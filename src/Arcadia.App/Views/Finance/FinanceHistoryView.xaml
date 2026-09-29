@@ -1,0 +1,134 @@
+<UserControl x:Class="Arcadia.App.Views.Finance.FinanceHistoryView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:ui="urn:arcadia-ui"
+             xmlns:l="clr-namespace:Arcadia.App.Localization"
+             xmlns:fvm="clr-namespace:Arcadia.App.ViewModels.Finance"
+             xmlns:fin="clr-namespace:Arcadia.App.Views.Finance"
+             xmlns:svc="clr-namespace:Arcadia.App.Services"
+             mc:Ignorable="d" d:DataContext="{d:DesignInstance fvm:FinanceHistoryViewModel}" x:Name="Root">
+    <UserControl.Resources>
+        <DataTemplate x:Key="MonthRowTemplate" DataType="{x:Type fvm:MonthRow}">
+            <Grid MinHeight="26">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="130" /><ColumnDefinition Width="130" /><ColumnDefinition Width="130" /><ColumnDefinition Width="130" /><ColumnDefinition Width="80" /></Grid.ColumnDefinitions>
+                <TextBlock Text="{Binding Month}" FontSize="12.5" VerticalAlignment="Center">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="Foreground" Value="#C8D6E8" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsCurrent}" Value="True"><Setter Property="Foreground" Value="#45D2FF" /></DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
+                <fin:MoneyText Grid.Column="1" Money="{Binding Income}" Style="{StaticResource Fin.Money}" FontSize="12.5" VerticalAlignment="Center" Foreground="#8CD9A6" />
+                <fin:MoneyText Grid.Column="2" Money="{Binding Expenses}" Style="{StaticResource Fin.Money}" FontSize="12.5" VerticalAlignment="Center" />
+                <fin:MoneyText Grid.Column="3" Money="{Binding Net}" Style="{StaticResource Fin.Money}" FontSize="12.5" VerticalAlignment="Center" Foreground="{Binding NetTone, Converter={StaticResource Fin.Ink}}" />
+                <fin:MoneyText Grid.Column="4" Money="{Binding Saved}" Style="{StaticResource Fin.Money}" FontSize="12.5" VerticalAlignment="Center" Foreground="#9FC4E6" />
+                <TextBlock Grid.Column="5" Text="{Binding Count}" Style="{StaticResource Org.Time}" TextAlignment="Right" VerticalAlignment="Center" />
+            </Grid>
+        </DataTemplate>
+    </UserControl.Resources>
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="380" />
+            <ColumnDefinition Width="10" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <!-- ═══════ the month, as a statement ═══════ -->
+        <StackPanel>
+            <Border Style="{StaticResource Fin.Panel}">
+                <Border Style="{StaticResource Fin.PanelInner}" Padding="16,12">
+                    <StackPanel>
+                        <DockPanel>
+                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                                <ui:ArcadiaButton Variant="Tool" Icon="ChevronLeft" IconSize="11" Width="26" Height="26" Command="{Binding PreviousMonthCommand}" AutomationProperties.Name="{l:Loc Cal_Previous}" Margin="0,0,3,0" />
+                                <ui:ArcadiaButton Variant="Tool" Icon="ChevronRight" IconSize="11" Width="26" Height="26" Command="{Binding NextMonthCommand}" AutomationProperties.Name="{l:Loc Cal_Next}" />
+                            </StackPanel>
+                            <TextBlock Text="{Binding MonthTitle}" FontFamily="{StaticResource Fin.Figures}" FontSize="18" Foreground="#EEF5FC" VerticalAlignment="Center" />
+                        </DockPanel>
+                        <Border Height="1" Background="#26384F" Margin="0,10,0,6" />
+                        <ItemsControl ItemsSource="{Binding MonthLines}" Focusable="False">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate DataType="{x:Type fvm:MetricCell}">
+                                    <DockPanel Margin="0,5">
+                                        <fin:MoneyText DockPanel.Dock="Right" Money="{Binding Value}" Style="{StaticResource Fin.Money}" FontSize="14" Foreground="{Binding Tone, Converter={StaticResource Fin.Ink}}" />
+                                        <TextBlock Text="{Binding Label}" FontSize="12.5" Foreground="#9FB3CC" VerticalAlignment="Center" />
+                                    </DockPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <TextBlock Text="{l:Loc Hist_MonthEmpty}" Style="{StaticResource Fin.Meta}" Margin="0,8,0,0" TextWrapping="Wrap" Visibility="{Binding MonthIsEmpty, Converter={StaticResource Fin.HasValue}}" />
+                    </StackPanel>
+                </Border>
+            </Border>
+            <ItemsControl ItemsSource="{Binding Currencies}" Margin="0,8,0,0" Focusable="False">
+                <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <RadioButton Style="{StaticResource Tool.RadioChip}" GroupName="HistCurrency" Content="{Binding}" Margin="0,0,4,4" Height="26" Padding="8,0"
+                                     Command="{Binding DataContext.SetCurrencyCommand, ElementName=Root}" CommandParameter="{Binding}" AutomationProperties.Name="{Binding}">
+                            <RadioButton.IsChecked>
+                                <MultiBinding Converter="{StaticResource It.Same}" Mode="OneWay">
+                                    <Binding />
+                                    <Binding Path="DataContext.Currency" ElementName="Root" />
+                                </MultiBinding>
+                            </RadioButton.IsChecked>
+                        </RadioButton>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            <Border Style="{StaticResource Fin.Panel}" Margin="0,6,0,0">
+                <Border Style="{StaticResource Fin.PanelInner}">
+                    <StackPanel>
+                        <TextBlock Text="{l:Loc Hist_MajorCategories}" Style="{StaticResource Fin.Kicker}" />
+                        <ItemsControl ItemsSource="{Binding YearCategories}" ItemTemplate="{StaticResource Fin.CategoryBarTemplate}" Margin="0,6,0,0" Focusable="False" />
+                    </StackPanel>
+                </Border>
+            </Border>
+        </StackPanel>
+
+        <!-- ═══════ the year ═══════ -->
+        <DockPanel Grid.Column="2">
+            <DockPanel DockPanel.Dock="Top" Margin="0,0,0,8">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <ui:ArcadiaButton Variant="Tool" Icon="ChevronLeft" IconSize="11" Width="28" Height="28" Command="{Binding PreviousYearCommand}" AutomationProperties.Name="{l:Loc Hist_PreviousYear}" />
+                    <TextBlock Text="{Binding Year}" FontFamily="{StaticResource Fin.Figures}" FontSize="20" Foreground="#EEF5FC" Margin="10,0" VerticalAlignment="Center" />
+                    <ui:ArcadiaButton Variant="Tool" Icon="ChevronRight" IconSize="11" Width="28" Height="28" Command="{Binding NextYearCommand}" AutomationProperties.Name="{l:Loc Hist_NextYear}" />
+                    <TextBlock Text="{l:Loc Hist_YearOverview}" Style="{StaticResource Fin.Kicker}" Margin="14,0,0,0" VerticalAlignment="Center" />
+                </StackPanel>
+            </DockPanel>
+            <Border DockPanel.Dock="Top" Style="{StaticResource Fin.Panel}" Height="210" Margin="0,0,0,10">
+                <Border Style="{StaticResource Fin.PanelInner}">
+                    <fin:FinanceChart Series="{Binding YearSeries}" Labels="{Binding YearLabels}" Formatter="{Binding ChartFormatter}" AxisFormatter="{Binding AxisFormatter}"
+                                      HideValues="{Binding IsHidden, Source={x:Static svc:FinancePrivacy.Instance}}" AutomationProperties.Name="{l:Loc Hist_YearOverview}" />
+                </Border>
+            </Border>
+            <Border Style="{StaticResource Fin.Panel}">
+                <Border Style="{StaticResource Tool.TableInner}">
+                    <DockPanel>
+                        <Border DockPanel.Dock="Top" BorderBrush="#1E2E44" BorderThickness="0,0,0,1" Padding="12,6" Background="#0A111B">
+                            <Grid TextBlock.FontSize="10.5" TextBlock.FontWeight="SemiBold" TextBlock.Foreground="#7F93AE">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="130" /><ColumnDefinition Width="130" /><ColumnDefinition Width="130" /><ColumnDefinition Width="130" /><ColumnDefinition Width="80" /></Grid.ColumnDefinitions>
+                                <TextBlock Text="{l:Loc Hist_Month}" />
+                                <TextBlock Grid.Column="1" Text="{l:Loc Fin_Income}" TextAlignment="Right" />
+                                <TextBlock Grid.Column="2" Text="{l:Loc Fin_Expenses}" TextAlignment="Right" />
+                                <TextBlock Grid.Column="3" Text="{l:Loc Fin_Net}" TextAlignment="Right" />
+                                <TextBlock Grid.Column="4" Text="{l:Loc Fin_Saved}" TextAlignment="Right" />
+                                <TextBlock Grid.Column="5" Text="{l:Loc Rep_Transactions}" TextAlignment="Right" />
+                            </Grid>
+                        </Border>
+                        <Border DockPanel.Dock="Bottom" BorderBrush="#26384F" BorderThickness="0,1,0,0" Padding="12,6" Background="#0A111B">
+                            <ContentControl Content="{Binding YearTotal}" Focusable="False" ContentTemplate="{StaticResource MonthRowTemplate}" />
+                        </Border>
+                        <ItemsControl ItemsSource="{Binding YearRows}" Focusable="False" Padding="12,2" ItemTemplate="{StaticResource MonthRowTemplate}" />
+                    </DockPanel>
+                </Border>
+            </Border>
+        </DockPanel>
+    </Grid>
+
+</UserControl>

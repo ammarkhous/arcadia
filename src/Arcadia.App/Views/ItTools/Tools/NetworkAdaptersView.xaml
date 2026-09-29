@@ -1,0 +1,58 @@
+<UserControl x:Class="Arcadia.App.Views.ItTools.Tools.NetworkAdaptersView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:ui="urn:arcadia-ui"
+             xmlns:l="clr-namespace:Arcadia.App.Localization"
+             xmlns:it="clr-namespace:Arcadia.App.ViewModels.ItTools"
+             xmlns:itv="clr-namespace:Arcadia.App.Views.ItTools"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance it:NetworkAdaptersToolViewModel}">
+    <DockPanel>
+        <itv:ToolHeader DockPanel.Dock="Top" />
+
+        <Border DockPanel.Dock="Top" Style="{StaticResource Tool.CommandBar}">
+            <Border Style="{StaticResource Tool.CommandBarInner}">
+                <DockPanel>
+                    <ui:ArcadiaButton DockPanel.Dock="Right" Style="{StaticResource Tool.Button}" Icon="Refresh" Content="{l:Loc It_Refresh}" Command="{Binding RefreshCommand}" IsEnabled="{Binding IsIdle}" />
+                    <CheckBox Style="{StaticResource Tool.Check}" Content="{l:Loc Net_ShowAll}" IsChecked="{Binding ShowInactive}" />
+                </DockPanel>
+            </Border>
+        </Border>
+
+        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Focusable="False">
+            <ItemsControl ItemsSource="{Binding Adapters}" Focusable="False">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <UniformGrid Columns="{Binding Columns, RelativeSource={RelativeSource AncestorType=UserControl}}" VerticalAlignment="Top" />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate DataType="{x:Type it:AdapterViewModel}">
+                        <ui:ArcadiaPanel Header="{Binding Info.Name}" Icon="Network" Margin="0,0,10,10">
+                            <ui:ArcadiaPanel.HeaderAction>
+                                <StackPanel Orientation="Horizontal">
+                                    <ui:ArcadiaLed Width="9" Height="9" Tone="{Binding Tone, Converter={StaticResource It.Tone}}" VerticalAlignment="Center" />
+                                    <TextBlock Text="{Binding StatusText}" Style="{StaticResource Text.Meta}" Margin="6,0,0,0" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </ui:ArcadiaPanel.HeaderAction>
+                            <StackPanel>
+                                <ItemsControl ItemsSource="{Binding Rows}" Tag="130" Focusable="False" />
+                                <StackPanel Orientation="Horizontal" Margin="0,8,0,0" HorizontalAlignment="Right">
+                                    <ui:ArcadiaButton Style="{StaticResource Tool.Button}" Icon="Copy" Content="{l:Loc Net_CopyIp}"
+                                                      Command="{Binding DataContext.CopyIpCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}"
+                                                      IsEnabled="{Binding PrimaryIp, Converter={StaticResource It.IsNull}, ConverterParameter=invert}" />
+                                    <ui:ArcadiaButton Style="{StaticResource Tool.Button}" Icon="Copy" Content="{l:Loc Net_CopyMac}"
+                                                      Command="{Binding DataContext.CopyMacCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" />
+                                    <ui:ArcadiaButton Style="{StaticResource Tool.Button}" Icon="Copy" Content="{l:Loc Net_CopyAdapter}"
+                                                      Command="{Binding DataContext.CopyAdapterCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" />
+                                </StackPanel>
+                            </StackPanel>
+                        </ui:ArcadiaPanel>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+    </DockPanel>
+</UserControl>

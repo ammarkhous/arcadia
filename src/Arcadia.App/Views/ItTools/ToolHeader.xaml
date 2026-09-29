@@ -1,0 +1,99 @@
+<UserControl x:Class="Arcadia.App.Views.ItTools.ToolHeader"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:ui="urn:arcadia-ui"
+             xmlns:l="clr-namespace:Arcadia.App.Localization"
+             xmlns:it="clr-namespace:Arcadia.App.ViewModels.ItTools"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance it:ToolViewModel}">
+    <!-- Title, description, status and the shared Copy / Export / Add to session actions of every tool -->
+    <StackPanel Margin="0,0,0,10">
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <Border Width="42" Height="42" CornerRadius="4" BorderBrush="#2A3A52" BorderThickness="1" VerticalAlignment="Top">
+                <Border.Background>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                        <GradientStop Offset="0" Color="#1C2940" />
+                        <GradientStop Offset="1" Color="#0B111B" />
+                    </LinearGradientBrush>
+                </Border.Background>
+                <ui:ArcadiaIcon Kind="{Binding Icon}" Width="24" Height="24" />
+            </Border>
+            <StackPanel Grid.Column="1" Margin="12,0,12,0" VerticalAlignment="Center">
+                <TextBlock Text="{Binding Title}" Style="{StaticResource Text.Title}" FontSize="21" />
+                <TextBlock Text="{Binding Description}" Style="{StaticResource Text.Meta}" TextWrapping="Wrap" Margin="0,1,0,0" />
+            </StackPanel>
+            <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                <ui:ArcadiaButton Style="{StaticResource Tool.Button}" Icon="Copy" Content="{l:Loc It_CopyAll}" Command="{Binding CopyAllCommand}"
+                                  IsEnabled="{Binding HasResult}" Visibility="{Binding SupportsReport, Converter={StaticResource BoolToVisibility}}" ToolTip="{l:Loc It_CopyAllTip}" />
+                <ui:ArcadiaButton Style="{StaticResource Tool.Button}" Icon="Export" Content="{l:Loc It_Export}" Command="{Binding ExportCommand}"
+                                  IsEnabled="{Binding HasResult}" Visibility="{Binding SupportsReport, Converter={StaticResource BoolToVisibility}}" ToolTip="{l:Loc It_ExportTip}" />
+                <ui:ArcadiaButton Style="{StaticResource Tool.Button}" Icon="Diagnostic" Content="{l:Loc It_AddToSession}" Command="{Binding RecordCommand}"
+                                  IsEnabled="{Binding CanRecord}" ToolTip="{l:Loc It_AddToSessionTip}">
+                    <ui:ArcadiaButton.Visibility>
+                        <MultiBinding Converter="{StaticResource It.AllTrue}">
+                            <Binding Path="SessionActive" />
+                            <Binding Path="SupportsReport" />
+                        </MultiBinding>
+                    </ui:ArcadiaButton.Visibility>
+                </ui:ArcadiaButton>
+            </StackPanel>
+        </Grid>
+
+        <!-- status line + busy scanner -->
+        <Grid Margin="0,10,0,0" MinHeight="18">
+            <StackPanel Orientation="Horizontal">
+                <ui:ArcadiaLed Width="8" Height="8" Margin="0,0,7,0" VerticalAlignment="Center" Tone="#45D2FF"
+                               Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibility}}" />
+                <TextBlock Text="{Binding StatusText}" Style="{StaticResource Text.Meta}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+            </StackPanel>
+        </Grid>
+        <Border Style="{StaticResource Tool.BusyBar}" Margin="0,4,0,0" x:Name="BusyTrack">
+            <Border x:Name="Scanner" Width="160" HorizontalAlignment="Left" Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibility}}">
+                <Border.Background>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                        <GradientStop Offset="0" Color="#0045D2FF" />
+                        <GradientStop Offset="0.5" Color="#FF45D2FF" />
+                        <GradientStop Offset="1" Color="#0045D2FF" />
+                    </LinearGradientBrush>
+                </Border.Background>
+                <Border.RenderTransform>
+                    <TranslateTransform x:Name="ScanShift" />
+                </Border.RenderTransform>
+            </Border>
+        </Border>
+
+        <!-- friendly error -->
+        <Border Margin="0,10,0,0" CornerRadius="4" BorderBrush="#6A2A30" BorderThickness="1" Padding="12,10"
+                Visibility="{Binding Error, Converter={StaticResource HasValue}}">
+            <Border.Background>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                    <GradientStop Offset="0" Color="#3A1519" />
+                    <GradientStop Offset="1" Color="#16100F" />
+                </LinearGradientBrush>
+            </Border.Background>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <ui:ArcadiaIcon Kind="{Binding Error.Icon}" Width="22" Height="22" VerticalAlignment="Top" Foreground="#FF9A9E" />
+                <StackPanel Grid.Column="1" Margin="12,0">
+                    <TextBlock Text="{Binding Error.Title}" Style="{StaticResource Text.Item}" Foreground="#FFD0D2" />
+                    <TextBlock Text="{Binding Error.Message}" Style="{StaticResource Text.Body}" TextWrapping="Wrap" Margin="0,2,0,0" />
+                    <TextBox Style="{StaticResource Tool.SelectableText}" Text="{Binding Error.Detail, Mode=OneWay}" FontSize="11.5" Foreground="#9C8A8C" Margin="0,4,0,0"
+                             FontFamily="{StaticResource Font.Mono}" Visibility="{Binding Error.Detail, Converter={StaticResource HasValue}}" />
+                </StackPanel>
+                <ui:ArcadiaButton Grid.Column="2" Variant="Tool" Icon="Close" IconSize="12" Command="{Binding DismissErrorCommand}" ToolTip="{l:Loc It_Dismiss}"
+                                  AutomationProperties.Name="{l:Loc It_Dismiss}" VerticalAlignment="Top" Width="26" Height="26" />
+            </Grid>
+        </Border>
+    </StackPanel>
+</UserControl>

@@ -1,0 +1,487 @@
+<!-- IT Tools look: dense desktop tables, a console well, equipment-panel readouts. Built on the Arcadia palette. -->
+<ResourceDictionary xmlns:shared="clr-namespace:Arcadia.UI;assembly=Arcadia.UI" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:ui="urn:arcadia-ui"
+                    xmlns:it="clr-namespace:Arcadia.App.ViewModels.ItTools"
+                    xmlns:conv="clr-namespace:Arcadia.App.Converters"
+                    xmlns:ctl="clr-namespace:Arcadia.App.Views.Controls">
+
+    <ResourceDictionary.MergedDictionaries>
+        <shared:SharedResourceDictionary Source="/Arcadia.UI;component/Themes/Palette.xaml" />
+        <shared:SharedResourceDictionary Source="/Arcadia.UI;component/Themes/Typography.xaml" />
+        <shared:SharedResourceDictionary Source="/Arcadia.UI;component/Themes/StandardControls.xaml" />
+    </ResourceDictionary.MergedDictionaries>
+
+    <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
+    <FontFamily x:Key="Font.Mono">Cascadia Mono, Consolas, Courier New</FontFamily>
+    <conv:ToneToColorConverter x:Key="It.Tone" />
+    <conv:HasValueToVisibilityConverter x:Key="It.HasValue" />
+    <conv:AllTrueToVisibilityConverter x:Key="It.AllTrue" />
+    <conv:FractionToPercentConverter x:Key="It.Percent" />
+    <conv:SameValueConverter x:Key="It.Same" />
+    <ctl:EqualsToVisibilityConverter x:Key="Ws.TabVisible" />
+    <ctl:EqualsConverter x:Key="Ws.Equals" />
+    <ctl:PairConverter x:Key="Ws.Pair" />
+    <conv:LocKeyConverter x:Key="Ws.PinLabel" Pattern="Proj_Pin_{0}" />
+    <conv:LocKeyConverter x:Key="Doc.FavLabel" Pattern="Doc_Fav_{0}" />
+    <conv:LocKeyConverter x:Key="Ws.ArchiveLabel" Pattern="Proj_Archive_{0}" />
+    <conv:ToneToSlabConverter x:Key="It.Slab" />
+    <conv:MegabytesLabelConverter x:Key="It.MbLabel" />
+    <conv:PresetCheckedConverter x:Key="It.PresetChecked" />
+    <conv:HashNameConverter x:Key="It.HashName" />
+    <conv:LocKeyConverter x:Key="It.DnsLabel" Pattern="Dns_Type_{0}" />
+    <conv:LocKeyConverter x:Key="It.LogLabel" Pattern="Evt_Log_{0}" />
+    <conv:LocKeyConverter x:Key="It.CloseLabel" Pattern="Diag_Closed_{0}" />
+    <conv:IsNullConverter x:Key="It.IsNull" />
+    <conv:SessionMetaConverter x:Key="It.SessionMeta" />
+
+    <!-- ═══════════════ Tool rail (the module's own navigation) ═══════════════ -->
+    <Style x:Key="Tool.RailItem" TargetType="RadioButton">
+        <Setter Property="Foreground" Value="{StaticResource Brush.Text.Secondary}" />
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="Height" Value="30" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="FocusVisualStyle" Value="{StaticResource Arcadia.FocusVisual}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="RadioButton">
+                    <Grid Background="Transparent">
+                        <Border x:Name="wash" CornerRadius="3" Opacity="0" Background="{StaticResource Brush.Nav.Selected}" />
+                        <Border x:Name="hover" CornerRadius="3" Opacity="0" Background="{StaticResource Brush.Nav.Hover}" />
+                        <Border x:Name="edge" Width="3" HorizontalAlignment="Left" Margin="0,5" CornerRadius="1.5" Background="{StaticResource Brush.Cyan}" Opacity="0">
+                            <Border.Effect>
+                                <DropShadowEffect Color="#45D2FF" BlurRadius="8" ShadowDepth="0" Opacity="0.9" />
+                            </Border.Effect>
+                        </Border>
+                        <ContentPresenter Margin="12,0,8,0" VerticalAlignment="Center" TextBlock.Foreground="{TemplateBinding Foreground}" />
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="hover" Property="Opacity" Value="1" />
+                            <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
+                        </Trigger>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="wash" Property="Opacity" Value="1" />
+                            <Setter TargetName="edge" Property="Opacity" Value="1" />
+                            <Setter Property="Foreground" Value="White" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- ═══════════════ Compact option chip (radio or toggle) ═══════════════ -->
+    <Style x:Key="Tool.Chip" TargetType="ToggleButton">
+        <Setter Property="Foreground" Value="{StaticResource Brush.Text.Secondary}" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="Height" Value="26" />
+        <Setter Property="MinWidth" Value="34" />
+        <Setter Property="Margin" Value="0,0,4,0" />
+        <Setter Property="Padding" Value="10,0" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="FocusVisualStyle" Value="{StaticResource Arcadia.FocusVisual}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ToggleButton">
+                    <Border x:Name="plate" CornerRadius="2" Background="{StaticResource Brush.Secondary}" BorderBrush="#06090E" BorderThickness="1" Padding="{TemplateBinding Padding}">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" TextBlock.Foreground="{TemplateBinding Foreground}" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="plate" Property="Background" Value="{StaticResource Brush.Secondary.Hover}" />
+                            <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
+                        </Trigger>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="plate" Property="Background" Value="{StaticResource Brush.Nav.Selected}" />
+                            <Setter TargetName="plate" Property="BorderBrush" Value="#5C9CFF" />
+                            <Setter Property="Foreground" Value="White" />
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Opacity" Value="0.45" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    <Style x:Key="Tool.RadioChip" TargetType="RadioButton" BasedOn="{StaticResource Tool.Chip}" />
+    <Style x:Key="Tool.ChipButton" TargetType="Button">
+        <Setter Property="Foreground" Value="{StaticResource Brush.Text.Secondary}" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="Height" Value="26" />
+        <Setter Property="Margin" Value="0,0,4,4" />
+        <Setter Property="Padding" Value="9,0" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="FocusVisualStyle" Value="{StaticResource Arcadia.FocusVisual}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="plate" CornerRadius="2" Background="{StaticResource Brush.Secondary}" BorderBrush="#06090E" BorderThickness="1" Padding="{TemplateBinding Padding}">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" TextBlock.Foreground="{TemplateBinding Foreground}" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="plate" Property="Background" Value="{StaticResource Brush.Secondary.Hover}" />
+                            <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="plate" Property="Background" Value="{StaticResource Brush.Secondary.Pressed}" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- ═══════════════ Checkbox: a small bevelled box with a lit check ═══════════════ -->
+    <Style x:Key="Tool.Check" TargetType="CheckBox">
+        <Setter Property="Foreground" Value="{StaticResource Brush.Text.Secondary}" />
+        <Setter Property="FontSize" Value="12.5" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Margin" Value="0,0,14,0" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="FocusVisualStyle" Value="{StaticResource Arcadia.FocusVisual}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="CheckBox">
+                    <StackPanel Orientation="Horizontal" Background="Transparent">
+                        <Border x:Name="box" Width="16" Height="16" CornerRadius="2" Background="#0A0E15" BorderBrush="#34465F" BorderThickness="1" VerticalAlignment="Center">
+                            <ui:ArcadiaIcon x:Name="mark" Kind="Check" Width="12" Height="12" Foreground="#9FE6FF" Visibility="Collapsed" />
+                        </Border>
+                        <ContentPresenter Margin="7,0,0,0" VerticalAlignment="Center" TextBlock.Foreground="{TemplateBinding Foreground}" />
+                    </StackPanel>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="box" Property="BorderBrush" Value="#5C9CFF" />
+                            <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
+                        </Trigger>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="mark" Property="Visibility" Value="Visible" />
+                            <Setter TargetName="box" Property="Background" Value="#14305E" />
+                            <Setter TargetName="box" Property="BorderBrush" Value="#5C9CFF" />
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Opacity" Value="0.45" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Light text over artwork (project banners, world cards) -->
+    <Style x:Key="Text.OnArt" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="#F2F6FB" />
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="Effect">
+            <Setter.Value>
+                <DropShadowEffect ShadowDepth="1" BlurRadius="4" Opacity="0.95" Color="Black" />
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- ═══════════════ Radio option: a lit ring ═══════════════ -->
+    <Style x:Key="Tool.Radio" TargetType="RadioButton">
+        <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="FocusVisualStyle" Value="{StaticResource Arcadia.FocusVisual}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="RadioButton">
+                    <Grid Background="Transparent">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Grid Width="16" Height="16" VerticalAlignment="Top" Margin="0,2,0,0">
+                            <Ellipse x:Name="ring" Fill="#0A0E15" Stroke="#34465F" StrokeThickness="1.2" />
+                            <Ellipse x:Name="dot" Width="7" Height="7" Fill="#7CE0FF" Visibility="Collapsed" />
+                        </Grid>
+                        <ContentPresenter Grid.Column="1" Margin="6,0,0,0" />
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="ring" Property="Stroke" Value="#5C9CFF" /></Trigger>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="dot" Property="Visibility" Value="Visible" />
+                            <Setter TargetName="ring" Property="Stroke" Value="#5C9CFF" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- ═══════════════ Plates ═══════════════ -->
+    <!-- Sunken command strip: inputs and the Run/Cancel buttons of a tool -->
+    <Style x:Key="Tool.CommandBar" TargetType="Border">
+        <Setter Property="Background" Value="#05070A" />
+        <Setter Property="CornerRadius" Value="5" />
+        <Setter Property="Padding" Value="1" />
+        <Setter Property="Margin" Value="0,0,0,10" />
+    </Style>
+    <Style x:Key="Tool.CommandBarInner" TargetType="Border">
+        <Setter Property="Background" Value="{StaticResource Brush.Surface}" />
+        <Setter Property="BorderBrush" Value="{StaticResource Brush.Bevel}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="4" />
+        <Setter Property="Padding" Value="10,8" />
+    </Style>
+
+    <!-- Terminal-like well for ping / raw output -->
+    <Style x:Key="Tool.Console" TargetType="Border">
+        <Setter Property="CornerRadius" Value="4" />
+        <Setter Property="BorderBrush" Value="#1B2A40" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="Padding" Value="12,10" />
+        <Setter Property="Background">
+            <Setter.Value>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                    <GradientStop Offset="0" Color="#03060A" />
+                    <GradientStop Offset="1" Color="#060B12" />
+                </LinearGradientBrush>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="Tool.Mono" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{StaticResource Font.Mono}" />
+        <Setter Property="FontSize" Value="12.5" />
+        <Setter Property="Foreground" Value="#B9D4F0" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+    </Style>
+
+    <!-- Read-only text the user can select and copy (values in property sheets) -->
+    <Style x:Key="Tool.SelectableText" TargetType="TextBox">
+        <Setter Property="IsReadOnly" Value="True" />
+        <Setter Property="IsReadOnlyCaretVisible" Value="False" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+        <Setter Property="SelectionBrush" Value="#3F8CFF" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="TextBox">
+                    <ScrollViewer x:Name="PART_ContentHost" Focusable="False" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Hidden" />
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- A property sheet row: label column, selectable value, optional lamp -->
+    <DataTemplate DataType="{x:Type it:InfoRow}">
+        <Grid Margin="0,0,0,0" MinHeight="26">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="{Binding Tag, RelativeSource={RelativeSource AncestorType=ItemsControl}, TargetNullValue=160, FallbackValue=160}" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <Border Grid.ColumnSpan="2" BorderBrush="#141C28" BorderThickness="0,0,0,1" />
+            <TextBlock Text="{Binding Label}" Style="{StaticResource Text.Label}" FontSize="12.5" VerticalAlignment="Top" Margin="0,5,10,5" TextTrimming="CharacterEllipsis" ToolTip="{Binding Label}" />
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="0,5,0,5">
+                <ui:ArcadiaLed Width="9" Height="9" Margin="0,0,7,0" VerticalAlignment="Center" Tone="{Binding Tone, Converter={StaticResource It.Tone}}"
+                               Visibility="{Binding HasTone, Converter={StaticResource BoolToVisibility}}" />
+                <TextBox Style="{StaticResource Tool.SelectableText}" Text="{Binding Value, Mode=OneWay}" AutomationProperties.Name="{Binding Label}" />
+            </StackPanel>
+        </Grid>
+    </DataTemplate>
+
+    <!-- Busy "scanner" line under a tool header -->
+    <Style x:Key="Tool.BusyBar" TargetType="Border">
+        <Setter Property="Height" Value="2" />
+        <Setter Property="ClipToBounds" Value="True" />
+        <Setter Property="Background" Value="#101A28" />
+    </Style>
+
+    <!-- ═══════════════ Desktop tables ═══════════════ -->
+    <Style TargetType="DataGrid">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="RowBackground" Value="Transparent" />
+        <Setter Property="AlternatingRowBackground" Value="#0B0F17" />
+        <Setter Property="GridLinesVisibility" Value="Horizontal" />
+        <Setter Property="HorizontalGridLinesBrush" Value="#141C28" />
+        <Setter Property="HeadersVisibility" Value="Column" />
+        <Setter Property="AutoGenerateColumns" Value="False" />
+        <Setter Property="CanUserAddRows" Value="False" />
+        <Setter Property="CanUserDeleteRows" Value="False" />
+        <Setter Property="CanUserResizeRows" Value="False" />
+        <Setter Property="CanUserReorderColumns" Value="False" />
+        <Setter Property="IsReadOnly" Value="True" />
+        <Setter Property="SelectionMode" Value="Extended" />
+        <Setter Property="SelectionUnit" Value="FullRow" />
+        <Setter Property="RowHeight" Value="26" />
+        <Setter Property="FontSize" Value="12.5" />
+        <Setter Property="ClipboardCopyMode" Value="IncludeHeader" />
+        <Setter Property="EnableRowVirtualization" Value="True" />
+        <Setter Property="EnableColumnVirtualization" Value="True" />
+        <Setter Property="VirtualizingPanel.VirtualizationMode" Value="Recycling" />
+        <Setter Property="VirtualizingPanel.ScrollUnit" Value="Pixel" />
+        <Setter Property="ScrollViewer.CanContentScroll" Value="True" />
+        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+    </Style>
+
+    <Style TargetType="DataGridColumnHeader">
+        <Setter Property="Foreground" Value="#8FA3BF" />
+        <Setter Property="FontFamily" Value="{StaticResource Font.Display}" />
+        <Setter Property="FontSize" Value="11.5" />
+        <Setter Property="Height" Value="30" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="DataGridColumnHeader">
+                    <Grid Background="Transparent">
+                        <Border x:Name="plate" BorderBrush="#03050A" BorderThickness="0,0,0,1">
+                            <Border.Background>
+                                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                    <GradientStop Offset="0" Color="#182131" />
+                                    <GradientStop Offset="1" Color="#10161F" />
+                                </LinearGradientBrush>
+                            </Border.Background>
+                        </Border>
+                        <Border Height="1" VerticalAlignment="Top" Background="#243148" />
+                        <Border Width="1" HorizontalAlignment="Right" Margin="0,7" Background="#233044" />
+                        <DockPanel Margin="10,0,8,0">
+                            <Path x:Name="arrow" DockPanel.Dock="Right" Width="8" Height="5" Stretch="Fill" Fill="#7CC4FF" Visibility="Collapsed" VerticalAlignment="Center" Margin="6,0,0,0"
+                                  Data="M0,0 L8,0 L4,5 Z" />
+                            <ContentPresenter VerticalAlignment="Center" TextBlock.Foreground="{TemplateBinding Foreground}" />
+                        </DockPanel>
+                        <Thumb x:Name="PART_RightHeaderGripper" HorizontalAlignment="Right" Width="6" Cursor="SizeWE" Opacity="0" />
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
+                        </Trigger>
+                        <Trigger Property="SortDirection" Value="Descending">
+                            <Setter TargetName="arrow" Property="Visibility" Value="Visible" />
+                            <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
+                        </Trigger>
+                        <Trigger Property="SortDirection" Value="Ascending">
+                            <Setter TargetName="arrow" Property="Visibility" Value="Visible" />
+                            <Setter TargetName="arrow" Property="Data" Value="M0,5 L8,5 L4,0 Z" />
+                            <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style TargetType="DataGridRow">
+        <Setter Property="SnapsToDevicePixels" Value="True" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="DataGridRow">
+                    <Border x:Name="row" Background="{TemplateBinding Background}" SnapsToDevicePixels="True">
+                        <Grid>
+                            <Border x:Name="sel" Opacity="0">
+                                <Border.Background>
+                                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                        <GradientStop Offset="0" Color="#553F8CFF" />
+                                        <GradientStop Offset="1" Color="#1A3F8CFF" />
+                                    </LinearGradientBrush>
+                                </Border.Background>
+                            </Border>
+                            <Border x:Name="hover" Opacity="0" Background="#0F2F6BD9" />
+                            <Border x:Name="edge" Width="2" HorizontalAlignment="Left" Background="{StaticResource Brush.Cyan}" Opacity="0" />
+                            <DataGridCellsPresenter ItemsPanel="{TemplateBinding ItemsPanel}" SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
+                        </Grid>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="hover" Property="Opacity" Value="1" />
+                        </Trigger>
+                        <Trigger Property="IsSelected" Value="True">
+                            <Setter TargetName="sel" Property="Opacity" Value="1" />
+                            <Setter TargetName="edge" Property="Opacity" Value="1" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style TargetType="DataGridCell">
+        <Setter Property="Padding" Value="10,0,8,0" />
+        <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
+        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="DataGridCell">
+                    <Border Background="Transparent" Padding="{TemplateBinding Padding}">
+                        <ContentPresenter VerticalAlignment="Center" />
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+        <Style.Triggers>
+            <Trigger Property="IsSelected" Value="True">
+                <Setter Property="Foreground" Value="White" />
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- Cell text styles -->
+    <Style x:Key="Cell.Text" TargetType="TextBlock">
+        <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+    <Style x:Key="Cell.Dim" TargetType="TextBlock" BasedOn="{StaticResource Cell.Text}">
+        <Setter Property="Foreground" Value="{StaticResource Brush.Text.Secondary}" />
+    </Style>
+    <!-- Paths and file names never mirror (they keep their order in right-to-left layouts) -->
+    <Style x:Key="Cell.Path" TargetType="TextBlock" BasedOn="{StaticResource Cell.Text}">
+        <Setter Property="Foreground" Value="{StaticResource Brush.Text.Secondary}" />
+        <Setter Property="FlowDirection" Value="LeftToRight" />
+        <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+    </Style>
+    <Style x:Key="Cell.Mono" TargetType="TextBlock" BasedOn="{StaticResource Cell.Text}">
+        <Setter Property="FontFamily" Value="{StaticResource Font.Mono}" />
+        <Setter Property="FontSize" Value="12" />
+    </Style>
+    <Style x:Key="Cell.Number" TargetType="TextBlock" BasedOn="{StaticResource Cell.Text}">
+        <Setter Property="FontFamily" Value="{StaticResource Font.Display}" />
+        <Setter Property="HorizontalAlignment" Value="Right" />
+    </Style>
+
+    <!-- Table frame (same bevel as panels, no caption) -->
+    <Style x:Key="Tool.TableFrame" TargetType="Border">
+        <Setter Property="Background" Value="#05070A" />
+        <Setter Property="CornerRadius" Value="5" />
+        <Setter Property="Padding" Value="1" />
+    </Style>
+    <Style x:Key="Tool.TableInner" TargetType="Border">
+        <Setter Property="Background" Value="{StaticResource Brush.Surface}" />
+        <Setter Property="BorderBrush" Value="{StaticResource Brush.Bevel}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="4" />
+        <Setter Property="ClipToBounds" Value="True" />
+    </Style>
+
+    <!-- Small caps label over an input -->
+    <Style x:Key="Tool.InputLabel" TargetType="TextBlock" BasedOn="{StaticResource Text.Caps}">
+        <Setter Property="FontSize" Value="10.5" />
+        <Setter Property="Foreground" Value="#7F93AE" />
+        <Setter Property="Margin" Value="0,0,0,3" />
+    </Style>
+
+    <!-- Equipment readout: caps label, big value -->
+    <Style x:Key="Tool.ReadoutValue" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{StaticResource Font.Display}" />
+        <Setter Property="FontSize" Value="20" />
+        <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
+        <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+    </Style>
+
+    <!-- Compact secondary button for toolbars -->
+    <Style x:Key="Tool.Button" TargetType="ui:ArcadiaButton">
+        <Setter Property="MinHeight" Value="30" />
+        <Setter Property="Padding" Value="12,4" />
+        <Setter Property="IconSize" Value="14" />
+        <Setter Property="Margin" Value="6,0,0,0" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+</ResourceDictionary>

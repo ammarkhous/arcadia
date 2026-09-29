@@ -1,0 +1,166 @@
+<UserControl x:Class="Arcadia.App.Views.Organizer.CalendarMonthView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="urn:arcadia-ui"
+             xmlns:l="clr-namespace:Arcadia.App.Localization"
+             xmlns:ovm="clr-namespace:Arcadia.App.ViewModels.Organizer"
+             x:Name="Root">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="10" />
+            <ColumnDefinition Width="290" />
+        </Grid.ColumnDefinitions>
+
+        <!-- ═══════ month grid ═══════ -->
+        <Border Style="{StaticResource Tr.Chart}">
+            <Border Style="{StaticResource Tr.ChartInner}">
+                <DockPanel>
+                    <ItemsControl DockPanel.Dock="Top" ItemsSource="{Binding WeekdayHeaders}" Focusable="False" Height="28">
+                        <ItemsControl.ItemsPanel><ItemsPanelTemplate><UniformGrid Rows="1" /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border BorderBrush="#1A2638" BorderThickness="0,0,1,1" Background="#0C1520">
+                                    <TextBlock Text="{Binding}" Style="{StaticResource Org.Kicker}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <ItemsControl ItemsSource="{Binding MonthDays}" Focusable="False" KeyboardNavigation.DirectionalNavigation="Cycle">
+                        <ItemsControl.ItemsPanel><ItemsPanelTemplate><UniformGrid Rows="6" Columns="7" /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="{x:Type ovm:MonthDay}">
+                                <Button Style="{StaticResource Org.DayCell}" Command="{Binding DataContext.SelectDayCommand, ElementName=Root}" CommandParameter="{Binding}"
+                                        AutomationProperties.Name="{Binding}" MouseDoubleClick="OnDayDoubleClick" Tag="{Binding DataContext, ElementName=Root}">
+                                    <Button.ContextMenu>
+                                        <ContextMenu>
+                                            <MenuItem Header="{l:Loc Cal_NewEventHere}" Command="{Binding PlacementTarget.Tag.NewEventOnDayCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}">
+                                                <MenuItem.Icon><ui:ArcadiaIcon Kind="Calendar" Width="14" Height="14" /></MenuItem.Icon>
+                                            </MenuItem>
+                                            <MenuItem Header="{l:Loc Cal_NewTaskHere}" Command="{Binding PlacementTarget.Tag.NewTaskOnDayCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}">
+                                                <MenuItem.Icon><ui:ArcadiaIcon Kind="Tasks" Width="14" Height="14" /></MenuItem.Icon>
+                                            </MenuItem>
+                                            <MenuItem Header="{l:Loc Cal_OpenDay}" Command="{Binding PlacementTarget.Tag.OpenDayCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}">
+                                                <MenuItem.Icon><ui:ArcadiaIcon Kind="Clock" Width="14" Height="14" /></MenuItem.Icon>
+                                            </MenuItem>
+                                        </ContextMenu>
+                                    </Button.ContextMenu>
+                                    <Grid>
+                                        <Grid.Style>
+                                            <Style TargetType="Grid">
+                                                <Setter Property="Background" Value="Transparent" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsWeekend}" Value="True"><Setter Property="Background" Value="#0708101A" /></DataTrigger>
+                                                    <DataTrigger Binding="{Binding IsSelected}" Value="True"><Setter Property="Background" Value="#1A1F4F8C" /></DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Grid.Style>
+                                        <Border BorderThickness="1" BorderBrush="#45D2FF" Opacity="0.8" Visibility="{Binding IsSelected, Converter={StaticResource Org.HasValue}}" />
+                                        <DockPanel Margin="5,4,5,3">
+                                            <DockPanel DockPanel.Dock="Top" Height="20">
+                                                <Ellipse DockPanel.Dock="Right" Width="5" Height="5" Fill="#B98CFF" VerticalAlignment="Center" Margin="0,0,2,0" ToolTip="{l:Loc Cal_HasTasks}"
+                                                         Visibility="{Binding HasTasks, Converter={StaticResource Org.HasValue}}" />
+                                                <Grid HorizontalAlignment="Left">
+                                                    <Border Width="22" Height="20" CornerRadius="10" Background="#1F6FA8" Visibility="{Binding IsToday, Converter={StaticResource Org.HasValue}}" />
+                                                    <TextBlock Text="{Binding DayNumber}" HorizontalAlignment="Center" VerticalAlignment="Center" FontFamily="Cascadia Mono, Consolas" FontSize="12" Margin="4,0">
+                                                        <TextBlock.Style>
+                                                            <Style TargetType="TextBlock">
+                                                                <Setter Property="Foreground" Value="#C8D6E8" />
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding InMonth}" Value="False"><Setter Property="Foreground" Value="#4B5E77" /></DataTrigger>
+                                                                    <DataTrigger Binding="{Binding IsToday}" Value="True"><Setter Property="Foreground" Value="White" /></DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </TextBlock.Style>
+                                                    </TextBlock>
+                                                </Grid>
+                                            </DockPanel>
+                                            <TextBlock DockPanel.Dock="Bottom" Text="{Binding MoreText}" Style="{StaticResource Text.Meta}" FontSize="10.5" Margin="2,0,0,0"
+                                                       Visibility="{Binding MoreText, Converter={StaticResource Org.HasValue}}" />
+                                            <ItemsControl ItemsSource="{Binding Entries}" Focusable="False" Margin="0,2,0,0" ClipToBounds="True">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate DataType="{x:Type ovm:CalendarEntry}">
+                                                        <Border Margin="0,0,0,2" Height="17" CornerRadius="2" BorderThickness="2,0,0,0" BorderBrush="{Binding Accent, Converter={StaticResource Org.Tone}}"
+                                                                Background="{Binding Accent, Converter={StaticResource Org.ToneBrush}, ConverterParameter=0.13}" ToolTip="{Binding}">
+                                                            <DockPanel Margin="4,0,2,0" LastChildFill="True">
+                                                                <TextBlock DockPanel.Dock="Left" Text="{Binding StartText}" Style="{StaticResource Org.Time}" FontSize="10" VerticalAlignment="Center" Margin="0,0,4,0"
+                                                                           Visibility="{Binding StartText, Converter={StaticResource Org.HasValue}}" />
+                                                                <TextBlock ui:Bidi.Text="{Binding Title}" FontSize="11" Foreground="#D6E2F0" VerticalAlignment="Center" TextTrimming="CharacterEllipsis">
+                                                                    <TextBlock.Style>
+                                                                        <Style TargetType="TextBlock">
+                                                                            <Style.Triggers>
+                                                                                <DataTrigger Binding="{Binding IsDone}" Value="True">
+                                                                                    <Setter Property="TextDecorations" Value="Strikethrough" />
+                                                                                    <Setter Property="Opacity" Value="0.55" />
+                                                                                </DataTrigger>
+                                                                            </Style.Triggers>
+                                                                        </Style>
+                                                                    </TextBlock.Style>
+                                                                </TextBlock>
+                                                            </DockPanel>
+                                                        </Border>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </DockPanel>
+                                    </Grid>
+                                </Button>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </DockPanel>
+            </Border>
+        </Border>
+
+        <!-- ═══════ selected day ═══════ -->
+        <Border Grid.Column="2" Style="{StaticResource Tool.TableFrame}">
+            <Border Style="{StaticResource Tool.TableInner}" Padding="12,10">
+                <DockPanel>
+                    <StackPanel DockPanel.Dock="Top">
+                        <TextBlock Text="{l:Loc Cal_SelectedDay}" Style="{StaticResource Org.Kicker}" />
+                        <TextBlock Text="{Binding SelectedDayTitle}" Style="{StaticResource Text.Section}" TextWrapping="Wrap" Margin="0,3,0,10" />
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                            <ui:ArcadiaButton Icon="Calendar" IconSize="12" Content="{l:Loc Cal_NewEvent}" Command="{Binding NewEventCommand}" Margin="0,0,6,0" />
+                            <ui:ArcadiaButton Icon="Clock" IconSize="12" Content="{l:Loc Cal_OpenDay}" Command="{Binding OpenDayCommand}" />
+                        </StackPanel>
+                        <Border Height="1" Background="#1E2E44" />
+                    </StackPanel>
+                    <Grid>
+                        <ListBox ItemsSource="{Binding SelectedDayEntries}" SelectedItem="{Binding SelectedEntry}" Style="{StaticResource Tr.List}" AutomationProperties.Name="{Binding SelectedDayTitle}"
+                                 KeyDown="OnEntryKey" MouseDoubleClick="OnEntryDoubleClick">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate DataType="{x:Type ovm:CalendarEntry}">
+                                    <Grid Margin="4,7,4,7">
+                                        <Grid.ContextMenu>
+                                            <ContextMenu>
+                                                <MenuItem Header="{l:Loc Cal_Open}" Command="{Binding PlacementTarget.Tag.OpenEntryCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}" />
+                                                <MenuItem Header="{l:Loc Confirm_Delete}" Command="{Binding PlacementTarget.Tag.DeleteEntryCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}"
+                                                          Visibility="{Binding IsEvent, Converter={StaticResource Org.HasValue}}" />
+                                            </ContextMenu>
+                                        </Grid.ContextMenu>
+                                        <Grid.Tag><Binding Path="DataContext" ElementName="Root" /></Grid.Tag>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="3" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <Border CornerRadius="1.5" Background="{Binding Accent, Converter={StaticResource Org.Tone}}" />
+                                        <StackPanel Grid.Column="1" Margin="9,0,0,0">
+                                            <DockPanel>
+                                                <TextBlock DockPanel.Dock="Right" Text="{Binding KindLabel}" Style="{StaticResource Org.Kicker}" FontSize="9" VerticalAlignment="Center" />
+                                                <TextBlock Text="{Binding TimeText}" Style="{StaticResource Org.Time}" />
+                                            </DockPanel>
+                                            <TextBlock ui:Bidi.Text="{Binding Title}" Style="{StaticResource Text.Item}" FontSize="13" TextWrapping="Wrap" Margin="0,1,0,0" />
+                                            <TextBlock ui:Bidi.Text="{Binding Location}" Style="{StaticResource Text.Meta}" FontSize="11" Visibility="{Binding Location, Converter={StaticResource Org.HasValue}}" />
+                                        </StackPanel>
+                                    </Grid>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                        <TextBlock Text="{l:Loc Cal_DayEmpty}" Style="{StaticResource Text.Meta}" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap"
+                                   Visibility="{Binding SelectedDayEntries.Count, Converter={StaticResource Org.HasValue}, ConverterParameter=invert}" />
+                    </Grid>
+                </DockPanel>
+            </Border>
+        </Border>
+    </Grid>
+</UserControl>

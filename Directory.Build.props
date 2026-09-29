@@ -1,0 +1,15 @@
+<Project>
+  <PropertyGroup>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <Company>Arcadia</Company>
+    <Product>Arcadia</Product>
+    <!-- Release candidates: dotnet publish -p:VersionSuffix=rc.1 → 1.0.0-rc.1 (About, logs, backup manifest, installer) -->
+    <VersionPrefix>1.0.0</VersionPrefix>
+    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
+    <Copyright>© 2026 Arcadia</Copyright>
+    <SatelliteResourceLanguages>en;ar</SatelliteResourceLanguages>
+    <EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild>
+  </PropertyGroup>
+</Project>

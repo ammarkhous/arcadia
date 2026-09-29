@@ -1,0 +1,95 @@
+<UserControl x:Class="Arcadia.App.Views.ItTools.Tools.ServicesView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:ui="urn:arcadia-ui"
+             xmlns:l="clr-namespace:Arcadia.App.Localization"
+             xmlns:it="clr-namespace:Arcadia.App.ViewModels.ItTools"
+             xmlns:itv="clr-namespace:Arcadia.App.Views.ItTools"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance it:ServicesToolViewModel}">
+    <DockPanel>
+        <itv:ToolHeader DockPanel.Dock="Top" />
+
+        <Border DockPanel.Dock="Top" Style="{StaticResource Tool.CommandBar}">
+            <Border Style="{StaticResource Tool.CommandBarInner}">
+                <StackPanel>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <ui:ArcadiaChoice Style="{StaticResource Tool.RadioChip}" GroupName="SvcFilter" Content="{l:Loc Svc_FilterAll}" Command="{Binding SetFilterCommand}" CommandParameter="All" Height="30">
+                                <ui:ArcadiaChoice.IsChecked>
+                                    <MultiBinding Converter="{StaticResource It.Same}" Mode="OneWay"><Binding Path="Filter" /><Binding Source="All" /></MultiBinding>
+                                </ui:ArcadiaChoice.IsChecked>
+                            </ui:ArcadiaChoice>
+                            <ui:ArcadiaChoice Style="{StaticResource Tool.RadioChip}" GroupName="SvcFilter" Content="{l:Loc Svc_FilterRunning}" Command="{Binding SetFilterCommand}" CommandParameter="Running" Height="30">
+                                <ui:ArcadiaChoice.IsChecked>
+                                    <MultiBinding Converter="{StaticResource It.Same}" Mode="OneWay"><Binding Path="Filter" /><Binding Source="Running" /></MultiBinding>
+                                </ui:ArcadiaChoice.IsChecked>
+                            </ui:ArcadiaChoice>
+                            <ui:ArcadiaChoice Style="{StaticResource Tool.RadioChip}" GroupName="SvcFilter" Content="{l:Loc Svc_FilterStopped}" Command="{Binding SetFilterCommand}" CommandParameter="Stopped" Height="30">
+                                <ui:ArcadiaChoice.IsChecked>
+                                    <MultiBinding Converter="{StaticResource It.Same}" Mode="OneWay"><Binding Path="Filter" /><Binding Source="Stopped" /></MultiBinding>
+                                </ui:ArcadiaChoice.IsChecked>
+                            </ui:ArcadiaChoice>
+                        </StackPanel>
+                        <Grid Grid.Column="1" Width="220" Height="30" Margin="10,0,0,0">
+                            <TextBox x:Name="SearchBox" Padding="28,0,8,0" Text="{Binding Search, UpdateSourceTrigger=PropertyChanged, Delay=200}" AutomationProperties.Name="{l:Loc Svc_Search}" />
+                            <ui:ArcadiaIcon Kind="Search" Width="14" Height="14" HorizontalAlignment="Left" Margin="9,0,0,0" IsHitTestVisible="False" Foreground="{StaticResource Brush.Icon.Dim}" />
+                            <TextBlock Text="{l:Loc Svc_Search}" Margin="29,0,8,0" VerticalAlignment="Center" FontSize="12" Foreground="{StaticResource Brush.Text.Muted}" IsHitTestVisible="False"
+                                       Visibility="{Binding Text, ElementName=SearchBox, Converter={StaticResource HasValue}, ConverterParameter=invert}" />
+                        </Grid>
+                        <ui:ArcadiaButton Grid.Column="2" Style="{StaticResource Tool.Button}" HorizontalAlignment="Left" Icon="Refresh" Content="{l:Loc It_Refresh}" Command="{Binding RefreshCommand}" IsEnabled="{Binding IsIdle}" />
+                        <StackPanel Grid.Column="3" Orientation="Horizontal">
+                            <ui:ArcadiaButton Style="{StaticResource Tool.Button}" Icon="Play" Content="{l:Loc Svc_Start}" Command="{Binding StartServiceCommand}" />
+                            <ui:ArcadiaButton Style="{StaticResource Tool.Button}" Icon="Stop" Content="{l:Loc Svc_Stop}" Command="{Binding StopServiceCommand}" />
+                            <ui:ArcadiaButton Style="{StaticResource Tool.Button}" Icon="Refresh" Content="{l:Loc Svc_Restart}" Command="{Binding RestartServiceCommand}" />
+                        </StackPanel>
+                    </Grid>
+                    <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                        <ui:ArcadiaIcon Kind="Shield" Width="13" Height="13" Foreground="{StaticResource Brush.Icon.Dim}" />
+                        <TextBlock Text="{l:Loc Svc_Hint}" Style="{StaticResource Text.Meta}" Margin="6,0,0,0" TextWrapping="Wrap" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </Border>
+
+        <Border Style="{StaticResource Tool.TableFrame}">
+            <Border Style="{StaticResource Tool.TableInner}">
+                <DataGrid ItemsSource="{Binding Services}" SelectedItem="{Binding Selected}" SelectionMode="Single" AutomationProperties.Name="{l:Loc Tool_services}">
+                    <DataGrid.ContextMenu>
+                        <ContextMenu>
+                            <MenuItem Header="{l:Loc Svc_Start}" Command="{Binding StartServiceCommand}"><MenuItem.Icon><ui:ArcadiaIcon Kind="Play" Width="14" Height="14" /></MenuItem.Icon></MenuItem>
+                            <MenuItem Header="{l:Loc Svc_Stop}" Command="{Binding StopServiceCommand}"><MenuItem.Icon><ui:ArcadiaIcon Kind="Stop" Width="14" Height="14" /></MenuItem.Icon></MenuItem>
+                            <MenuItem Header="{l:Loc Svc_Restart}" Command="{Binding RestartServiceCommand}"><MenuItem.Icon><ui:ArcadiaIcon Kind="Refresh" Width="14" Height="14" /></MenuItem.Icon></MenuItem>
+                            <Separator Background="#26344A" Margin="4" />
+                            <MenuItem Header="{l:Loc It_CopySelected}" Command="{Binding CopySelectedCommand}"><MenuItem.Icon><ui:ArcadiaIcon Kind="Copy" Width="14" Height="14" /></MenuItem.Icon></MenuItem>
+                            <MenuItem Header="{l:Loc It_CopyAll}" Command="{Binding CopyAllCommand}"><MenuItem.Icon><ui:ArcadiaIcon Kind="Copy" Width="14" Height="14" /></MenuItem.Icon></MenuItem>
+                        </ContextMenu>
+                    </DataGrid.ContextMenu>
+                    <DataGrid.Columns>
+                        <DataGridTemplateColumn Header="{l:Loc Svc_Status}" Width="120" SortMemberPath="StatusText">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate DataType="{x:Type it:ServiceRow}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <ui:ArcadiaLed Width="8" Height="8" Tone="{Binding Tone, Converter={StaticResource It.Tone}}" VerticalAlignment="Center" />
+                                        <TextBlock Text="{Binding StatusText}" Style="{StaticResource Cell.Text}" Margin="8,0,0,0" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <DataGridTextColumn Header="{l:Loc Svc_Display}" Binding="{Binding DisplayName}" Width="3*" ElementStyle="{StaticResource Cell.Text}" />
+                        <DataGridTextColumn Header="{l:Loc Svc_Name}" Binding="{Binding Name}" Width="2*" ElementStyle="{StaticResource Cell.Mono}" />
+                        <DataGridTextColumn Header="{l:Loc Svc_StartType}" Binding="{Binding StartType}" Width="130" ElementStyle="{StaticResource Cell.Dim}" />
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Border>
+        </Border>
+    </DockPanel>
+</UserControl>

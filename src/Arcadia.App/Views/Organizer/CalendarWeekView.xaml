@@ -1,0 +1,197 @@
+<UserControl x:Class="Arcadia.App.Views.Organizer.CalendarWeekView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="urn:arcadia-ui"
+             xmlns:l="clr-namespace:Arcadia.App.Localization"
+             xmlns:ovm="clr-namespace:Arcadia.App.ViewModels.Organizer"
+             xmlns:ov="clr-namespace:Arcadia.App.Views.Organizer"
+             x:Name="Root">
+    <Border Style="{StaticResource Tr.Chart}">
+        <Border Style="{StaticResource Tr.ChartInner}">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="58" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <!-- day headers -->
+                <Border Grid.ColumnSpan="2" Background="#0C1520" BorderBrush="#1A2638" BorderThickness="0,0,0,1" />
+                <ItemsControl Grid.Column="1" ItemsSource="{Binding Columns}" Focusable="False" Height="42">
+                    <ItemsControl.ItemsPanel><ItemsPanelTemplate><UniformGrid Rows="1" /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate DataType="{x:Type ovm:DayColumn}">
+                            <Button Style="{StaticResource Org.EntryButton}" Command="{Binding DataContext.OpenDayCommand, ElementName=Root}" CommandParameter="{Binding}"
+                                    AutomationProperties.Name="{Binding}" ToolTip="{l:Loc Cal_OpenDay}">
+                                <Border BorderBrush="#1A2638" BorderThickness="1,0,0,0">
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding Header}" Style="{StaticResource Org.Kicker}" VerticalAlignment="Center" />
+                                        <Grid Margin="7,0,0,0">
+                                            <Border Width="28" Height="24" CornerRadius="12" Background="#1F6FA8" Visibility="{Binding IsToday, Converter={StaticResource Org.HasValue}}" />
+                                            <TextBlock Text="{Binding DayNumber}" FontFamily="{StaticResource Font.Display}" FontSize="16" Foreground="#E6F0FA" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                        </Grid>
+                                    </StackPanel>
+                                </Border>
+                            </Button>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <!-- all-day lane -->
+                <Border Grid.Row="1" Grid.ColumnSpan="2" BorderBrush="#1A2638" BorderThickness="0,0,0,1" Background="#0A121C" />
+                <TextBlock Grid.Row="1" Text="{l:Loc Cal_AllDay}" Style="{StaticResource Org.Kicker}" FontSize="9" Margin="6,6,4,6" VerticalAlignment="Top" TextWrapping="Wrap" />
+                <ItemsControl Grid.Row="1" Grid.Column="1" ItemsSource="{Binding Columns}" Focusable="False" MinHeight="26">
+                    <ItemsControl.ItemsPanel><ItemsPanelTemplate><UniformGrid Rows="1" /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate DataType="{x:Type ovm:DayColumn}">
+                            <Border BorderBrush="#1A2638" BorderThickness="1,0,0,0" Padding="3,3,3,1" Background="Transparent" MouseLeftButtonDown="OnAllDayMouseDown" Tag="{Binding}">
+                                <ScrollViewer MaxHeight="76" VerticalScrollBarVisibility="Auto" Focusable="False">
+                                    <ItemsControl ItemsSource="{Binding AllDay}" Focusable="False">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate DataType="{x:Type ovm:CalendarEntry}">
+                                                <Button Style="{StaticResource Org.EntryButton}" Margin="0,0,0,2" Command="{Binding DataContext.OpenEntryCommand, ElementName=Root}" CommandParameter="{Binding}"
+                                                        AutomationProperties.Name="{Binding}" ToolTip="{Binding}">
+                                                    <Border Height="19" CornerRadius="2" BorderThickness="2,0,0,0" BorderBrush="{Binding Accent, Converter={StaticResource Org.Tone}}"
+                                                            Background="{Binding Accent, Converter={StaticResource Org.ToneBrush}, ConverterParameter=0.18}">
+                                                        <DockPanel Margin="5,0,3,0">
+                                                            <ui:ArcadiaIcon DockPanel.Dock="Left" Kind="{Binding Icon}" Width="10" Height="10" VerticalAlignment="Center" />
+                                                            <TextBlock ui:Bidi.Text="{Binding Title}" FontSize="11" Foreground="#D6E2F0" Margin="5,0,0,0" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                                                        </DockPanel>
+                                                    </Border>
+                                                </Button>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </ScrollViewer>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <!-- the hours -->
+                <ScrollViewer x:Name="Scroller" Grid.Row="2" Grid.ColumnSpan="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Focusable="False">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="58" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <!-- gutter labels -->
+                        <ItemsControl ItemsSource="{Binding HourLabels}" Focusable="False">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Height="{Binding HourHeight, ElementName=Root}">
+                                        <TextBlock Text="{Binding}" Style="{StaticResource Org.Time}" FontSize="10.5" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,-7,8,0" Foreground="#6F86A6" />
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <!-- hour lines (half hours fainter), working hours slightly lifted -->
+                        <ItemsControl Grid.Column="1" ItemsSource="{Binding HourLabels}" Focusable="False" IsHitTestVisible="False">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Height="{Binding HourHeight, ElementName=Root}">
+                                        <Border BorderBrush="#1C293B" BorderThickness="0,1,0,0" />
+                                        <Border BorderBrush="#111B28" BorderThickness="0,1,0,0" VerticalAlignment="Center" />
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <Border Grid.Column="1" VerticalAlignment="Top" IsHitTestVisible="False" Background="#080E2A45" Height="{Binding WorkingHeight, ElementName=Root}" Margin="{Binding WorkingMargin, ElementName=Root}" />
+                        <!-- day columns with timed blocks -->
+                        <ItemsControl Grid.Column="1" ItemsSource="{Binding Columns}" Focusable="False">
+                            <ItemsControl.ItemsPanel><ItemsPanelTemplate><UniformGrid Rows="1" /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate DataType="{x:Type ovm:DayColumn}">
+                                    <Grid Background="Transparent" MouseLeftButtonDown="OnColumnMouseDown" MouseRightButtonDown="OnColumnRightDown" Tag="{Binding}">
+                                        <Grid.ContextMenu>
+                                            <ContextMenu>
+                                                <MenuItem Header="{l:Loc Cal_NewEventHere}" Click="OnMenuNewEvent">
+                                                    <MenuItem.Icon><ui:ArcadiaIcon Kind="Calendar" Width="14" Height="14" /></MenuItem.Icon>
+                                                </MenuItem>
+                                                <MenuItem Header="{l:Loc Cal_NewAllDayHere}" Click="OnMenuNewAllDay" />
+                                                <MenuItem Header="{l:Loc Cal_NewTaskHere}" Click="OnMenuNewTask">
+                                                    <MenuItem.Icon><ui:ArcadiaIcon Kind="Tasks" Width="14" Height="14" /></MenuItem.Icon>
+                                                </MenuItem>
+                                            </ContextMenu>
+                                        </Grid.ContextMenu>
+                                        <Border BorderBrush="#1A2638" BorderThickness="1,0,0,0" IsHitTestVisible="False">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsToday}" Value="True"><Setter Property="Background" Value="#0A45D2FF" /></DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+                                        </Border>
+                                        <ItemsControl ItemsSource="{Binding Timed}" Focusable="False">
+                                            <ItemsControl.ItemsPanel>
+                                                <ItemsPanelTemplate><ov:TimelinePanel MinuteHeight="{Binding MinuteHeight, ElementName=Root}" /></ItemsPanelTemplate>
+                                            </ItemsControl.ItemsPanel>
+                                            <ItemsControl.ItemContainerStyle>
+                                                <Style TargetType="ContentPresenter">
+                                                    <Setter Property="ov:TimelinePanel.Start" Value="{Binding StartMinutes}" />
+                                                    <Setter Property="ov:TimelinePanel.Duration" Value="{Binding DurationMinutes}" />
+                                                    <Setter Property="ov:TimelinePanel.Lane" Value="{Binding Lane}" />
+                                                    <Setter Property="ov:TimelinePanel.Lanes" Value="{Binding Lanes}" />
+                                                </Style>
+                                            </ItemsControl.ItemContainerStyle>
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate DataType="{x:Type ovm:TimedBlock}">
+                                                    <Button Style="{StaticResource Org.EntryButton}" Command="{Binding DataContext.OpenEntryCommand, ElementName=Root}" CommandParameter="{Binding Entry}"
+                                                            AutomationProperties.Name="{Binding}" ToolTip="{Binding Entry}" VerticalContentAlignment="Stretch">
+                                                        <Button.ContextMenu>
+                                                            <ContextMenu>
+                                                                <MenuItem Header="{l:Loc Cal_Open}" Click="OnMenuOpenEntry" />
+                                                                <MenuItem Header="{l:Loc Confirm_Delete}" Click="OnMenuDeleteEntry" Visibility="{Binding Entry.IsEvent, Converter={StaticResource Org.HasValue}}" />
+                                                            </ContextMenu>
+                                                        </Button.ContextMenu>
+                                                        <Border CornerRadius="3" BorderThickness="3,0,0,0" BorderBrush="{Binding Entry.Accent, Converter={StaticResource Org.Tone}}"
+                                                                Background="{Binding Entry.Accent, Converter={StaticResource Org.ToneBrush}, ConverterParameter=0.2}" ClipToBounds="True" Padding="6,2,4,2">
+                                                            <StackPanel>
+                                                                <StackPanel.Style>
+                                                                    <Style TargetType="StackPanel">
+                                                                        <Style.Triggers>
+                                                                            <DataTrigger Binding="{Binding Entry.IsDone}" Value="True"><Setter Property="Opacity" Value="0.5" /></DataTrigger>
+                                                                        </Style.Triggers>
+                                                                    </Style>
+                                                                </StackPanel.Style>
+                                                                <DockPanel>
+                                                                    <ui:ArcadiaIcon DockPanel.Dock="Right" Kind="Repeat" Width="10" Height="10" Opacity="0.7" Visibility="{Binding Entry.IsRecurring, Converter={StaticResource Org.HasValue}}" />
+                                                                    <TextBlock ui:Bidi.Text="{Binding Entry.Title}" FontSize="11.5" FontWeight="SemiBold" Foreground="#E6F0FA" TextTrimming="CharacterEllipsis" />
+                                                                </DockPanel>
+                                                                <TextBlock Text="{Binding Entry.TimeText}" Style="{StaticResource Org.Time}" FontSize="10" />
+                                                                <TextBlock ui:Bidi.Text="{Binding Entry.Location}" FontSize="10.5" Foreground="#9FB3CC" TextTrimming="CharacterEllipsis"
+                                                                           Visibility="{Binding Entry.Location, Converter={StaticResource Org.HasValue}}" />
+                                                            </StackPanel>
+                                                        </Border>
+                                                    </Button>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                        <!-- now -->
+                                        <Grid VerticalAlignment="Top" IsHitTestVisible="False" Visibility="{Binding IsToday, Converter={StaticResource Org.HasValue}}">
+                                            <Grid.Margin>
+                                                <MultiBinding Converter="{StaticResource Org.MinutesToMargin}">
+                                                    <Binding Path="NowMinutes" />
+                                                    <Binding Path="MinuteHeight" ElementName="Root" />
+                                                </MultiBinding>
+                                            </Grid.Margin>
+                                            <Border Height="2" Background="#45D2FF" Opacity="0.9">
+                                                <Border.Effect><DropShadowEffect Color="#45D2FF" BlurRadius="6" ShadowDepth="0" Opacity="0.8" /></Border.Effect>
+                                            </Border>
+                                            <Ellipse Width="8" Height="8" Fill="#45D2FF" HorizontalAlignment="Left" Margin="-4,-3,0,0" />
+                                        </Grid>
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </Grid>
+                </ScrollViewer>
+            </Grid>
+        </Border>
+    </Border>
+</UserControl>

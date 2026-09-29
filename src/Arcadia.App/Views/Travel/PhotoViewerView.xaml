@@ -1,0 +1,99 @@
+<UserControl x:Class="Arcadia.App.Views.Travel.PhotoViewerView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:ui="urn:arcadia-ui"
+             xmlns:l="clr-namespace:Arcadia.App.Localization"
+             xmlns:tvm="clr-namespace:Arcadia.App.ViewModels.Travel"
+             mc:Ignorable="d" d:DataContext="{d:DesignInstance tvm:PhotoViewerViewModel}"
+             Focusable="True" Loaded="OnLoaded" PreviewKeyDown="OnKey">
+    <Grid Background="#F2030508">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="320" />
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- top bar -->
+        <DockPanel Grid.ColumnSpan="2" Margin="14,10,14,6">
+            <ui:ArcadiaButton DockPanel.Dock="Right" Variant="Tool" Icon="Close" Width="34" Height="30" Command="{Binding CloseCommand}" ToolTip="{l:Loc Tr_CloseViewer}" AutomationProperties.Name="{l:Loc Tr_CloseViewer}" />
+            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Margin="0,0,14,0">
+                <ui:ArcadiaButton Style="{StaticResource Tool.Button}" Icon="Minus" Width="32" Command="{Binding ZoomOutCommand}" ToolTip="{l:Loc Tr_ZoomOut}" AutomationProperties.Name="{l:Loc Tr_ZoomOut}" Margin="0,0,4,0" />
+                <ui:ArcadiaButton Style="{StaticResource Tool.Button}" Icon="Plus" Width="32" Command="{Binding ZoomInCommand}" ToolTip="{l:Loc Tr_ZoomIn}" AutomationProperties.Name="{l:Loc Tr_ZoomIn}" Margin="0,0,8,0" />
+                <ui:ArcadiaButton Style="{StaticResource Tool.Button}" Content="{l:Loc Tr_Fit}" Command="{Binding FitCommand}" Margin="0,0,4,0" />
+                <ui:ArcadiaButton Style="{StaticResource Tool.Button}" Content="{l:Loc Tr_ActualSize}" Command="{Binding ActualCommand}" />
+            </StackPanel>
+            <TextBlock Text="{Binding PositionText}" Style="{StaticResource Tr.Coord}" FontSize="12" VerticalAlignment="Center" Margin="0,0,12,0" />
+            <TextBlock ui:Bidi.Text="{Binding Current.Title}" Style="{StaticResource Text.Item}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+        </DockPanel>
+
+        <!-- the photo -->
+        <Grid Grid.Row="1" Margin="10,0,10,12" ClipToBounds="True">
+            <ScrollViewer x:Name="Scroller" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" Focusable="False" PreviewMouseWheel="OnWheel">
+                <Image Source="{Binding Image}" RenderOptions.BitmapScalingMode="HighQuality" x:Name="Photo">
+                    <Image.Style>
+                        <Style TargetType="Image">
+                            <Setter Property="Stretch" Value="Uniform" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding ActualSize}" Value="True"><Setter Property="Stretch" Value="None" /></DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Image.Style>
+                    <Image.LayoutTransform><ScaleTransform ScaleX="{Binding Scale}" ScaleY="{Binding Scale}" /></Image.LayoutTransform>
+                </Image>
+            </ScrollViewer>
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="{Binding IsBroken, Converter={StaticResource BoolToVisibility}}">
+                <ui:ArcadiaIcon Kind="Warning" Width="34" Height="34" Foreground="#F2A623" />
+                <TextBlock Text="{l:Loc Tr_PhotoUnavailable}" Style="{StaticResource Text.Body}" Margin="0,8,0,0" HorizontalAlignment="Center" />
+                <TextBlock Text="{l:Loc Tr_PhotoUnavailableBody}" Style="{StaticResource Text.Meta}" TextAlignment="Center" TextWrapping="Wrap" MaxWidth="380" />
+            </StackPanel>
+            <TextBlock Text="{l:Loc Tr_Loading}" Style="{StaticResource Text.Meta}" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisibility}}" />
+            <Button Style="{StaticResource Tr.MapButton}" Width="40" Height="64" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="8,0,0,0" Command="{Binding PreviousCommand}"
+                    ToolTip="{l:Loc Tr_Previous}" AutomationProperties.Name="{l:Loc Tr_Previous}">
+                <ui:ArcadiaIcon Kind="ChevronLeft" Width="18" Height="18" />
+            </Button>
+            <Button Style="{StaticResource Tr.MapButton}" Width="40" Height="64" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,8,0" Command="{Binding NextCommand}"
+                    ToolTip="{l:Loc Tr_Next}" AutomationProperties.Name="{l:Loc Tr_Next}">
+                <ui:ArcadiaIcon Kind="ChevronRight" Width="18" Height="18" />
+            </Button>
+        </Grid>
+
+        <!-- details & actions -->
+        <Border Grid.Row="1" Grid.Column="1" Margin="0,0,12,12" Style="{StaticResource Tool.TableFrame}">
+            <Border Style="{StaticResource Tool.TableInner}" Padding="14,12">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Focusable="False">
+                    <StackPanel>
+                        <TextBlock Text="{l:Loc Tr_Caption}" Style="{StaticResource Tr.Kicker}" />
+                        <TextBox Text="{Binding Caption, UpdateSourceTrigger=PropertyChanged}" MinHeight="30" Margin="0,4,0,0" ui:Bidi.AutoDirection="True" AutomationProperties.Name="{l:Loc Tr_Caption}"
+                                 LostFocus="OnCaptionLostFocus" />
+                        <ItemsControl ItemsSource="{Binding Details}" Margin="0,12,0,0" Focusable="False">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate DataType="{x:Type tvm:InfoLine}">
+                                    <StackPanel Margin="0,0,0,8">
+                                        <TextBlock Text="{Binding Label}" Style="{StaticResource Text.Caps}" FontSize="9.5" Foreground="#7F93AE" />
+                                        <TextBox Style="{StaticResource Tool.SelectableText}" Text="{Binding Value, Mode=OneWay}" FontSize="12.5" ui:Bidi.AutoDirection="True" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <WrapPanel Margin="0,6,0,0">
+                            <ui:ArcadiaButton Style="{StaticResource Tool.Button}" Margin="0,0,6,6" Icon="External" Content="{l:Loc Doc_Open}" Command="{Binding OpenExternalCommand}" />
+                            <ui:ArcadiaButton Style="{StaticResource Tool.Button}" Margin="0,0,6,6" Icon="Documents" Content="{l:Loc Doc_Reveal}" Command="{Binding RevealCommand}" />
+                            <ui:ArcadiaButton Style="{StaticResource Tool.Button}" Margin="0,0,6,6" Icon="Suitcase" Content="{l:Loc Tr_SetTripCover}" Command="{Binding SetTripCoverCommand}"
+                                              Visibility="{Binding CanSetTripCover, Converter={StaticResource BoolToVisibility}}" />
+                            <ui:ArcadiaButton Style="{StaticResource Tool.Button}" Margin="0,0,6,6" Icon="MapPin" Content="{l:Loc Tr_SetPlaceCover}" Command="{Binding SetPlaceCoverCommand}"
+                                              Visibility="{Binding CanSetPlaceCover, Converter={StaticResource BoolToVisibility}}" />
+                            <ui:ArcadiaButton Style="{StaticResource Tool.Button}" Margin="0,0,6,6" Icon="MapPin" Content="{l:Loc Tr_AssociatePlace}" Command="{Binding AssociatePlaceCommand}" />
+                            <ui:ArcadiaButton Style="{StaticResource Tool.Button}" Margin="0,0,6,6" Icon="Suitcase" Content="{l:Loc Tr_AssociateTrip}" Command="{Binding AssociateTripCommand}" />
+                        </WrapPanel>
+                        <TextBlock Text="{l:Loc Tr_ViewerPrivacy}" Style="{StaticResource Text.Meta}" FontSize="11" TextWrapping="Wrap" Margin="0,10,0,0" />
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+        </Border>
+    </Grid>
+</UserControl>

@@ -1,0 +1,135 @@
+<UserControl x:Class="Arcadia.App.Dialogs.TripEditorView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:ui="urn:arcadia-ui"
+             xmlns:l="clr-namespace:Arcadia.App.Localization"
+             xmlns:dialogs="clr-namespace:Arcadia.App.Dialogs"
+             mc:Ignorable="d" d:DataContext="{d:DesignInstance dialogs:TripEditorViewModel}">
+    <StackPanel Margin="22,16,22,18">
+        <!-- live preview of the trip's cover world -->
+        <Border Height="96" CornerRadius="4" ClipToBounds="True" BorderThickness="1" BorderBrush="#2A3E58">
+            <Grid>
+                <ui:ArtworkPresenter Theme="{Binding World}" Seed="11" Vignette="0.3" BottomShade="0.9" />
+                <Border Height="3" VerticalAlignment="Top" Background="{Binding Accent, Converter={StaticResource It.Tone}}" />
+                <StackPanel VerticalAlignment="Bottom" Margin="14,0,14,10">
+                    <TextBlock Text="{l:Loc Tr_DossierKicker}" FontSize="10" Foreground="#B9E6FA" />
+                    <TextBlock ui:Bidi.Text="{Binding Name}" Style="{StaticResource Text.OnArt}" FontFamily="{StaticResource Font.Display}" FontSize="19" TextTrimming="CharacterEllipsis" />
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <TextBlock Margin="0,12,0,0" Text="{l:Loc Tr_TripName}" Style="{StaticResource FieldLabel}" />
+        <TextBox Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" MinHeight="32" FontSize="15" ui:Bidi.AutoDirection="True" AutomationProperties.Name="{l:Loc Tr_TripName}" />
+        <TextBlock Text="{Binding NameError}" Style="{StaticResource FieldError}" Visibility="{Binding NameError, Converter={StaticResource HasValue}}" />
+
+        <Grid Margin="0,10,0,0">
+            <Grid.ColumnDefinitions><ColumnDefinition Width="1.4*" /><ColumnDefinition Width="12" /><ColumnDefinition Width="*" /><ColumnDefinition Width="12" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+            <StackPanel>
+                <TextBlock Text="{l:Loc Tr_Destination}" Style="{StaticResource FieldLabel}" />
+                <ComboBox ItemsSource="{Binding DestinationOptions}" SelectedItem="{Binding Destination}" MinHeight="30" IsTextSearchEnabled="True" AutomationProperties.Name="{l:Loc Tr_Destination}" />
+            </StackPanel>
+            <StackPanel Grid.Column="2">
+                <TextBlock Text="{l:Loc Tr_StartDate}" Style="{StaticResource FieldLabel}" />
+                <TextBox Text="{Binding StartText, UpdateSourceTrigger=PropertyChanged}" MinHeight="30" AutomationProperties.Name="{l:Loc Tr_StartDate}" />
+            </StackPanel>
+            <StackPanel Grid.Column="4">
+                <TextBlock Text="{l:Loc Tr_EndDate}" Style="{StaticResource FieldLabel}" />
+                <TextBox Text="{Binding EndText, UpdateSourceTrigger=PropertyChanged}" MinHeight="30" AutomationProperties.Name="{l:Loc Tr_EndDate}" />
+            </StackPanel>
+        </Grid>
+        <TextBlock Text="{Binding DateHint}" Style="{StaticResource Text.Meta}" FontSize="11" Margin="0,3,0,0" />
+        <TextBlock Text="{Binding DateError}" Style="{StaticResource FieldError}" Visibility="{Binding DateError, Converter={StaticResource HasValue}}" />
+
+        <Grid Margin="0,10,0,0">
+            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="12" /><ColumnDefinition Width="*" /><ColumnDefinition Width="12" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+            <StackPanel>
+                <TextBlock Text="{l:Loc Tr_TripStatus}" Style="{StaticResource FieldLabel}" />
+                <ComboBox ItemsSource="{Binding StatusOptions}" SelectedItem="{Binding Status}" MinHeight="30" AutomationProperties.Name="{l:Loc Tr_TripStatus}" />
+            </StackPanel>
+            <StackPanel Grid.Column="2">
+                <TextBlock Text="{l:Loc Tr_LinkedProject}" Style="{StaticResource FieldLabel}" />
+                <ComboBox ItemsSource="{Binding ProjectOptions}" SelectedItem="{Binding Project}" MinHeight="30" AutomationProperties.Name="{l:Loc Tr_LinkedProject}" />
+            </StackPanel>
+            <StackPanel Grid.Column="4">
+                <TextBlock Text="{l:Loc Tr_Rating}" Style="{StaticResource FieldLabel}" />
+                <ComboBox ItemsSource="{Binding RatingOptions}" SelectedItem="{Binding Rating}" MinHeight="30" AutomationProperties.Name="{l:Loc Tr_Rating}" />
+            </StackPanel>
+        </Grid>
+
+        <TextBlock Margin="0,10,0,0" Text="{l:Loc Tr_Description}" Style="{StaticResource FieldLabel}" />
+        <TextBox Style="{StaticResource TextArea}" Height="60" Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}" ui:Bidi.AutoDirection="True" AutomationProperties.Name="{l:Loc Tr_Description}" />
+        <TextBlock Margin="0,10,0,0" Text="{l:Loc Proj_Tags}" Style="{StaticResource FieldLabel}" />
+        <TextBox Text="{Binding Tags, UpdateSourceTrigger=PropertyChanged}" MinHeight="30" ui:Bidi.AutoDirection="True" AutomationProperties.Name="{l:Loc Proj_Tags}" />
+
+        <!-- identity -->
+        <TextBlock Margin="0,12,0,0" Text="{l:Loc Proj_Accent}" Style="{StaticResource FieldLabel}" />
+        <ItemsControl ItemsSource="{Binding AccentOptions}" Focusable="False">
+            <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate DataType="{x:Type dialogs:ChoiceItem}">
+                    <ui:ArcadiaChoice Style="{StaticResource Tool.RadioChip}" GroupName="Accent" Height="28" Padding="8,0" Command="{Binding DataContext.SetAccentCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding Key}"
+                                      AutomationProperties.Name="{Binding Label}" ToolTip="{Binding Label}">
+                        <ui:ArcadiaChoice.IsChecked>
+                            <MultiBinding Converter="{StaticResource It.Same}" Mode="OneWay"><Binding Path="Key" /><Binding Path="DataContext.Accent" RelativeSource="{RelativeSource AncestorType=UserControl}" /></MultiBinding>
+                        </ui:ArcadiaChoice.IsChecked>
+                        <StackPanel Orientation="Horizontal">
+                            <ui:ArcadiaLed Width="11" Height="11" Tone="{Binding Tone, Converter={StaticResource It.Tone}}" />
+                            <TextBlock Text="{Binding Label}" Margin="6,0,0,0" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </ui:ArcadiaChoice>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+        <TextBlock Margin="0,10,0,0" Text="{l:Loc Tr_CoverWorld}" Style="{StaticResource FieldLabel}" />
+        <ItemsControl ItemsSource="{Binding WorldOptions}" Focusable="False">
+            <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate DataType="{x:Type dialogs:ChoiceItem}">
+                    <ui:ArcadiaChoice GroupName="World" Width="92" Height="40" Margin="0,0,6,6" Cursor="Hand"
+                                      Command="{Binding DataContext.SetWorldCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding Key}" AutomationProperties.Name="{Binding Key}">
+                        <ui:ArcadiaChoice.IsChecked>
+                            <MultiBinding Converter="{StaticResource It.Same}" Mode="OneWay"><Binding Path="Key" /><Binding Path="DataContext.World" RelativeSource="{RelativeSource AncestorType=UserControl}" /></MultiBinding>
+                        </ui:ArcadiaChoice.IsChecked>
+                        <ui:ArcadiaChoice.Template>
+                            <ControlTemplate TargetType="ui:ArcadiaChoice">
+                                <Border x:Name="frame" CornerRadius="3" BorderThickness="1.5" BorderBrush="#26344A" Padding="1">
+                                    <ui:ArtworkPresenter Theme="{Binding Key}" Seed="7" Vignette="0.3" CornerRadius="2" />
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="frame" Property="BorderBrush" Value="#5C9CFF" /></Trigger>
+                                    <Trigger Property="IsChecked" Value="True"><Setter TargetName="frame" Property="BorderBrush" Value="#7CE0FF" /></Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </ui:ArcadiaChoice.Template>
+                    </ui:ArcadiaChoice>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <!-- optional initial places -->
+        <StackPanel Visibility="{Binding HasInitialPlaces, Converter={StaticResource BoolToVisibility}}">
+            <TextBlock Margin="0,10,0,0" Text="{l:Loc Tr_InitialPlaces}" Style="{StaticResource FieldLabel}" />
+            <Border Style="{StaticResource Tool.TableFrame}">
+                <Border Style="{StaticResource Tool.TableInner}">
+                    <ScrollViewer MaxHeight="110" VerticalScrollBarVisibility="Auto" Focusable="False">
+                        <ItemsControl ItemsSource="{Binding InitialPlaces}" Margin="6,4" Focusable="False">
+                            <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate DataType="{x:Type dialogs:PlaceChoice}">
+                                    <CheckBox Style="{StaticResource Tool.Check}" IsChecked="{Binding IsChecked}" Content="{Binding Place.Name}" Margin="0,2,14,2" />
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Border>
+            </Border>
+        </StackPanel>
+
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,18,0,0">
+            <ui:ArcadiaButton Content="{l:Loc Editor_Cancel}" Command="{Binding CancelCommand}" MinWidth="96" Margin="0,0,10,0" IsCancel="True" />
+            <ui:ArcadiaButton Variant="Primary" Icon="Suitcase" IconSize="14" Content="{Binding ConfirmText}" Command="{Binding ConfirmCommand}" MinWidth="120" IsDefault="True" />
+        </StackPanel>
+    </StackPanel>
+</UserControl>

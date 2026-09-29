@@ -1,0 +1,144 @@
+<UserControl x:Class="Arcadia.App.Views.Travel.TravelMemoriesView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="urn:arcadia-ui"
+             xmlns:l="clr-namespace:Arcadia.App.Localization"
+             xmlns:tvm="clr-namespace:Arcadia.App.ViewModels.Travel"
+             xmlns:tv="clr-namespace:Arcadia.App.Views.Travel"
+             x:Name="Root">
+    <Grid>
+        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Focusable="False">
+            <StackPanel Margin="0,0,4,10">
+                <StackPanel Margin="2,0,0,12" Visibility="{Binding ShowHeader, ElementName=Root, Converter={StaticResource BoolToVisibility}}">
+                    <TextBlock Text="{l:Loc Tr_MemoriesKicker}" Style="{StaticResource Tr.Kicker}" />
+                    <TextBlock Text="{l:Loc TrSection_Memories}" Style="{StaticResource Text.Title}" FontSize="24" Margin="0,2,0,0" />
+                </StackPanel>
+                <ItemsControl ItemsSource="{Binding Chapters, ElementName=Root}" Focusable="False">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate DataType="{x:Type tvm:MemoryChapterItem}">
+                            <Border Style="{StaticResource Tr.Chart}" Margin="0,0,0,14">
+                                <Grid Margin="10">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+                                    <!-- chapter heading -->
+                                    <DockPanel Margin="4,0,4,10">
+                                        <ui:ArcadiaButton DockPanel.Dock="Right" Variant="Link" Content="{l:Loc Tr_OpenTrip}" Command="{Binding OpenTripCommand, ElementName=Root}" CommandParameter="{Binding}"
+                                                          Visibility="{Binding TripId, Converter={StaticResource HasValue}}" VerticalAlignment="Center" />
+                                        <ItemsControl DockPanel.Dock="Right" ItemsSource="{Binding Flags}" Focusable="False" VerticalAlignment="Center" Margin="0,0,12,0">
+                                            <ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel Orientation="Horizontal" /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                                            <ItemsControl.ItemTemplate><DataTemplate><Border BorderThickness="1" BorderBrush="#40FFFFFF" Margin="4,0,0,0"><Image Source="{Binding}" Style="{StaticResource Tr.Flag}" /></Border></DataTemplate></ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                        <StackPanel>
+                                            <TextBlock ui:Bidi.Text="{Binding Title}" Style="{StaticResource Text.Script}" FontSize="30" Foreground="#E6F0FA" TextTrimming="CharacterEllipsis" />
+                                            <TextBlock Style="{StaticResource Tr.Coord}"><Run Text="{Binding DatesText, Mode=OneWay}" /><Run Text="   ·   " /><Run Text="{Binding CountsText, Mode=OneWay}" /></TextBlock>
+                                        </StackPanel>
+                                    </DockPanel>
+                                    <Grid Grid.Row="1">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="1.35*" />
+                                            <ColumnDefinition Width="10" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <!-- hero photo + a strip -->
+                                        <StackPanel>
+                                            <ItemsControl ItemsSource="{Binding Hero}" Focusable="False">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate DataType="{x:Type tvm:MemoryCard}">
+                                                        <Button Style="{StaticResource Tr.PhotoTile}" Height="260" Command="{Binding OpenCommand, ElementName=Root}" CommandParameter="{Binding}" AutomationProperties.Name="{Binding Title}">
+                                                            <Grid ClipToBounds="True">
+                                                                <Border Background="#0E1826" />
+                                                                <tv:PhotoThumb Path="{Binding PhotoPath}" Orientation="{Binding Orientation}" DecodeWidth="900" />
+                                                                <Border VerticalAlignment="Bottom" Height="54">
+                                                                    <Border.Background>
+                                                                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                                                            <GradientStop Offset="0" Color="#00060A10" />
+                                                                            <GradientStop Offset="1" Color="#E0060A10" />
+                                                                        </LinearGradientBrush>
+                                                                    </Border.Background>
+                                                                </Border>
+                                                                <StackPanel VerticalAlignment="Bottom" Margin="10,0,10,8">
+                                                                    <TextBlock ui:Bidi.Text="{Binding Title}" Style="{StaticResource Text.OnArt}" FontSize="14" TextTrimming="CharacterEllipsis" />
+                                                                    <TextBlock Style="{StaticResource Tr.Coord}" Foreground="#C8D6E8"><Run Text="{Binding WhenText, Mode=OneWay}" /><Run Text="  " /><Run Text="{Binding PlaceName, Mode=OneWay}" /></TextBlock>
+                                                                </StackPanel>
+                                                            </Grid>
+                                                        </Button>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                            <ItemsControl ItemsSource="{Binding Photos}" Margin="0,8,0,0" Focusable="False">
+                                                <ItemsControl.ItemsPanel><ItemsPanelTemplate><UniformGrid Columns="4" /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate DataType="{x:Type tvm:MemoryCard}">
+                                                        <Button Style="{StaticResource Tr.PhotoTile}" Height="78" Margin="0,0,6,6" Command="{Binding OpenCommand, ElementName=Root}" CommandParameter="{Binding}"
+                                                                ToolTip="{Binding WhenText}" AutomationProperties.Name="{Binding Title}">
+                                                            <Grid ClipToBounds="True"><Border Background="#0E1826" /><tv:PhotoThumb Path="{Binding PhotoPath}" Orientation="{Binding Orientation}" DecodeWidth="240" /></Grid>
+                                                        </Button>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </StackPanel>
+                                        <!-- words and footsteps -->
+                                        <ItemsControl ItemsSource="{Binding Words}" Focusable="False">
+                                            <ItemsControl.Style>
+                                                <Style TargetType="ItemsControl">
+                                                    <Setter Property="Grid.Column" Value="2" />
+                                                    <Style.Triggers>
+                                                        <!-- a chapter of words only uses the full width -->
+                                                        <DataTrigger Binding="{Binding HasPhotos}" Value="False">
+                                                            <Setter Property="Grid.Column" Value="0" />
+                                                            <Setter Property="Grid.ColumnSpan" Value="3" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </ItemsControl.Style>
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate DataType="{x:Type tvm:MemoryCard}">
+                                                    <Button Style="{StaticResource ListRowButton}" Padding="8,7" Margin="0,0,0,6" Command="{Binding OpenCommand, ElementName=Root}" CommandParameter="{Binding}">
+                                                        <Grid>
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="Auto" />
+                                                                <ColumnDefinition Width="*" />
+                                                            </Grid.ColumnDefinitions>
+                                                            <Border Width="3" CornerRadius="1.5" Margin="0,2,10,2">
+                                                                <Border.Style>
+                                                                    <Style TargetType="Border">
+                                                                        <Setter Property="Background" Value="#45D2FF" />
+                                                                        <Style.Triggers>
+                                                                            <DataTrigger Binding="{Binding IsVisit}" Value="True"><Setter Property="Background" Value="#F2B13C" /></DataTrigger>
+                                                                        </Style.Triggers>
+                                                                    </Style>
+                                                                </Border.Style>
+                                                            </Border>
+                                                            <StackPanel Grid.Column="1">
+                                                                <StackPanel Orientation="Horizontal">
+                                                                    <ui:ArcadiaIcon Kind="{Binding Icon}" Width="13" Height="13" />
+                                                                    <TextBlock Text="{Binding WhenText}" Style="{StaticResource Tr.Coord}" Margin="7,0,0,0" VerticalAlignment="Center" />
+                                                                </StackPanel>
+                                                                <TextBlock ui:Bidi.Text="{Binding Title}" Style="{StaticResource Text.Item}" FontSize="13.5" Margin="0,3,0,0" TextTrimming="CharacterEllipsis" />
+                                                                <TextBlock ui:Bidi.Text="{Binding Text}" Style="{StaticResource Text.Body}" FontStyle="Italic" Foreground="#AFC0D6" TextWrapping="Wrap" MaxHeight="58"
+                                                                           TextTrimming="CharacterEllipsis" Visibility="{Binding Text, Converter={StaticResource HasValue}}" />
+                                                            </StackPanel>
+                                                        </Grid>
+                                                    </Button>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </Grid>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+        </ScrollViewer>
+        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="480" Visibility="{Binding Chapters.Count, ElementName=Root, Converter={StaticResource HasValue}, ConverterParameter=invert}">
+            <Border Width="420" Height="180" Style="{StaticResource ArtworkWell}">
+                <ui:ArtworkPresenter Theme="lake-sunset" Seed="23" Vignette="0.35" BottomShade="0.6" />
+            </Border>
+            <TextBlock Text="{l:Loc Tr_NoMemoriesTitle}" Style="{StaticResource Text.Script}" FontSize="30" HorizontalAlignment="Center" Margin="0,14,0,0" />
+            <TextBlock Text="{l:Loc Tr_NoMemoriesBody}" Style="{StaticResource Text.Body}" TextAlignment="Center" TextWrapping="Wrap" Margin="0,6,0,0" />
+        </StackPanel>
+    </Grid>
+</UserControl>

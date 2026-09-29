@@ -1,0 +1,621 @@
+<UserControl x:Class="Arcadia.App.Views.Automation.AutomationView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:ui="urn:arcadia-ui"
+             xmlns:l="clr-namespace:Arcadia.App.Localization"
+             xmlns:conv="clr-namespace:Arcadia.App.Converters"
+             xmlns:avm="clr-namespace:Arcadia.App.ViewModels.Automation"
+             mc:Ignorable="d" d:DataContext="{d:DesignInstance avm:AutomationViewModel}" x:Name="Root">
+    <UserControl.Resources>
+        <conv:EnumEqualsConverter x:Key="EnumEq" />
+        <conv:ToneToColorConverter x:Key="Tone" />
+        <FontFamily x:Key="Mono">Cascadia Mono, Consolas</FontFamily>
+
+        <Style x:Key="Panel" TargetType="Border">
+            <Setter Property="Background" Value="#0A111B" />
+            <Setter Property="BorderBrush" Value="#1A2A40" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="4" />
+            <Setter Property="Padding" Value="14,12" />
+        </Style>
+        <Style x:Key="Caps" TargetType="TextBlock" BasedOn="{StaticResource Text.Caps}">
+            <Setter Property="FontSize" Value="10.5" />
+            <Setter Property="Foreground" Value="#6FA6D6" />
+        </Style>
+        <Style x:Key="Tab" TargetType="RadioButton" BasedOn="{StaticResource Tool.RadioChip}">
+            <Setter Property="Margin" Value="0,0,6,0" />
+            <Setter Property="MinWidth" Value="92" />
+        </Style>
+        <!-- block caption on the flow rail: WHEN / IF / THEN -->
+        <Style x:Key="Node" TargetType="Border">
+            <Setter Property="Width" Value="46" />
+            <Setter Property="Height" Value="20" />
+            <Setter Property="CornerRadius" Value="2" />
+            <Setter Property="Background" Value="#10223A" />
+            <Setter Property="BorderBrush" Value="#2E6A9E" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="HorizontalAlignment" Value="Left" />
+            <Setter Property="VerticalAlignment" Value="Top" />
+        </Style>
+
+        <!-- one field of a step: label + the editor for its kind -->
+        <DataTemplate x:Key="FieldEditor" DataType="{x:Type avm:FieldViewModel}">
+            <Grid Margin="0,3" Visibility="{Binding IsShown, Converter={StaticResource BoolToVisibility}}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="180" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="{Binding Label}" Style="{StaticResource Text.Meta}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                <Grid Grid.Column="1">
+                    <!-- text-like kinds -->
+                    <TextBox Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}" MinHeight="26" AutomationProperties.Name="{Binding Label}">
+                        <TextBox.Style>
+                            <Style TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Kind}" Value="Text"><Setter Property="Visibility" Value="Visible" /></DataTrigger>
+                                    <DataTrigger Binding="{Binding Kind}" Value="Number"><Setter Property="Visibility" Value="Visible" /></DataTrigger>
+                                    <DataTrigger Binding="{Binding Kind}" Value="Time"><Setter Property="Visibility" Value="Visible" /></DataTrigger>
+                                    <DataTrigger Binding="{Binding Kind}" Value="Date"><Setter Property="Visibility" Value="Visible" /></DataTrigger>
+                                    <DataTrigger Binding="{Binding Kind}" Value="Extensions"><Setter Property="Visibility" Value="Visible" /></DataTrigger>
+                                    <DataTrigger Binding="{Binding Kind}" Value="Uri"><Setter Property="Visibility" Value="Visible" /></DataTrigger>
+                                    <DataTrigger Binding="{Binding IsLtr}" Value="True"><Setter Property="FlowDirection" Value="LeftToRight" /><Setter Property="FontFamily" Value="{StaticResource Mono}" /></DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBox.Style>
+                    </TextBox>
+                    <!-- pickers -->
+                    <ComboBox ItemsSource="{Binding Choices}" SelectedItem="{Binding SelectedChoice}" MinHeight="26" AutomationProperties.Name="{Binding Label}">
+                        <ComboBox.Style>
+                            <Style TargetType="ComboBox" BasedOn="{StaticResource {x:Type ComboBox}}">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Kind}" Value="Choice"><Setter Property="Visibility" Value="Visible" /></DataTrigger>
+                                    <DataTrigger Binding="{Binding Kind}" Value="Game"><Setter Property="Visibility" Value="Visible" /></DataTrigger>
+                                    <DataTrigger Binding="{Binding Kind}" Value="Project"><Setter Property="Visibility" Value="Visible" /></DataTrigger>
+                                    <DataTrigger Binding="{Binding Kind}" Value="Trip"><Setter Property="Visibility" Value="Visible" /></DataTrigger>
+                                    <DataTrigger Binding="{Binding Kind}" Value="Section"><Setter Property="Visibility" Value="Visible" /></DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </ComboBox.Style>
+                    </ComboBox>
+                    <CheckBox IsChecked="{Binding Flag}" VerticalAlignment="Center" AutomationProperties.Name="{Binding Label}">
+                        <CheckBox.Style>
+                            <Style TargetType="CheckBox" BasedOn="{StaticResource ToggleSwitch}">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                                <Setter Property="HorizontalAlignment" Value="Left" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Kind}" Value="Bool"><Setter Property="Visibility" Value="Visible" /></DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </CheckBox.Style>
+                    </CheckBox>
+                    <!-- days of the week -->
+                    <ItemsControl ItemsSource="{Binding Days}" Focusable="False" Visibility="{Binding Days, Converter={StaticResource HasValue}}">
+                        <ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel Orientation="Horizontal" /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="{x:Type avm:DayToggle}">
+                                <ToggleButton IsChecked="{Binding IsOn}" Content="{Binding Label}" Style="{StaticResource Tool.Chip}" Margin="0,0,4,0" MinWidth="40" AutomationProperties.Name="{Binding Label}" />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <!-- folder / executable: path + browse (+ detect running) -->
+                    <DockPanel>
+                        <DockPanel.Style>
+                            <Style TargetType="DockPanel">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Kind}" Value="Folder"><Setter Property="Visibility" Value="Visible" /></DataTrigger>
+                                    <DataTrigger Binding="{Binding Kind}" Value="Executable"><Setter Property="Visibility" Value="Visible" /></DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </DockPanel.Style>
+                        <ui:ArcadiaButton DockPanel.Dock="Right" Variant="Secondary" Icon="Search" IconSize="11" Content="{l:Loc Auto_Browse}" Height="26" Margin="6,0,0,0" Command="{Binding BrowseCommand}" />
+                        <ComboBox DockPanel.Dock="Right" Width="150" Margin="6,0,0,0" MinHeight="26" ItemsSource="{Binding RunningProcesses}" SelectedItem="{Binding Value}" FlowDirection="LeftToRight"
+                                  DropDownOpened="OnDetectOpened" AutomationProperties.Name="{l:Loc Auto_DetectRunning}" ToolTip="{l:Loc Auto_DetectRunning}">
+                            <ComboBox.Style>
+                                <Style TargetType="ComboBox" BasedOn="{StaticResource {x:Type ComboBox}}">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Kind}" Value="Executable"><Setter Property="Visibility" Value="Visible" /></DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </ComboBox.Style>
+                        </ComboBox>
+                        <TextBox Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}" MinHeight="26" FlowDirection="LeftToRight" FontFamily="{StaticResource Mono}" AutomationProperties.Name="{Binding Label}" />
+                    </DockPanel>
+                </Grid>
+            </Grid>
+        </DataTemplate>
+
+        <!-- a condition or an action -->
+        <DataTemplate x:Key="StepEditor" DataType="{x:Type avm:StepViewModel}">
+            <Border Margin="0,0,0,8" Padding="10,8" CornerRadius="3" Background="#0C1522" BorderBrush="#1E3048" BorderThickness="1">
+                <StackPanel>
+                    <DockPanel>
+                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                            <Border Style="{StaticResource Chip}" Margin="0,0,6,0" Visibility="{Binding NeedsConfirmation, Converter={StaticResource BoolToVisibility}}" ToolTip="{l:Loc Auto_SafetyConfirm}">
+                                <TextBlock Text="{l:Loc Auto_AsksFirst}" FontSize="10.5" Foreground="#F0C064" />
+                            </Border>
+                            <ui:ArcadiaButton Variant="Tool" Icon="ChevronDown" IconSize="10" Width="24" Height="24" Command="{Binding MoveDownCommand}" AutomationProperties.Name="{l:Loc Auto_MoveDown}"
+                                              Visibility="{Binding Number, Converter={StaticResource HasValue}}" />
+                            <ui:ArcadiaButton Variant="Tool" Icon="Close" IconSize="10" Width="24" Height="24" Command="{Binding RemoveCommand}" AutomationProperties.Name="{l:Loc Auto_Remove}" />
+                        </StackPanel>
+                        <Border Width="22" Height="22" CornerRadius="11" Background="#123052" Margin="0,0,8,0" Visibility="{Binding Number, Converter={StaticResource HasValue}}">
+                            <TextBlock Text="{Binding Number}" FontFamily="{StaticResource Mono}" FontSize="11" Foreground="#9FD8FF" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ui:ArcadiaIcon Kind="{Binding Icon}" Width="15" Height="15" Foreground="#45D2FF" Margin="0,0,8,0" VerticalAlignment="Center" />
+                        <ComboBox ItemsSource="{Binding Types}" SelectedItem="{Binding Type}" MinHeight="26" MaxWidth="340" HorizontalAlignment="Left" AutomationProperties.Name="{l:Loc Auto_StepType}" />
+                    </DockPanel>
+                    <ItemsControl ItemsSource="{Binding Fields}" ItemTemplate="{StaticResource FieldEditor}" Margin="0,6,0,0" Focusable="False" />
+                </StackPanel>
+            </Border>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <Grid Margin="24,18,24,18">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- ═══════ masthead: CONTROL ROOM ═══════ -->
+        <DockPanel Margin="0,0,0,12">
+            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                <Border Style="{StaticResource Chip}" Margin="0,0,8,0" Padding="10,3">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="{Binding EngineGlyph}" FontSize="13" Foreground="{Binding EngineTone, Converter={StaticResource Tone}}" VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding EngineState}" Style="{StaticResource Text.Caps}" FontSize="11" Margin="7,0,0,0" VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding Counts}" Style="{StaticResource Text.Meta}" Margin="12,0,0,0" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Border>
+                <ToggleButton Style="{StaticResource Tool.Chip}" IsChecked="{Binding IsGamingMode}" Margin="0,0,6,0" AutomationProperties.Name="{l:Loc Perf_GamingMode}">
+                    <StackPanel Orientation="Horizontal"><ui:ArcadiaIcon Kind="Games" Width="12" Height="12" /><TextBlock Text="{l:Loc Perf_GamingMode}" Margin="6,0,0,0" /></StackPanel>
+                </ToggleButton>
+                <ToggleButton Style="{StaticResource Tool.Chip}" IsChecked="{Binding IsPowerSaver}" Margin="0,0,6,0" AutomationProperties.Name="{l:Loc Perf_PowerSaver}">
+                    <StackPanel Orientation="Horizontal"><ui:ArcadiaIcon Kind="Bolt" Width="12" Height="12" /><TextBlock Text="{l:Loc Perf_PowerSaver}" Margin="6,0,0,0" /></StackPanel>
+                </ToggleButton>
+                <ToggleButton Style="{StaticResource Tool.Chip}" IsChecked="{Binding IsPaused}" AutomationProperties.Name="{l:Loc Auto_PauseAll}">
+                    <StackPanel Orientation="Horizontal"><ui:ArcadiaIcon Kind="Stop" Width="12" Height="12" /><TextBlock Text="{l:Loc Auto_PauseAll}" Margin="6,0,0,0" /></StackPanel>
+                </ToggleButton>
+            </StackPanel>
+            <Border Width="40" Height="40" CornerRadius="4" BorderBrush="#2A5A8C" BorderThickness="1" VerticalAlignment="Center">
+                <Border.Background>
+                    <RadialGradientBrush>
+                        <GradientStop Offset="0" Color="#1B3A5E" />
+                        <GradientStop Offset="1" Color="#0A1422" />
+                    </RadialGradientBrush>
+                </Border.Background>
+                <ui:ArcadiaIcon Kind="Automation" Width="22" Height="22" Foreground="#45D2FF" AccentBrush="White" />
+            </Border>
+            <StackPanel Margin="14,0,0,0" VerticalAlignment="Center">
+                <TextBlock Text="{l:Loc Auto_Title}" FontSize="22" FontWeight="SemiBold" Foreground="{StaticResource Brush.Text.Primary}" />
+                <TextBlock Text="{l:Loc Auto_Tagline}" Style="{StaticResource Text.Meta}" Margin="0,1,0,0" />
+            </StackPanel>
+        </DockPanel>
+
+        <!-- ═══════ tabs ═══════ -->
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,12">
+            <RadioButton Style="{StaticResource Tab}" GroupName="AutoTab" Content="{l:Loc Auto_TabAutomations}" IsChecked="{Binding Tab, Converter={StaticResource EnumEq}, ConverterParameter=Automations}" />
+            <RadioButton Style="{StaticResource Tab}" GroupName="AutoTab" Content="{l:Loc Auto_TabTemplates}" IsChecked="{Binding Tab, Converter={StaticResource EnumEq}, ConverterParameter=Templates}" />
+            <RadioButton Style="{StaticResource Tab}" GroupName="AutoTab" Content="{l:Loc Auto_TabActivity}" IsChecked="{Binding Tab, Converter={StaticResource EnumEq}, ConverterParameter=Activity}" />
+            <RadioButton Style="{StaticResource Tab}" GroupName="AutoTab" Content="{l:Loc Auto_TabTriggers}" IsChecked="{Binding Tab, Converter={StaticResource EnumEq}, ConverterParameter=Triggers}" />
+            <RadioButton Style="{StaticResource Tab}" GroupName="AutoTab" Content="{l:Loc Auto_TabSessions}" IsChecked="{Binding Tab, Converter={StaticResource EnumEq}, ConverterParameter=Sessions}" />
+            <RadioButton Style="{StaticResource Tab}" GroupName="AutoTab" Content="{l:Loc Auto_TabEngine}" IsChecked="{Binding Tab, Converter={StaticResource EnumEq}, ConverterParameter=Engine}" />
+        </StackPanel>
+
+        <!-- ═══════ MY AUTOMATIONS + editor ═══════ -->
+        <Grid Grid.Row="2" Visibility="{Binding Tab, Converter={StaticResource EnumEq}, ConverterParameter=Automations}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="380" />
+                <ColumnDefinition Width="14" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <Border Style="{StaticResource Tool.TableFrame}">
+                <Border Style="{StaticResource Tool.TableInner}">
+                    <DockPanel>
+                        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="10,8">
+                            <ui:ArcadiaButton Variant="Primary" Icon="Plus" IconSize="11" Content="{l:Loc Auto_New}" Command="{Binding NewAutomationCommand}" Height="28" />
+                            <ui:ArcadiaButton Variant="Secondary" Icon="Import" IconSize="11" Content="{l:Loc Auto_Import}" Command="{Binding ImportCommand}" Height="28" Margin="6,0,0,0" />
+                            <ui:ArcadiaButton Variant="Secondary" Icon="Export" IconSize="11" Content="{l:Loc Auto_Export}" Command="{Binding ExportCommand}" Height="28" Margin="6,0,0,0" />
+                        </StackPanel>
+                        <Border DockPanel.Dock="Top" Height="1" Background="#1E2E44" />
+                        <Grid>
+                            <TextBlock Text="{l:Loc Auto_Empty}" Style="{StaticResource Text.Meta}" TextWrapping="Wrap" Margin="14" Visibility="{Binding Automations.Count, Converter={StaticResource HasValue}, ConverterParameter=invert}" />
+                            <ListBox ItemsSource="{Binding Automations}" SelectedItem="{Binding Selected}" Background="Transparent" BorderThickness="0" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                     AutomationProperties.Name="{l:Loc Auto_TabAutomations}" AutomationProperties.AutomationId="AutomationList">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate DataType="{x:Type avm:AutomationRow}">
+                                        <Grid Margin="2,5">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="22" />
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="{Binding StateGlyph}" Foreground="{Binding Tone, Converter={StaticResource Tone}}" FontSize="13" ToolTip="{Binding State}" AutomationProperties.Name="{Binding State}" />
+                                            <StackPanel Grid.Column="1">
+                                                <TextBlock ui:Bidi.Text="{Binding Title}" Style="{StaticResource Text.Item}" FontSize="13" TextTrimming="CharacterEllipsis" />
+                                                <TextBlock ui:Bidi.Text="{Binding Summary}" Style="{StaticResource Text.Meta}" FontSize="11" TextTrimming="CharacterEllipsis" />
+                                                <TextBlock Style="{StaticResource Text.Meta}" FontSize="10.5" Foreground="#5F7894">
+                                                    <Run Text="{Binding State, Mode=OneWay}" /> · <Run Text="{Binding LastRun, Mode=OneWay}" /> <Run Text="{Binding LastResult, Mode=OneWay}" />
+                                                </TextBlock>
+                                            </StackPanel>
+                                            <CheckBox Grid.Column="2" Style="{StaticResource ToggleSwitch}" IsChecked="{Binding Definition.Enabled, Mode=OneWay}" VerticalAlignment="Center"
+                                                      Command="{Binding DataContext.ToggleEnabledCommand, ElementName=Root}" CommandParameter="{Binding}" AutomationProperties.Name="{l:Loc Auto_Enabled}" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </Grid>
+                    </DockPanel>
+                </Border>
+            </Border>
+
+            <!-- editor -->
+            <Border Grid.Column="2" Style="{StaticResource Tool.TableFrame}">
+                <Border Style="{StaticResource Tool.TableInner}">
+                    <Grid>
+                        <TextBlock Text="{l:Loc Auto_EditorEmpty}" Style="{StaticResource Text.Meta}" Margin="18" TextWrapping="Wrap" Visibility="{Binding IsEditing, Converter={StaticResource HasValue}, ConverterParameter=invert}" />
+                        <DockPanel Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibility}}">
+                            <!-- command bar -->
+                            <Border DockPanel.Dock="Bottom" BorderBrush="#1E2E44" BorderThickness="0,1,0,0" Padding="12,8">
+                                <DockPanel>
+                                    <ui:ArcadiaButton DockPanel.Dock="Right" Variant="Primary" Icon="Check" IconSize="11" Content="{l:Loc Auto_SaveCaps}" Command="{Binding SaveCommand}" MinWidth="100" Height="28"
+                                                      AutomationProperties.AutomationId="AutomationSave" />
+                                    <StackPanel Orientation="Horizontal">
+                                        <ui:ArcadiaButton Variant="Secondary" Icon="Play" IconSize="11" Content="{l:Loc Auto_TestCaps}" Command="{Binding TestCommand}" MinWidth="90" Height="28" AutomationProperties.AutomationId="AutomationTest" />
+                                        <ui:ArcadiaButton Variant="Secondary" Icon="Copy" IconSize="11" Content="{l:Loc Auto_Duplicate}" Command="{Binding DuplicateCommand}" Height="28" Margin="6,0,0,0" />
+                                        <ui:ArcadiaButton Variant="Link" Content="{l:Loc Auto_Delete}" Command="{Binding DeleteCommand}" Margin="12,0,0,0" />
+                                    </StackPanel>
+                                </DockPanel>
+                            </Border>
+                            <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="18,14">
+                                <StackPanel>
+                                    <!-- identity -->
+                                    <TextBox Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" FontSize="17" FontWeight="SemiBold" MinHeight="32" ui:Bidi.AutoDirection="True"
+                                             AutomationProperties.Name="{l:Loc Auto_Name}" AutomationProperties.AutomationId="AutomationName" />
+                                    <TextBox Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}" Margin="0,6,0,0" MinHeight="26" ui:Bidi.AutoDirection="True" AutomationProperties.Name="{l:Loc Auto_Description}" />
+                                    <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                                        <CheckBox Style="{StaticResource ToggleSwitch}" IsChecked="{Binding Enabled}" VerticalAlignment="Center" AutomationProperties.Name="{l:Loc Auto_Enabled}" />
+                                        <TextBlock Text="{l:Loc Auto_Enabled}" Style="{StaticResource Text.Item}" Margin="8,0,20,0" VerticalAlignment="Center" />
+                                        <TextBlock Text="{l:Loc Auto_Cooldown}" Style="{StaticResource Text.Meta}" VerticalAlignment="Center" />
+                                        <TextBox Text="{Binding CooldownMinutes, UpdateSourceTrigger=PropertyChanged}" Width="54" Margin="8,0,20,0" MinHeight="26" FlowDirection="LeftToRight" AutomationProperties.Name="{l:Loc Auto_Cooldown}" />
+                                        <TextBlock Text="{l:Loc Auto_Tags}" Style="{StaticResource Text.Meta}" VerticalAlignment="Center" />
+                                        <TextBox Text="{Binding Tags, UpdateSourceTrigger=PropertyChanged}" Width="160" Margin="8,0,0,0" MinHeight="26" AutomationProperties.Name="{l:Loc Auto_Tags}" />
+                                    </StackPanel>
+
+                                    <!-- WHEN → IF → THEN, joined by a thin rail -->
+                                    <Grid Margin="0,18,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="60" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <Border Width="2" Background="#1E4670" HorizontalAlignment="Left" Margin="22,10,0,14" />
+                                        <StackPanel Grid.ColumnSpan="2">
+                                            <!-- WHEN -->
+                                            <Grid>
+                                                <Grid.ColumnDefinitions><ColumnDefinition Width="60" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                                                <Border Style="{StaticResource Node}" Margin="0,4,0,0"><TextBlock Text="{l:Loc Auto_WhenCaps}" FontFamily="{StaticResource Mono}" FontSize="10.5" Foreground="#9FD8FF" HorizontalAlignment="Center" VerticalAlignment="Center" /></Border>
+                                                <ContentControl Grid.Column="1" Content="{Binding Trigger}" Focusable="False">
+                                                    <ContentControl.ContentTemplate>
+                                                        <DataTemplate DataType="{x:Type avm:StepViewModel}">
+                                                            <Border Padding="10,8" CornerRadius="3" Background="#0C1826" BorderBrush="#2E6A9E" BorderThickness="1" Margin="0,0,0,12">
+                                                                <StackPanel>
+                                                                    <DockPanel>
+                                                                        <ui:ArcadiaIcon Kind="{Binding Icon}" Width="15" Height="15" Foreground="#45D2FF" Margin="0,0,8,0" VerticalAlignment="Center" />
+                                                                        <ComboBox ItemsSource="{Binding Types}" SelectedItem="{Binding Type}" MinHeight="26" MaxWidth="340" HorizontalAlignment="Left"
+                                                                                  AutomationProperties.Name="{l:Loc Auto_TriggerType}" AutomationProperties.AutomationId="TriggerType" />
+                                                                    </DockPanel>
+                                                                    <ItemsControl ItemsSource="{Binding Fields}" ItemTemplate="{StaticResource FieldEditor}" Margin="0,6,0,0" Focusable="False" />
+                                                                </StackPanel>
+                                                            </Border>
+                                                        </DataTemplate>
+                                                    </ContentControl.ContentTemplate>
+                                                </ContentControl>
+                                            </Grid>
+                                            <!-- IF -->
+                                            <Grid>
+                                                <Grid.ColumnDefinitions><ColumnDefinition Width="60" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                                                <Border Style="{StaticResource Node}" Margin="0,4,0,0"><TextBlock Text="{l:Loc Auto_IfCaps}" FontFamily="{StaticResource Mono}" FontSize="10.5" Foreground="#9FD8FF" HorizontalAlignment="Center" VerticalAlignment="Center" /></Border>
+                                                <StackPanel Grid.Column="1" Margin="0,0,0,12">
+                                                    <StackPanel Orientation="Horizontal" Margin="0,2,0,6">
+                                                        <RadioButton Style="{StaticResource Tool.RadioChip}" GroupName="CondMode" Content="{l:Loc Auto_All}" IsChecked="{Binding AnyCondition, Converter={StaticResource InverseBool}}" Margin="0,0,4,0" />
+                                                        <RadioButton Style="{StaticResource Tool.RadioChip}" GroupName="CondMode" Content="{l:Loc Auto_AnyCond}" IsChecked="{Binding AnyCondition}" />
+                                                        <TextBlock Text="{l:Loc Auto_NoConditions}" Style="{StaticResource Text.Meta}" Margin="12,0,0,0" VerticalAlignment="Center"
+                                                                   Visibility="{Binding Conditions.Count, Converter={StaticResource HasValue}, ConverterParameter=invert}" />
+                                                    </StackPanel>
+                                                    <ItemsControl ItemsSource="{Binding Conditions}" ItemTemplate="{StaticResource StepEditor}" Focusable="False" />
+                                                    <ui:ArcadiaButton Variant="Link" Content="{l:Loc Auto_AddCondition}" Command="{Binding AddConditionCommand}" HorizontalAlignment="Left" />
+                                                </StackPanel>
+                                            </Grid>
+                                            <!-- THEN -->
+                                            <Grid>
+                                                <Grid.ColumnDefinitions><ColumnDefinition Width="60" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                                                <Border Style="{StaticResource Node}" Margin="0,4,0,0"><TextBlock Text="{l:Loc Auto_ThenCaps}" FontFamily="{StaticResource Mono}" FontSize="10.5" Foreground="#9FD8FF" HorizontalAlignment="Center" VerticalAlignment="Center" /></Border>
+                                                <StackPanel Grid.Column="1">
+                                                    <ItemsControl ItemsSource="{Binding Actions}" ItemTemplate="{StaticResource StepEditor}" Focusable="False" />
+                                                    <ui:ArcadiaButton Variant="Link" Content="{l:Loc Auto_AddAction}" Command="{Binding AddActionCommand}" HorizontalAlignment="Left" />
+                                                </StackPanel>
+                                            </Grid>
+                                        </StackPanel>
+                                    </Grid>
+
+                                    <!-- validation and test -->
+                                    <ItemsControl ItemsSource="{Binding Errors}" Margin="0,12,0,0" Focusable="False">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate><TextBlock Text="{Binding StringFormat=⚠ {0}}" Foreground="#F07A6A" TextWrapping="Wrap" Margin="0,2" /></DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                    <Border Margin="0,12,0,0" Padding="12,9" CornerRadius="3" BorderThickness="1" Visibility="{Binding TestResult, Converter={StaticResource HasValue}}">
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Setter Property="BorderBrush" Value="#8A6A2A" />
+                                                <Setter Property="Background" Value="#1A1508" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding TestOk}" Value="True"><Setter Property="BorderBrush" Value="#2A7A55" /><Setter Property="Background" Value="#081A12" /></DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+                                        <StackPanel>
+                                            <TextBlock Text="{l:Loc Auto_SimulationCaps}" Style="{StaticResource Caps}" Foreground="#E0B060" />
+                                            <TextBlock Text="{Binding TestResult}" Style="{StaticResource Text.Base}" TextWrapping="Wrap" Margin="0,4,0,0" AutomationProperties.AutomationId="AutomationTestResult" />
+                                        </StackPanel>
+                                    </Border>
+                                </StackPanel>
+                            </ScrollViewer>
+                        </DockPanel>
+                    </Grid>
+                </Border>
+            </Border>
+        </Grid>
+
+        <!-- ═══════ TEMPLATES ═══════ -->
+        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" Visibility="{Binding Tab, Converter={StaticResource EnumEq}, ConverterParameter=Templates}">
+            <ItemsControl ItemsSource="{Binding Templates}" Focusable="False" MaxWidth="900" HorizontalAlignment="Left">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate DataType="{x:Type avm:TemplateRow}">
+                        <Border Style="{StaticResource Panel}" Margin="0,0,0,8">
+                            <DockPanel>
+                                <ui:ArcadiaButton DockPanel.Dock="Right" Variant="Secondary" Icon="Plus" IconSize="11" Content="{l:Loc Auto_UseTemplate}" Height="28" VerticalAlignment="Center"
+                                                  Command="{Binding DataContext.UseTemplateCommand, ElementName=Root}" CommandParameter="{Binding}" AutomationProperties.Name="{Binding Title}" />
+                                <ui:ArcadiaIcon Kind="{Binding Icon}" Width="20" Height="20" Foreground="#45D2FF" VerticalAlignment="Center" Margin="0,0,14,0" />
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding Title}" Style="{StaticResource Text.Item}" FontSize="13.5" />
+                                    <TextBlock Text="{Binding Description}" Style="{StaticResource Text.Meta}" TextWrapping="Wrap" />
+                                </StackPanel>
+                            </DockPanel>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+
+        <!-- ═══════ ACTIVITY ═══════ -->
+        <Grid Grid.Row="2" Visibility="{Binding Tab, Converter={StaticResource EnumEq}, ConverterParameter=Activity}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="14" />
+                <ColumnDefinition Width="360" />
+            </Grid.ColumnDefinitions>
+            <Border Style="{StaticResource Tool.TableFrame}">
+                <Border Style="{StaticResource Tool.TableInner}">
+                    <DockPanel>
+                        <DockPanel DockPanel.Dock="Top" Margin="10,8">
+                            <ui:ArcadiaButton DockPanel.Dock="Right" Variant="Link" Content="{l:Loc Auto_ClearLog}" Command="{Binding ClearActivityCommand}" />
+                            <StackPanel Orientation="Horizontal">
+                                <RadioButton Style="{StaticResource Tool.RadioChip}" GroupName="RunFilter" Content="{l:Loc Auto_FilterAll}" IsChecked="True" Command="{Binding FilterRunsCommand}" CommandParameter="all" Margin="0,0,4,0" />
+                                <RadioButton Style="{StaticResource Tool.RadioChip}" GroupName="RunFilter" Content="{l:Loc Auto_FilterFailed}" Command="{Binding FilterRunsCommand}" CommandParameter="failed" Margin="0,0,4,0" />
+                                <RadioButton Style="{StaticResource Tool.RadioChip}" GroupName="RunFilter" Content="{l:Loc Auto_FilterBlocked}" Command="{Binding FilterRunsCommand}" CommandParameter="blocked" Margin="0,0,4,0" />
+                                <RadioButton Style="{StaticResource Tool.RadioChip}" GroupName="RunFilter" Content="{l:Loc Auto_FilterSkipped}" Command="{Binding FilterRunsCommand}" CommandParameter="skipped" />
+                            </StackPanel>
+                        </DockPanel>
+                        <Border DockPanel.Dock="Top" Height="1" Background="#1E2E44" />
+                        <Grid>
+                            <TextBlock Text="{l:Loc Auto_NoActivity}" Style="{StaticResource Text.Meta}" Margin="14" Visibility="{Binding Runs.Count, Converter={StaticResource HasValue}, ConverterParameter=invert}" />
+                            <ListBox ItemsSource="{Binding Runs}" SelectedItem="{Binding SelectedRun}" Background="Transparent" BorderThickness="0" AutomationProperties.Name="{l:Loc Auto_TabActivity}"
+                                     AutomationProperties.AutomationId="ActivityList" VirtualizingPanel.IsVirtualizing="True" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate DataType="{x:Type avm:RunRow}">
+                                        <Grid Margin="2,3">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="22" />
+                                                <ColumnDefinition Width="140" />
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="110" />
+                                                <ColumnDefinition Width="64" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="{Binding Glyph}" Foreground="{Binding Tone, Converter={StaticResource Tone}}" ToolTip="{Binding Status}" AutomationProperties.Name="{Binding Status}" />
+                                            <TextBlock Grid.Column="1" Text="{Binding Time}" FontFamily="{StaticResource Mono}" FontSize="11" Foreground="#7F93AE" VerticalAlignment="Center" />
+                                            <StackPanel Grid.Column="2">
+                                                <TextBlock ui:Bidi.Text="{Binding Name}" Style="{StaticResource Text.Item}" FontSize="12.5" TextTrimming="CharacterEllipsis" />
+                                                <TextBlock ui:Bidi.Text="{Binding Summary}" Style="{StaticResource Text.Meta}" FontSize="11" TextTrimming="CharacterEllipsis" />
+                                            </StackPanel>
+                                            <TextBlock Grid.Column="3" Text="{Binding Trigger}" Style="{StaticResource Text.Meta}" FontSize="11" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                                            <TextBlock Grid.Column="4" Text="{Binding Duration}" FontFamily="{StaticResource Mono}" FontSize="11" Foreground="#7F93AE" HorizontalAlignment="Right" VerticalAlignment="Center" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </Grid>
+                    </DockPanel>
+                </Border>
+            </Border>
+            <Border Grid.Column="2" Style="{StaticResource Panel}" VerticalAlignment="Top">
+                <StackPanel>
+                    <TextBlock Text="{l:Loc Auto_RunDetails}" Style="{StaticResource Caps}" Margin="0,0,0,8" />
+                    <TextBlock Text="{l:Loc Auto_SelectRun}" Style="{StaticResource Text.Meta}" Visibility="{Binding SelectedRun, Converter={StaticResource HasValue}, ConverterParameter=invert}" />
+                    <ItemsControl ItemsSource="{Binding RunDetails}" Focusable="False">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="{x:Type avm:DetailLine}">
+                                <Grid Margin="0,2">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="140" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                                    <TextBlock Text="{Binding Label}" Style="{StaticResource Text.Meta}" FontSize="11.5" TextWrapping="Wrap" />
+                                    <TextBlock Grid.Column="1" Text="{Binding Value}" FontSize="11.5" TextWrapping="Wrap" FlowDirection="LeftToRight">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
+                                                <Style.Triggers><DataTrigger Binding="{Binding Ok}" Value="False"><Setter Property="Foreground" Value="#F07A6A" /></DataTrigger></Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <TextBlock Text="{Binding RunTechnical}" FontFamily="{StaticResource Mono}" FontSize="10.5" Foreground="#6F8BAA" TextWrapping="Wrap" Margin="0,8,0,0" FlowDirection="LeftToRight"
+                               Visibility="{Binding RunTechnical, Converter={StaticResource HasValue}}" />
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <!-- ═══════ TRIGGERS: live sources and the catalog ═══════ -->
+        <Grid Grid.Row="2" Visibility="{Binding Tab, Converter={StaticResource EnumEq}, ConverterParameter=Triggers}">
+            <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
+            <Border Style="{StaticResource Panel}" Margin="0,0,0,10">
+                <StackPanel>
+                    <TextBlock Text="{l:Loc Auto_Sources}" Style="{StaticResource Caps}" Margin="0,0,0,6" />
+                    <TextBlock Text="{Binding SourcesText}" FontFamily="{StaticResource Mono}" FontSize="11.5" Foreground="#9FB6D0" TextWrapping="Wrap" LineHeight="18" />
+                </StackPanel>
+            </Border>
+            <Border Grid.Row="1" Style="{StaticResource Tool.TableFrame}">
+                <Border Style="{StaticResource Tool.TableInner}">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="12,8">
+                        <ItemsControl ItemsSource="{Binding Catalog}" Focusable="False">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate DataType="{x:Type avm:CatalogRow}">
+                                    <Grid Margin="0,3">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="70" />
+                                            <ColumnDefinition Width="26" />
+                                            <ColumnDefinition Width="280" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="{Binding Group}" FontFamily="{StaticResource Mono}" FontSize="10.5" Foreground="#6FA6D6" VerticalAlignment="Center" />
+                                        <ui:ArcadiaIcon Grid.Column="1" Kind="{Binding Icon}" Width="14" Height="14" Foreground="#45D2FF" />
+                                        <TextBlock Grid.Column="2" Text="{Binding Title}" Style="{StaticResource Text.Item}" FontSize="12.5" VerticalAlignment="Center" />
+                                        <TextBlock Grid.Column="3" Text="{Binding Description}" Style="{StaticResource Text.Meta}" VerticalAlignment="Center" />
+                                        <TextBlock Grid.Column="4" Text="{Binding Badge}" Style="{StaticResource Text.Meta}" FontSize="11" VerticalAlignment="Center" />
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Border>
+            </Border>
+        </Grid>
+
+        <!-- ═══════ SESSION CENTER ═══════ -->
+        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" Visibility="{Binding Tab, Converter={StaticResource EnumEq}, ConverterParameter=Sessions}">
+            <Grid MaxWidth="1100" HorizontalAlignment="Left">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="12" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                <StackPanel>
+                    <Border Style="{StaticResource Panel}" Margin="0,0,0,10">
+                        <StackPanel>
+                            <TextBlock Text="{l:Loc Auto_GameSession}" Style="{StaticResource Caps}" Margin="0,0,0,8" />
+                            <TextBlock Text="{l:Loc Auto_NoGame}" Style="{StaticResource Text.Meta}" Visibility="{Binding NowPlaying.IsPlaying, Converter={StaticResource HasValue}, ConverterParameter=invert}" />
+                            <DockPanel Visibility="{Binding NowPlaying.IsPlaying, Converter={StaticResource BoolToVisibility}}">
+                                <ui:ArcadiaButton DockPanel.Dock="Right" Variant="Secondary" Icon="Stop" IconSize="11" Content="{l:Loc Auto_EndSession}" Command="{Binding StopGameCommand}" Height="28" />
+                                <ui:ArcadiaLed Width="8" Height="8" Tone="#5FE3A1" VerticalAlignment="Center" Margin="0,0,10,0" />
+                                <StackPanel>
+                                    <TextBlock Text="{Binding NowPlaying.Title}" Style="{StaticResource Text.Item}" FontSize="14" />
+                                    <TextBlock Text="{Binding NowPlaying.Elapsed}" FontFamily="{StaticResource Mono}" Foreground="#9FD8FF" />
+                                </StackPanel>
+                            </DockPanel>
+                        </StackPanel>
+                    </Border>
+                    <Border Style="{StaticResource Panel}" Margin="0,0,0,10">
+                        <StackPanel>
+                            <TextBlock Text="{l:Loc Auto_WorkSession}" Style="{StaticResource Caps}" Margin="0,0,0,8" />
+                            <TextBlock Text="{Binding WorkElapsed}" Style="{StaticResource Text.Item}" FontSize="13.5" TextWrapping="Wrap" />
+                            <DockPanel Margin="0,10,0,0" Visibility="{Binding Service.ActiveWork, Converter={StaticResource HasValue}}">
+                                <ui:ArcadiaButton DockPanel.Dock="Right" Variant="Primary" Icon="Stop" IconSize="11" Content="{l:Loc Auto_StopWork}" Command="{Binding StopWorkCommand}" Height="28" Margin="8,0,0,0" />
+                                <TextBox Text="{Binding WorkNote, UpdateSourceTrigger=PropertyChanged}" MinHeight="28" ui:Bidi.AutoDirection="True" AutomationProperties.Name="{l:Loc Auto_WorkNote}" />
+                            </DockPanel>
+                            <DockPanel Margin="0,10,0,0" Visibility="{Binding Service.ActiveWork, Converter={StaticResource HasValue}, ConverterParameter=invert}">
+                                <ui:ArcadiaButton DockPanel.Dock="Right" Variant="Primary" Icon="Play" IconSize="11" Content="{l:Loc Auto_StartWork}" Command="{Binding StartWorkCommand}" Height="28" Margin="8,0,0,0" />
+                                <ComboBox ItemsSource="{Binding ProjectChoices}" SelectedItem="{Binding WorkProject}" MinHeight="28" AutomationProperties.Name="{l:Loc Auto_Field_project}" />
+                            </DockPanel>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+                <StackPanel Grid.Column="2">
+                    <Border Style="{StaticResource Panel}" Margin="0,0,0,10">
+                        <StackPanel>
+                            <TextBlock Text="{l:Loc Auto_Performance}" Style="{StaticResource Caps}" Margin="0,0,0,8" />
+                            <DockPanel Margin="0,2"><CheckBox DockPanel.Dock="Right" Style="{StaticResource ToggleSwitch}" IsChecked="{Binding IsGamingMode}" AutomationProperties.Name="{l:Loc Perf_GamingMode}" /><TextBlock Text="{l:Loc Perf_GamingMode}" Style="{StaticResource Text.Item}" /></DockPanel>
+                            <TextBlock Style="{StaticResource Text.Meta}" Text="{Binding Performance.GamingReason, StringFormat=· {0}}" Visibility="{Binding Performance.IsGamingMode, Converter={StaticResource BoolToVisibility}}" />
+                            <DockPanel Margin="0,8,0,2"><CheckBox DockPanel.Dock="Right" Style="{StaticResource ToggleSwitch}" IsChecked="{Binding IsPowerSaver}" AutomationProperties.Name="{l:Loc Perf_PowerSaver}" /><TextBlock Text="{l:Loc Perf_PowerSaver}" Style="{StaticResource Text.Item}" /></DockPanel>
+                            <TextBlock Style="{StaticResource Text.Meta}" Margin="0,8,0,0" Text="{Binding PowerText}" />
+                        </StackPanel>
+                    </Border>
+                    <Border Style="{StaticResource Panel}">
+                        <StackPanel>
+                            <TextBlock Text="{l:Loc Auto_RecentWork}" Style="{StaticResource Caps}" Margin="0,0,0,8" />
+                            <TextBlock Text="{l:Loc Auto_NoWorkYet}" Style="{StaticResource Text.Meta}" Visibility="{Binding WorkSessions.Count, Converter={StaticResource HasValue}, ConverterParameter=invert}" />
+                            <ItemsControl ItemsSource="{Binding WorkSessions}" Focusable="False">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate DataType="{x:Type avm:WorkRow}">
+                                        <Grid Margin="0,2">
+                                            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="130" /><ColumnDefinition Width="70" /></Grid.ColumnDefinitions>
+                                            <StackPanel>
+                                                <TextBlock Text="{Binding Project}" Style="{StaticResource Text.Item}" FontSize="12.5" TextTrimming="CharacterEllipsis" />
+                                                <TextBlock Text="{Binding Note}" Style="{StaticResource Text.Meta}" FontSize="11" TextTrimming="CharacterEllipsis" Visibility="{Binding Note, Converter={StaticResource HasValue}}" />
+                                            </StackPanel>
+                                            <TextBlock Grid.Column="1" Text="{Binding When}" FontFamily="{StaticResource Mono}" FontSize="11" Foreground="#7F93AE" />
+                                            <TextBlock Grid.Column="2" Text="{Binding Duration}" FontFamily="{StaticResource Mono}" FontSize="11" HorizontalAlignment="Right" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </Grid>
+        </ScrollViewer>
+
+        <!-- ═══════ ENGINE ═══════ -->
+        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" Visibility="{Binding Tab, Converter={StaticResource EnumEq}, ConverterParameter=Engine}">
+            <StackPanel MaxWidth="720" HorizontalAlignment="Left">
+                <Border Style="{StaticResource Panel}" Margin="0,0,0,10">
+                    <StackPanel>
+                        <TextBlock Text="{l:Loc Auto_EngineHeading}" Style="{StaticResource Caps}" Margin="0,0,0,8" />
+                        <DockPanel Margin="0,2"><CheckBox DockPanel.Dock="Right" Style="{StaticResource ToggleSwitch}" IsChecked="{Binding EngineEnabled}" AutomationProperties.Name="{l:Loc Auto_EngineEnabled}" /><TextBlock Text="{l:Loc Auto_EngineEnabled}" Style="{StaticResource Text.Item}" /></DockPanel>
+                        <DockPanel Margin="0,8,0,2"><CheckBox DockPanel.Dock="Right" Style="{StaticResource ToggleSwitch}" IsChecked="{Binding IsPaused}" AutomationProperties.Name="{l:Loc Auto_PauseAll}" /><TextBlock Text="{l:Loc Auto_PauseAll}" Style="{StaticResource Text.Item}" /></DockPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                            <TextBlock Text="{l:Loc Auto_Retention}" Style="{StaticResource Text.Meta}" VerticalAlignment="Center" Width="220" />
+                            <TextBox Text="{Binding Prefs.LogRetentionDays}" Width="60" MinHeight="26" FlowDirection="LeftToRight" AutomationProperties.Name="{l:Loc Auto_Retention}" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
+                            <TextBlock Text="{l:Loc Auto_MaxEntries}" Style="{StaticResource Text.Meta}" VerticalAlignment="Center" Width="220" />
+                            <TextBox Text="{Binding Prefs.LogMaxEntries}" Width="60" MinHeight="26" FlowDirection="LeftToRight" AutomationProperties.Name="{l:Loc Auto_MaxEntries}" />
+                        </StackPanel>
+                        <TextBlock Text="{l:Loc Auto_BackupNote}" Style="{StaticResource Text.Meta}" TextWrapping="Wrap" Margin="0,10,0,0" />
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource Panel}" Margin="0,0,0,10">
+                    <StackPanel>
+                        <TextBlock Text="{l:Loc Auto_GameDetection}" Style="{StaticResource Caps}" Margin="0,0,0,8" />
+                        <DockPanel Margin="0,2"><CheckBox DockPanel.Dock="Right" Style="{StaticResource ToggleSwitch}" IsChecked="{Binding TrackingPrefs.Enabled}" AutomationProperties.Name="{l:Loc Auto_TrackSessions}" /><TextBlock Text="{l:Loc Auto_TrackSessions}" Style="{StaticResource Text.Item}" /></DockPanel>
+                        <DockPanel Margin="0,8,0,2"><CheckBox DockPanel.Dock="Right" Style="{StaticResource ToggleSwitch}" IsChecked="{Binding TrackingPrefs.DetectExternalLaunches}" AutomationProperties.Name="{l:Loc Auto_DetectExternal}" /><TextBlock Text="{l:Loc Auto_DetectExternal}" Style="{StaticResource Text.Item}" /></DockPanel>
+                        <DockPanel Margin="0,8,0,2"><CheckBox DockPanel.Dock="Right" Style="{StaticResource ToggleSwitch}" IsChecked="{Binding PerformancePrefs.GamingForAllGames}" AutomationProperties.Name="{l:Loc Auto_GamingAllGames}" /><TextBlock Text="{l:Loc Auto_GamingAllGames}" Style="{StaticResource Text.Item}" /></DockPanel>
+                        <DockPanel Margin="0,8,0,2"><CheckBox DockPanel.Dock="Right" Style="{StaticResource ToggleSwitch}" IsChecked="{Binding PerformancePrefs.OfferSessionNote}" AutomationProperties.Name="{l:Loc Auto_OfferNote}" /><TextBlock Text="{l:Loc Auto_OfferNote}" Style="{StaticResource Text.Item}" /></DockPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                            <TextBlock Text="{l:Loc Auto_Grace}" Style="{StaticResource Text.Meta}" VerticalAlignment="Center" Width="220" />
+                            <TextBox Text="{Binding PerformancePrefs.GamingGraceSeconds}" Width="60" MinHeight="26" FlowDirection="LeftToRight" AutomationProperties.Name="{l:Loc Auto_Grace}" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
+                            <TextBlock Text="{l:Loc Auto_MinSession}" Style="{StaticResource Text.Meta}" VerticalAlignment="Center" Width="220" />
+                            <TextBox Text="{Binding TrackingPrefs.MinimumSessionMinutes}" Width="60" MinHeight="26" FlowDirection="LeftToRight" AutomationProperties.Name="{l:Loc Auto_MinSession}" />
+                        </StackPanel>
+                        <TextBlock Text="{l:Loc Auto_ExeHint}" Style="{StaticResource Text.Meta}" TextWrapping="Wrap" Margin="0,10,0,0" />
+                    </StackPanel>
+                </Border>
+                <ui:ArcadiaButton Variant="Primary" Icon="Check" IconSize="11" Content="{l:Loc Auto_SaveSettings}" Command="{Binding SaveEngineSettingsCommand}" HorizontalAlignment="Left" Height="28" />
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

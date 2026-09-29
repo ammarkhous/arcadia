@@ -1,0 +1,14 @@
+bin/
+obj/
+.vs/
+*.user
+*.suo
+TestResults/
+artifacts/
+# Never commit local secrets or user settings
+appsettings.*.local.json
+secrets*.json
+*.db
+*.db-shm
+*.db-wal
+dist/

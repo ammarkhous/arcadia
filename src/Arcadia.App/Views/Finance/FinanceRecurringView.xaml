@@ -1,0 +1,166 @@
+<UserControl x:Class="Arcadia.App.Views.Finance.FinanceRecurringView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:ui="urn:arcadia-ui"
+             xmlns:l="clr-namespace:Arcadia.App.Localization"
+             xmlns:fvm="clr-namespace:Arcadia.App.ViewModels.Finance"
+             xmlns:dlg="clr-namespace:Arcadia.App.Dialogs"
+             xmlns:fin="clr-namespace:Arcadia.App.Views.Finance"
+             mc:Ignorable="d" d:DataContext="{d:DesignInstance fvm:FinanceRecurringViewModel}" x:Name="Root">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="330" />
+            <ColumnDefinition Width="10" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <!-- ═══════ upcoming ═══════ -->
+        <Border Style="{StaticResource Fin.Panel}">
+            <Border Style="{StaticResource Tool.TableInner}">
+                <DockPanel>
+                    <TextBlock DockPanel.Dock="Top" Text="{l:Loc Rec_Upcoming}" Style="{StaticResource Fin.Kicker}" Margin="12,10,12,4" />
+                    <Grid>
+                        <ListBox ItemsSource="{Binding Upcoming}" Style="{StaticResource Tr.List}" AutomationProperties.Name="{l:Loc Rec_Upcoming}">
+                            <ListBox.Resources>
+                                <DataTemplate DataType="{x:Type fvm:FinanceGroupHeader}">
+                                    <TextBlock Text="{Binding Title}" Style="{StaticResource Fin.Kicker}" FontSize="10.5" Margin="12,10,12,2" Foreground="{Binding Tone, Converter={StaticResource Fin.Ink}}" />
+                                </DataTemplate>
+                                <DataTemplate DataType="{x:Type fvm:BillItem}">
+                                    <DockPanel Margin="12,0,8,0">
+                                        <DockPanel.ContextMenu>
+                                            <ContextMenu>
+                                                <MenuItem Header="{l:Loc Rec_MarkPaid}" Command="{Binding PlacementTarget.Tag.MarkPaidCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}" />
+                                                <MenuItem Header="{l:Loc Rec_MarkPaidOptions}" Command="{Binding PlacementTarget.Tag.MarkPaidWithOptionsCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}" />
+                                                <MenuItem Header="{l:Loc Rec_Skip}" Command="{Binding PlacementTarget.Tag.SkipCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}" />
+                                                <Separator />
+                                                <MenuItem Header="{l:Loc Rec_Edit}" Command="{Binding PlacementTarget.Tag.EditBillCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}" />
+                                            </ContextMenu>
+                                        </DockPanel.ContextMenu>
+                                        <DockPanel.Tag><Binding Path="DataContext" ElementName="Root" /></DockPanel.Tag>
+                                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center" Margin="8,0,0,0">
+                                            <ui:ArcadiaButton Variant="Tool" Icon="Check" IconSize="11" Width="26" Height="24" Command="{Binding DataContext.MarkPaidCommand, ElementName=Root}" CommandParameter="{Binding}"
+                                                              ToolTip="{l:Loc Rec_MarkPaid}" AutomationProperties.Name="{l:Loc Rec_MarkPaid}" Margin="0,0,3,0" />
+                                            <ui:ArcadiaButton Variant="Tool" Icon="ChevronRight" IconSize="10" Width="26" Height="24" Command="{Binding DataContext.SkipCommand, ElementName=Root}" CommandParameter="{Binding}"
+                                                              ToolTip="{l:Loc Rec_Skip}" AutomationProperties.Name="{l:Loc Rec_Skip}" />
+                                        </StackPanel>
+                                        <ContentPresenter Content="{Binding}" ContentTemplate="{StaticResource Fin.BillRowTemplate}" />
+                                    </DockPanel>
+                                </DataTemplate>
+                            </ListBox.Resources>
+                        </ListBox>
+                        <TextBlock Text="{l:Loc Rec_NothingDue}" Style="{StaticResource Text.Body}" TextAlignment="Center" TextWrapping="Wrap" MaxWidth="280" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                   Visibility="{Binding HasUpcoming, Converter={StaticResource Fin.HasValue}, ConverterParameter=invert}" />
+                    </Grid>
+                </DockPanel>
+            </Border>
+        </Border>
+
+        <!-- ═══════ tracker ═══════ -->
+        <DockPanel Grid.Column="2">
+            <DockPanel DockPanel.Dock="Top" Margin="0,0,0,8">
+                <ui:ArcadiaButton DockPanel.Dock="Right" Variant="Primary" Icon="Plus" IconSize="12" Content="{l:Loc Rec_New}" Command="{Binding NewCommand}" />
+                <ItemsControl ItemsSource="{Binding Tabs}" Focusable="False" VerticalAlignment="Center">
+                    <ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel Orientation="Horizontal" /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <RadioButton Style="{StaticResource Tool.RadioChip}" GroupName="RecTabs" Content="{Binding Label}" Margin="0,0,5,0" Height="28" AutomationProperties.Name="{Binding Label}">
+                                <RadioButton.IsChecked>
+                                    <MultiBinding Converter="{StaticResource It.Same}" Mode="OneWay">
+                                        <Binding />
+                                        <Binding Path="DataContext.Tab" ElementName="Root" />
+                                    </MultiBinding>
+                                </RadioButton.IsChecked>
+                                <RadioButton.Command><Binding Path="DataContext.SetTabCommand" ElementName="Root" /></RadioButton.Command>
+                                <RadioButton.CommandParameter><Binding /></RadioButton.CommandParameter>
+                            </RadioButton>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </DockPanel>
+            <Border DockPanel.Dock="Bottom" Style="{StaticResource Fin.Panel}" Margin="0,8,0,0">
+                <Border Style="{StaticResource Tool.TableInner}" Padding="12,6">
+                    <DockPanel>
+                        <TextBlock DockPanel.Dock="Left" Text="{l:Loc Rec_Totals}" Style="{StaticResource Fin.Kicker}" VerticalAlignment="Center" Margin="0,0,14,0" />
+                        <ItemsControl ItemsSource="{Binding Totals}" Focusable="False">
+                            <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate DataType="{x:Type fvm:CurrencyTotal}">
+                                    <StackPanel Orientation="Horizontal" Margin="0,2,20,2">
+                                        <fin:MoneyText Money="{Binding TotalText}" Style="{StaticResource Fin.Money}" TextAlignment="Left" FontSize="12.5" Foreground="{Binding Tone, Converter={StaticResource Fin.Ink}}" />
+                                        <TextBlock Text="{Binding Detail}" Style="{StaticResource Fin.Meta}" Margin="8,0,0,0" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </DockPanel>
+                </Border>
+            </Border>
+            <Border Style="{StaticResource Fin.Panel}">
+                <Border Style="{StaticResource Tool.TableInner}">
+                    <DockPanel>
+                        <Border DockPanel.Dock="Top" BorderBrush="#1E2E44" BorderThickness="0,0,0,1" Padding="12,6" Background="#0A111B">
+                            <Grid TextBlock.FontSize="10.5" TextBlock.FontWeight="SemiBold" TextBlock.Foreground="#7F93AE">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" MinWidth="120" /><ColumnDefinition Width="92" /><ColumnDefinition Width="86" /><ColumnDefinition Width="86" />
+                                    <ColumnDefinition Width="112" /><ColumnDefinition Width="112" /><ColumnDefinition Width="92" /><ColumnDefinition Width="74" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="{l:Loc Rec_ColName}" />
+                                <TextBlock Grid.Column="1" Text="{l:Loc Rec_ColPrice}" TextAlignment="Right" Margin="0,0,10,0" />
+                                <TextBlock Grid.Column="2" Text="{l:Loc Rec_ColFrequency}" />
+                                <TextBlock Grid.Column="3" Text="{l:Loc Rec_ColNext}" />
+                                <TextBlock Grid.Column="4" Text="{l:Loc Rec_ColCategory}" />
+                                <TextBlock Grid.Column="5" Text="{l:Loc Rec_ColAccount}" />
+                                <TextBlock Grid.Column="6" Text="{l:Loc Rec_ColAnnual}" TextAlignment="Right" Margin="0,0,10,0" />
+                                <TextBlock Grid.Column="7" Text="{l:Loc Rec_ColStatus}" />
+                            </Grid>
+                        </Border>
+                        <Grid>
+                            <ListBox x:Name="List" ItemsSource="{Binding Items}" SelectedItem="{Binding Selected}" Style="{StaticResource Tr.List}" AutomationProperties.Name="{l:Loc FinSec_Recurring}">
+                                <ListBox.InputBindings>
+                                    <MouseBinding MouseAction="LeftDoubleClick" Command="{Binding EditCommand}" CommandParameter="{Binding SelectedItem, ElementName=List}" />
+                                    <KeyBinding Key="Return" Command="{Binding EditCommand}" CommandParameter="{Binding SelectedItem, ElementName=List}" />
+                                </ListBox.InputBindings>
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate DataType="{x:Type fvm:SubscriptionItem}">
+                                        <Grid MinHeight="36" Margin="12,0">
+                                            <Grid.ContextMenu>
+                                                <ContextMenu>
+                                                    <MenuItem Header="{l:Loc Rec_Edit}" Command="{Binding PlacementTarget.Tag.EditCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}" />
+                                                    <MenuItem Header="{l:Loc Rec_TogglePause}" Command="{Binding PlacementTarget.Tag.ToggleActiveCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}" />
+                                                    <Separator />
+                                                    <MenuItem Header="{l:Loc Confirm_Delete}" Command="{Binding PlacementTarget.Tag.DeleteCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}" />
+                                                </ContextMenu>
+                                            </Grid.ContextMenu>
+                                            <Grid.Tag><Binding Path="DataContext" ElementName="Root" /></Grid.Tag>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" MinWidth="120" /><ColumnDefinition Width="92" /><ColumnDefinition Width="86" /><ColumnDefinition Width="86" />
+                                                <ColumnDefinition Width="112" /><ColumnDefinition Width="112" /><ColumnDefinition Width="92" /><ColumnDefinition Width="74" />
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                <ui:ArcadiaIcon Kind="{Binding Icon}" Width="13" Height="13" Opacity="0.85" />
+                                                <TextBlock ui:Bidi.Text="{Binding Name}" FontSize="13" Foreground="{StaticResource Brush.Text.Primary}" Margin="8,0,0,0" TextTrimming="CharacterEllipsis" />
+                                            </StackPanel>
+                                            <fin:MoneyText Grid.Column="1" Money="{Binding PriceText}" Style="{StaticResource Fin.Money}" VerticalAlignment="Center" Margin="0,0,10,0" />
+                                            <TextBlock Grid.Column="2" Text="{Binding FrequencyText}" FontSize="12" Foreground="#AFC2D8" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                                            <TextBlock Grid.Column="3" Text="{Binding NextText}" Style="{StaticResource Org.Time}" VerticalAlignment="Center" />
+                                            <TextBlock Grid.Column="4" ui:Bidi.Text="{Binding CategoryText}" FontSize="12" Foreground="#AFC2D8" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="0,0,6,0" />
+                                            <TextBlock Grid.Column="5" ui:Bidi.Text="{Binding AccountText}" FontSize="12" Foreground="#AFC2D8" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="0,0,6,0" />
+                                            <fin:MoneyText Grid.Column="6" Money="{Binding AnnualText}" Style="{StaticResource Fin.Money}" FontSize="12.5" Foreground="#AFC2D8" VerticalAlignment="Center" Margin="0,0,10,0" />
+                                            <ContentPresenter Grid.Column="7" Content="{Binding StatusText}" Tag="{Binding StatusTone}" ContentTemplate="{StaticResource Fin.StateChip}" HorizontalAlignment="Left" VerticalAlignment="Center" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="400" Visibility="{Binding IsEmpty, Converter={StaticResource Fin.HasValue}}">
+                                <ui:ArcadiaIcon Kind="Repeat" Width="30" Height="30" Opacity="0.55" />
+                                <TextBlock Text="{l:Loc Rec_Empty}" Style="{StaticResource Text.Body}" TextAlignment="Center" TextWrapping="Wrap" Margin="0,10,0,0" />
+                            </StackPanel>
+                        </Grid>
+                    </DockPanel>
+                </Border>
+            </Border>
+        </DockPanel>
+    </Grid>
+</UserControl>

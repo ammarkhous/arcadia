@@ -1,0 +1,111 @@
+<UserControl x:Class="Arcadia.App.Views.ItTools.Tools.HashView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:ui="urn:arcadia-ui"
+             xmlns:l="clr-namespace:Arcadia.App.Localization"
+             xmlns:it="clr-namespace:Arcadia.App.ViewModels.ItTools"
+             xmlns:itv="clr-namespace:Arcadia.App.Views.ItTools"
+             mc:Ignorable="d"
+             AllowDrop="True"
+             d:DataContext="{d:DesignInstance it:HashToolViewModel}">
+    <DockPanel>
+        <itv:ToolHeader DockPanel.Dock="Top" />
+
+        <Border DockPanel.Dock="Top" Style="{StaticResource Tool.CommandBar}">
+            <Border Style="{StaticResource Tool.CommandBarInner}">
+                <StackPanel>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock Text="{l:Loc Hash_File}" Style="{StaticResource Tool.InputLabel}" />
+                            <Border Background="#0A0E15" BorderBrush="#26344A" BorderThickness="1" CornerRadius="3" MinHeight="30" Padding="8,0">
+                                <TextBlock Text="{Binding FilePathDisplay}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" FontFamily="{StaticResource Font.Mono}" FontSize="12"
+                                           Foreground="{StaticResource Brush.Text.Primary}" ToolTip="{Binding FilePath}" />
+                            </Border>
+                        </StackPanel>
+                        <ui:ArcadiaButton Grid.Column="1" Style="{StaticResource Tool.Button}" Icon="Documents" Content="{l:Loc Hash_Choose}" Command="{Binding ChooseFileCommand}"
+                                          VerticalAlignment="Bottom" IsEnabled="{Binding IsIdle}" Margin="8,0,0,0" />
+                    </Grid>
+                    <WrapPanel Margin="0,10,0,0">
+                        <TextBlock Text="{l:Loc Hash_Algorithm}" Style="{StaticResource Tool.InputLabel}" VerticalAlignment="Center" Margin="0,0,8,0" />
+                        <ItemsControl ItemsSource="{Binding Algorithms}" Focusable="False">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate><StackPanel Orientation="Horizontal" /></ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <ui:ArcadiaChoice Style="{StaticResource Tool.RadioChip}" GroupName="HashAlg" Content="{Binding Converter={StaticResource It.HashName}}" IsEnabled="{Binding DataContext.IsIdle, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                 Command="{Binding DataContext.SetAlgorithmCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}">
+                                        <ui:ArcadiaChoice.IsChecked>
+                                            <MultiBinding Converter="{StaticResource It.Same}" Mode="OneWay">
+                                                <Binding />
+                                                <Binding Path="DataContext.Algorithm" RelativeSource="{RelativeSource AncestorType=UserControl}" />
+                                            </MultiBinding>
+                                        </ui:ArcadiaChoice.IsChecked>
+                                    </ui:ArcadiaChoice>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <ui:ArcadiaButton Variant="Primary" Icon="Hash" IconSize="14" Content="{l:Loc Hash_Compute}" Command="{Binding ComputeCommand}" MinHeight="30" Padding="16,4" Margin="10,0,0,0"
+                                          Visibility="{Binding IsIdle, Converter={StaticResource BoolToVisibility}}" />
+                        <ui:ArcadiaButton Icon="Stop" IconSize="12" Content="{l:Loc It_Cancel}" Command="{Binding CancelCommand}" MinHeight="30" Padding="16,4" Margin="10,0,0,0"
+                                          Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibility}}" />
+                    </WrapPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,8,0,0" Visibility="{Binding IsMd5, Converter={StaticResource BoolToVisibility}}">
+                        <ui:ArcadiaIcon Kind="Warning" Width="14" Height="14" Foreground="#F2A623" />
+                        <TextBlock Text="{l:Loc Hash_Md5Warning}" Style="{StaticResource Text.Meta}" Foreground="#FFC96B" Margin="7,0,0,0" TextWrapping="Wrap" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </Border>
+
+        <StackPanel>
+            <ui:ArcadiaPanel Header="{l:Loc Hash_Result}" Icon="Hash" Margin="0,0,0,10">
+                <StackPanel>
+                    <Grid Margin="0,0,0,8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="{Binding FileName}" Style="{StaticResource Text.Item}" TextTrimming="CharacterEllipsis" />
+                        <TextBlock Grid.Column="1" Text="{Binding FileSize}" Style="{StaticResource Text.Meta}" Margin="10,0" VerticalAlignment="Center" />
+                        <Border Grid.Column="2" Style="{StaticResource Chip}" Margin="0" Visibility="{Binding HashAlgorithmName, Converter={StaticResource HasValue}}">
+                            <TextBlock Text="{Binding HashAlgorithmName}" FontFamily="{StaticResource Font.Mono}" FontSize="11.5" Foreground="#9FE6FF" />
+                        </Border>
+                    </Grid>
+                    <ui:ArcadiaProgressBar Height="6" Margin="0,0,0,8" Value="{Binding Progress, Converter={StaticResource It.Percent}}" Tone="#45D2FF"
+                                           Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibility}}" />
+                    <Border Style="{StaticResource Tool.Console}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBox Style="{StaticResource Tool.SelectableText}" Text="{Binding Hash, Mode=OneWay}" FontFamily="{StaticResource Font.Mono}" FontSize="14" Foreground="#9FE6FF"
+                                     FlowDirection="LeftToRight" AutomationProperties.Name="{l:Loc Hash_Value}" VerticalAlignment="Center" />
+                            <TextBlock Text="{l:Loc Hash_Drop}" Style="{StaticResource Tool.Mono}" Foreground="#4E6480" Visibility="{Binding Hash, Converter={StaticResource HasValue}, ConverterParameter=invert}" />
+                            <ui:ArcadiaButton Grid.Column="1" Style="{StaticResource Tool.Button}" Icon="Copy" Content="{l:Loc Hash_CopyHash}" Command="{Binding CopyHashCommand}" IsEnabled="{Binding HasResult}" />
+                        </Grid>
+                    </Border>
+                </StackPanel>
+            </ui:ArcadiaPanel>
+
+            <ui:ArcadiaPanel Header="{l:Loc Hash_Compare}" Icon="Check">
+                <StackPanel>
+                    <TextBlock Text="{l:Loc Hash_Expected}" Style="{StaticResource Tool.InputLabel}" />
+                    <TextBox MinHeight="30" Text="{Binding Expected, UpdateSourceTrigger=PropertyChanged}" FontFamily="{StaticResource Font.Mono}" FlowDirection="LeftToRight" AutomationProperties.Name="{l:Loc Hash_Expected}" />
+                    <StackPanel Orientation="Horizontal" Margin="0,8,0,0" Visibility="{Binding CompareText, Converter={StaticResource HasValue}}">
+                        <ui:ArcadiaLed Width="12" Height="12" Tone="{Binding CompareTone, Converter={StaticResource It.Tone}}" VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding CompareText}" Style="{StaticResource Text.Item}" Margin="8,0,0,0" VerticalAlignment="Center" />
+                    </StackPanel>
+                </StackPanel>
+            </ui:ArcadiaPanel>
+        </StackPanel>
+    </DockPanel>
+</UserControl>

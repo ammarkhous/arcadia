@@ -1,0 +1,172 @@
+<UserControl x:Class="Arcadia.App.Views.Travel.TravelCountriesView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:ui="urn:arcadia-ui"
+             xmlns:l="clr-namespace:Arcadia.App.Localization"
+             xmlns:tvm="clr-namespace:Arcadia.App.ViewModels.Travel"
+             xmlns:tv="clr-namespace:Arcadia.App.Views.Travel"
+             xmlns:ctl="clr-namespace:Arcadia.App.Views.Controls"
+             mc:Ignorable="d" d:DataContext="{d:DesignInstance tvm:TravelViewModel}">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+        <DockPanel>
+            <StackPanel DockPanel.Dock="Top" Margin="2,0,0,10">
+                <TextBlock Text="{l:Loc Tr_WorldKicker}" Style="{StaticResource Tr.Kicker}" />
+                <TextBlock Text="{l:Loc Tr_WorldExploredTitle}" Style="{StaticResource Text.Title}" FontSize="24" Margin="0,2,0,0" />
+            </StackPanel>
+
+            <!-- world explored: the map is the statistic -->
+            <Grid DockPanel.Dock="Top" Height="300" Margin="0,0,0,10">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="10" />
+                    <ColumnDefinition Width="300" />
+                </Grid.ColumnDefinitions>
+                <Border Style="{StaticResource Tr.Chart}">
+                    <Border Style="{StaticResource Tr.ChartInner}">
+                        <Grid>
+                            <tv:WorldMap Countries="{Binding Countries}" CountryShades="{Binding CountryShades}" IsCompact="True" LanguageCode="{Binding LanguageCode}"
+                                         SelectedCountry="{Binding SelectedCountry}" CountryCommand="{Binding CountryClickedCommand}" Latitude="22" Longitude="12" Zoom="1.45" />
+                            <Border VerticalAlignment="Bottom" HorizontalAlignment="Left" Margin="10" Padding="12,7" CornerRadius="3" BorderThickness="1" BorderBrush="#243650" Background="#E0080E17">
+                                <StackPanel>
+                                    <TextBlock Text="{Binding WorldText}" Style="{StaticResource Text.Item}" FontSize="13" />
+                                    <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
+                                        <Border Width="12" Height="9" Background="#0E3B4C" BorderBrush="#45D2FF" BorderThickness="1" /><TextBlock Text="{l:Loc Tr_CountryVisited}" Style="{StaticResource Text.Meta}" FontSize="11" Margin="5,0,12,0" />
+                                        <Border Width="12" Height="9" Background="#332A14" BorderBrush="#6A5424" BorderThickness="1" /><TextBlock Text="{l:Loc Tr_CountryWanted}" Style="{StaticResource Text.Meta}" FontSize="11" Margin="5,0,0,0" />
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+                    </Border>
+                </Border>
+                <Border Grid.Column="2" Style="{StaticResource Tool.TableFrame}">
+                    <Border Style="{StaticResource Tool.TableInner}" Padding="14,10">
+                        <StackPanel>
+                            <TextBlock Text="{l:Loc Tr_Continents}" Style="{StaticResource Tr.Kicker}" Margin="0,0,0,6" />
+                            <ItemsControl ItemsSource="{Binding Continents}" Focusable="False">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate DataType="{x:Type tvm:ContinentBar}">
+                                        <Grid Margin="0,4">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="110" />
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="54" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="{Binding Name}" Style="{StaticResource Text.Body}" FontSize="12.5" TextTrimming="CharacterEllipsis" />
+                                            <ui:ArcadiaProgressBar Grid.Column="1" Height="5" Value="{Binding Percent}" Tone="#45D2FF" VerticalAlignment="Center" />
+                                            <TextBlock Grid.Column="2" Text="{Binding CountText}" Style="{StaticResource Tr.Coord}" HorizontalAlignment="Right" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <TextBlock Text="{l:Loc Tr_ContinentsNote}" Style="{StaticResource Text.Meta}" FontSize="10.5" TextWrapping="Wrap" Margin="0,10,0,0" />
+                        </StackPanel>
+                    </Border>
+                </Border>
+            </Grid>
+
+            <!-- stat plates -->
+            <Border DockPanel.Dock="Top" Style="{StaticResource Tool.CommandBar}" Margin="0,0,0,10">
+                <Border Style="{StaticResource Tool.CommandBarInner}" Padding="0,8">
+                    <ItemsControl ItemsSource="{Binding WorldTiles}" Focusable="False">
+                        <ItemsControl.ItemsPanel><ItemsPanelTemplate><UniformGrid Rows="1" /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="{x:Type tvm:TravelStatTile}">
+                                <Grid AutomationProperties.Name="{Binding Label}" AutomationProperties.HelpText="{Binding Value}">
+                                    <Border Width="1" HorizontalAlignment="Left" Margin="0,2" Background="#1E2A3C" />
+                                    <StackPanel Margin="14,0,8,0">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="{Binding Value}" FontFamily="{StaticResource Font.Display}" FontSize="23" Foreground="{Binding Tone, Converter={StaticResource Tr.Tone}}" VerticalAlignment="Center" />
+                                            <ui:ArcadiaIcon Kind="{Binding Icon}" Width="13" Height="13" Margin="8,0,0,0" Foreground="{StaticResource Brush.Icon.Dim}" />
+                                        </StackPanel>
+                                        <TextBlock Text="{Binding Label}" Style="{StaticResource Text.Caps}" FontSize="10" Foreground="#7F93AE" TextTrimming="CharacterEllipsis" />
+                                        <TextBlock Text="{Binding Hint}" Style="{StaticResource Text.Meta}" FontSize="10.5" Visibility="{Binding Hint, Converter={StaticResource HasValue}}" />
+                                    </StackPanel>
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </Border>
+            </Border>
+
+            <!-- the list -->
+            <DockPanel DockPanel.Dock="Top" Margin="0,0,0,8">
+                <Grid DockPanel.Dock="Right" Width="220" Height="30">
+                    <TextBox x:Name="SearchBox" Padding="28,0,8,0" Text="{Binding CountrySearch, UpdateSourceTrigger=PropertyChanged, Delay=120}" ctl:Shortcuts.IsSearchBox="True"
+                             AutomationProperties.Name="{l:Loc Tr_SearchCountries}" ui:Bidi.AutoDirection="True" />
+                    <ui:ArcadiaIcon Kind="Search" Width="13" Height="13" HorizontalAlignment="Left" Margin="9,0,0,0" IsHitTestVisible="False" Foreground="{StaticResource Brush.Icon.Dim}" />
+                    <TextBlock Text="{l:Loc Tr_SearchCountries}" Margin="29,0,8,0" VerticalAlignment="Center" FontSize="12" Foreground="{StaticResource Brush.Text.Muted}" IsHitTestVisible="False"
+                               Visibility="{Binding Text, ElementName=SearchBox, Converter={StaticResource HasValue}, ConverterParameter=invert}" />
+                </Grid>
+                <ItemsControl ItemsSource="{Binding CountryFilters}" Focusable="False">
+                    <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <ui:ArcadiaChoice Style="{StaticResource Tool.RadioChip}" Height="28" Padding="12,0" GroupName="CountryFilter" Content="{Binding Label}" Margin="0,0,6,4"
+                                              Command="{Binding DataContext.SetCountryFilterCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}">
+                                <ui:ArcadiaChoice.IsChecked>
+                                    <MultiBinding Converter="{StaticResource It.Same}" Mode="OneWay">
+                                        <Binding Path="DataContext.CountryFilterOption" RelativeSource="{RelativeSource AncestorType=UserControl}" />
+                                        <Binding />
+                                    </MultiBinding>
+                                </ui:ArcadiaChoice.IsChecked>
+                            </ui:ArcadiaChoice>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </DockPanel>
+            <Border Style="{StaticResource Tool.TableFrame}">
+                <Border Style="{StaticResource Tool.TableInner}">
+                    <Grid>
+                        <DataGrid ItemsSource="{Binding CountryRows}" AutoGenerateColumns="False" IsReadOnly="True" HeadersVisibility="Column" SelectionMode="Single"
+                                  EnableRowVirtualization="True" AutomationProperties.Name="{l:Loc TrSection_Countries}" MouseDoubleClick="OnRowActivated" SelectionChanged="OnRowSelected">
+                            <DataGrid.Columns>
+                                <DataGridTemplateColumn Header="{l:Loc Tr_Country}" Width="2.2*" SortMemberPath="Name">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate DataType="{x:Type tvm:CountryRow}">
+                                            <StackPanel Orientation="Horizontal">
+                                                <Border BorderThickness="1" BorderBrush="#30FFFFFF" VerticalAlignment="Center"><Image Source="{Binding Flag}" Style="{StaticResource Tr.Flag}" Height="13" Width="20" /></Border>
+                                                <TextBlock ui:Bidi.Text="{Binding Name}" Style="{StaticResource Cell.Text}" Margin="9,0,0,0" />
+                                                <ui:ArcadiaIcon Kind="Star" Width="11" Height="11" Margin="6,0,0,0" Foreground="#FFD26A" Visibility="{Binding IsFavorite, Converter={StaticResource BoolToVisibility}}" />
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTextColumn Header="{l:Loc Tr_Continent}" Binding="{Binding Continent}" Width="1.2*" ElementStyle="{StaticResource Cell.Dim}" />
+                                <DataGridTemplateColumn Header="{l:Loc Tr_State}" Width="1.1*" SortMemberPath="StateText">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate DataType="{x:Type tvm:CountryRow}">
+                                            <ui:ArcadiaStatusIndicator Text="{Binding StateText}" Tone="{Binding StateTone, Converter={StaticResource Tr.Tone}}" HorizontalAlignment="Left" MinWidth="0" Height="18" />
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTextColumn Header="{l:Loc Tr_StatPlaces}" Binding="{Binding PlacesText}" SortMemberPath="PlaceCount" Width="80" ElementStyle="{StaticResource Cell.Number}" />
+                                <DataGridTextColumn Header="{l:Loc Tr_StatVisits}" Binding="{Binding VisitsText}" SortMemberPath="VisitCount" Width="70" ElementStyle="{StaticResource Cell.Number}" />
+                                <DataGridTextColumn Header="{l:Loc Tr_StatTrips}" Binding="{Binding TripsText}" SortMemberPath="TripCount" Width="70" ElementStyle="{StaticResource Cell.Number}" />
+                                <DataGridTextColumn Header="{l:Loc Tr_LastVisit}" Binding="{Binding LastVisitText}" Width="120" ElementStyle="{StaticResource Cell.Dim}" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                        <TextBlock Text="{l:Loc Tr_NoCountriesHere}" Style="{StaticResource Text.Meta}" HorizontalAlignment="Center" VerticalAlignment="Center" TextWrapping="Wrap" MaxWidth="380" TextAlignment="Center"
+                                   Visibility="{Binding CountryRows.Count, Converter={StaticResource HasValue}, ConverterParameter=invert}" />
+                    </Grid>
+                </Border>
+            </Border>
+        </DockPanel>
+
+        <!-- selected country -->
+        <Border Grid.Column="1" Width="340" Margin="10,0,0,0" Style="{StaticResource Tool.TableFrame}" Visibility="{Binding Country, Converter={StaticResource HasValue}}">
+            <Border Style="{StaticResource Tool.TableInner}" Padding="12,10,8,6">
+                <DockPanel>
+                    <ui:ArcadiaButton DockPanel.Dock="Top" HorizontalAlignment="Right" Variant="Tool" Icon="Close" IconSize="10" Width="24" Height="22" Margin="0,-4,0,-18" Panel.ZIndex="2"
+                                      Click="OnClosePanel" ToolTip="{l:Loc Tr_Close}" AutomationProperties.Name="{l:Loc Tr_Close}" />
+                    <tv:CountryPanelView />
+                </DockPanel>
+            </Border>
+        </Border>
+    </Grid>
+</UserControl>

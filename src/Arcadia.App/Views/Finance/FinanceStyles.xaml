@@ -1,0 +1,266 @@
+<!-- Finance on top of Arcadia's design system: a private financial terminal. Tabular money, dense rows, thin meters. -->
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:conv="clr-namespace:Arcadia.App.Converters"
+                    xmlns:org="clr-namespace:Arcadia.App.Views.Organizer"
+                    xmlns:fin="clr-namespace:Arcadia.App.Views.Finance"
+                    xmlns:fvm="clr-namespace:Arcadia.App.ViewModels.Finance"
+                    xmlns:l="clr-namespace:Arcadia.App.Localization"
+                    xmlns:ui="urn:arcadia-ui">
+
+    <!-- merged dictionaries cannot see App-level keys: the converters used here live here too -->
+    <conv:HasValueToVisibilityConverter x:Key="Fin.HasValue" />
+    <conv:ToneToColorConverter x:Key="Fin.Tone" />
+    <org:ToneBrushConverter x:Key="Fin.ToneBrush" />
+    <fin:InkConverter x:Key="Fin.Ink" />
+
+    <FontFamily x:Key="Fin.Figures">Bahnschrift, Segoe UI</FontFamily>
+
+    <!-- money: tabular figures, a DIN-like face, left-to-right in every language -->
+    <Style x:Key="Fin.Money" TargetType="fin:MoneyText">
+        <Setter Property="FontFamily" Value="{StaticResource Fin.Figures}" />
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="Foreground" Value="#DCE7F3" />
+        <Setter Property="TextAlignment" Value="Right" />
+        <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+    </Style>
+    <Style x:Key="Fin.MoneyLarge" TargetType="fin:MoneyText" BasedOn="{StaticResource Fin.Money}">
+        <Setter Property="FontSize" Value="24" />
+        <Setter Property="FontWeight" Value="Light" />
+        <Setter Property="Foreground" Value="#EEF5FC" />
+        <Setter Property="TextAlignment" Value="Left" />
+    </Style>
+    <Style x:Key="Fin.Kicker" TargetType="TextBlock" BasedOn="{StaticResource Text.Caps}">
+        <Setter Property="FontSize" Value="10.5" />
+        <Setter Property="Foreground" Value="#7FA9C8" />
+    </Style>
+    <Style x:Key="Fin.Meta" TargetType="TextBlock" BasedOn="{StaticResource Text.Meta}">
+        <Setter Property="FontSize" Value="11.5" />
+        <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+    </Style>
+
+    <!-- a quiet framed panel with a kicker heading -->
+    <Style x:Key="Fin.Panel" TargetType="Border" BasedOn="{StaticResource Tool.TableFrame}" />
+    <Style x:Key="Fin.PanelInner" TargetType="Border" BasedOn="{StaticResource Tool.TableInner}">
+        <Setter Property="Padding" Value="12,10" />
+    </Style>
+
+    <!-- a column header of the register (click to sort) -->
+    <Style x:Key="Fin.Header" TargetType="Button">
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Foreground" Value="#7F93AE" />
+        <Setter Property="HorizontalContentAlignment" Value="Left" />
+        <Setter Property="FocusVisualStyle" Value="{StaticResource Arcadia.FocusVisual}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="b" Background="Transparent" Padding="0,6">
+                        <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" TextBlock.Foreground="{TemplateBinding Foreground}"
+                                          TextBlock.FontSize="10.5" TextBlock.FontWeight="SemiBold" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True"><Setter Property="Foreground" Value="#C8DDF0" /></Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- a small state chip ("Over budget", "Paused"): tone dot + text, no loud fills -->
+    <DataTemplate x:Key="Fin.StateChip">
+        <Border CornerRadius="2" Padding="6,1,7,1" BorderThickness="1" BorderBrush="#26384F" Background="#0A121C">
+            <StackPanel Orientation="Horizontal">
+                <Ellipse Width="6" Height="6" Fill="{Binding Tag, RelativeSource={RelativeSource AncestorType=ContentPresenter}, Converter={StaticResource Fin.Ink}}" VerticalAlignment="Center" />
+                <TextBlock Text="{Binding}" FontSize="10.5" Foreground="#AFC2D8" Margin="5,0,0,0" VerticalAlignment="Center" />
+            </StackPanel>
+        </Border>
+    </DataTemplate>
+
+    <!-- ═══════ metric cell (a strip of figures) ═══════ -->
+    <DataTemplate DataType="{x:Type fvm:MetricCell}">
+        <Border Padding="14,10,14,10" BorderBrush="#1A2638" BorderThickness="0,0,1,0">
+            <StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <ui:ArcadiaIcon Kind="{Binding Icon}" Width="12" Height="12" Opacity="0.8" />
+                    <TextBlock Text="{Binding Label}" Style="{StaticResource Fin.Kicker}" Margin="6,0,0,0" TextTrimming="CharacterEllipsis" />
+                </StackPanel>
+                <fin:MoneyText Money="{Binding Value}" Style="{StaticResource Fin.MoneyLarge}" FontSize="21" Margin="0,5,0,0" HorizontalAlignment="Left" Foreground="{Binding Tone, Converter={StaticResource Fin.Ink}}" />
+                <TextBlock Text="{Binding Hint}" Style="{StaticResource Fin.Meta}" FontSize="10.5" Margin="0,2,0,0" Visibility="{Binding Hint, Converter={StaticResource Fin.HasValue}}" />
+            </StackPanel>
+        </Border>
+    </DataTemplate>
+
+    <!-- ═══════ per-currency total ═══════ -->
+    <DataTemplate DataType="{x:Type fvm:CurrencyTotal}">
+        <DockPanel Margin="0,3">
+            <Border DockPanel.Dock="Left" CornerRadius="2" Padding="5,0" Margin="0,0,10,0" BorderThickness="1" BorderBrush="#2A3E58" Background="#0C1622" VerticalAlignment="Center">
+                <TextBlock Text="{Binding Currency}" FontFamily="{StaticResource Fin.Figures}" FontSize="10.5" Foreground="#9FC4E6" />
+            </Border>
+            <TextBlock DockPanel.Dock="Right" Text="{Binding Detail}" Style="{StaticResource Fin.Meta}" Margin="10,0,0,0" VerticalAlignment="Center" />
+            <fin:MoneyText Money="{Binding TotalText}" Style="{StaticResource Fin.Money}" TextAlignment="Left" FontSize="13.5" VerticalAlignment="Center" Foreground="{Binding Tone, Converter={StaticResource Fin.Ink}}" />
+        </DockPanel>
+    </DataTemplate>
+
+    <!-- ═══════ spending by category: name, share bar, amount ═══════ -->
+    <DataTemplate x:Key="Fin.CategoryBarTemplate" DataType="{x:Type fvm:CategoryBar}">
+        <Grid Margin="0,4" ToolTip="{Binding CountText}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="20" />
+                <ColumnDefinition Width="5*" MinWidth="64" MaxWidth="170" />
+                <ColumnDefinition Width="4*" />
+                <ColumnDefinition Width="38" />
+                <ColumnDefinition Width="Auto" MinWidth="78" />
+            </Grid.ColumnDefinitions>
+            <ui:ArcadiaIcon Kind="{Binding Icon}" Width="13" Height="13" Foreground="{Binding Accent, Converter={StaticResource Fin.Tone}}" VerticalAlignment="Center" />
+            <TextBlock Grid.Column="1" ui:Bidi.Text="{Binding Name}" FontSize="12.5" Foreground="{StaticResource Brush.Text.Primary}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" Margin="4,0,8,0" />
+            <fin:MeterBar Grid.Column="2" Value="{Binding Share}" Tone="{Binding Accent}" Height="6" VerticalAlignment="Center" />
+            <TextBlock Grid.Column="3" Text="{Binding PercentText}" Style="{StaticResource Org.Time}" FontSize="10.5" TextAlignment="Right" VerticalAlignment="Center" Margin="6,0,0,0" />
+            <fin:MoneyText Grid.Column="4" Money="{Binding AmountText}" Style="{StaticResource Fin.Money}" FontSize="12.5" VerticalAlignment="Center" Margin="8,0,0,0" />
+        </Grid>
+    </DataTemplate>
+
+    <!-- ═══════ a budget row ═══════ -->
+    <DataTemplate x:Key="Fin.BudgetRowTemplate" DataType="{x:Type fvm:BudgetItem}">
+        <Grid Margin="0,6">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="22" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <ui:ArcadiaIcon Kind="{Binding Icon}" Width="14" Height="14" Foreground="{Binding Accent, Converter={StaticResource Fin.Tone}}" VerticalAlignment="Center" />
+            <DockPanel Grid.Column="1" Margin="4,0,8,0">
+                <ContentPresenter DockPanel.Dock="Right" Content="{Binding LevelText}" Tag="{Binding LevelTone}" ContentTemplate="{StaticResource Fin.StateChip}" Margin="8,0,0,0" />
+                <TextBlock ui:Bidi.Text="{Binding Name}" FontSize="13" Foreground="{StaticResource Brush.Text.Primary}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+            </DockPanel>
+            <fin:MoneyText Grid.Column="2" Money="{Binding UsedText}" Style="{StaticResource Fin.Money}" FontSize="12" Foreground="#AFC2D8" VerticalAlignment="Center" />
+            <fin:MeterBar Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" Margin="4,6,0,0" Value="{Binding Meter}" Tone="{Binding MeterTone}" />
+            <DockPanel Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="2" Margin="4,4,0,0">
+                <TextBlock DockPanel.Dock="Right" Text="{Binding PercentText}" Style="{StaticResource Org.Time}" FontSize="10.5" Margin="8,0,0,0" />
+                <fin:MoneyText Money="{Binding RemainingText}" FontSize="11" Foreground="#8FA3BD" TextAlignment="Left" />
+                <fin:MoneyText Money="{Binding CarriedText}" FontSize="11" Foreground="#6F86A6" TextAlignment="Left" Margin="10,0,0,0" Visibility="{Binding CarriedText, Converter={StaticResource Fin.HasValue}}" />
+            </DockPanel>
+        </Grid>
+    </DataTemplate>
+
+    <!-- ═══════ a bill due ═══════ -->
+    <DataTemplate x:Key="Fin.BillRowTemplate" DataType="{x:Type fvm:BillItem}">
+        <Grid MinHeight="34">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="26" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <ui:ArcadiaIcon Kind="{Binding Icon}" Width="14" Height="14" VerticalAlignment="Center" Opacity="0.85" />
+            <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="2,3,8,3">
+                <TextBlock ui:Bidi.Text="{Binding Name}" FontSize="12.5" Foreground="{StaticResource Brush.Text.Primary}" TextTrimming="CharacterEllipsis" />
+                <TextBlock Text="{Binding DueText}" FontSize="10.5" Foreground="{Binding DueTone, Converter={StaticResource Fin.Ink}}" TextTrimming="CharacterEllipsis" />
+            </StackPanel>
+            <fin:MoneyText Grid.Column="2" Money="{Binding AmountText}" Style="{StaticResource Fin.Money}" VerticalAlignment="Center" Foreground="{Binding AmountTone, Converter={StaticResource Fin.Ink}}" />
+        </Grid>
+    </DataTemplate>
+
+    <!-- ═══════ a compact transaction line (overview, trips, projects) ═══════ -->
+    <DataTemplate x:Key="Fin.TxnLineTemplate" DataType="{x:Type fvm:TransactionItem}">
+        <Grid MinHeight="32">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="58" />
+                <ColumnDefinition Width="22" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBlock Text="{Binding ShortDate}" Style="{StaticResource Org.Time}" FontSize="10.5" VerticalAlignment="Center" />
+            <ui:ArcadiaIcon Grid.Column="1" Kind="{Binding CategoryIcon}" Width="13" Height="13" Foreground="{Binding CategoryAccent, Converter={StaticResource Fin.Tone}}" VerticalAlignment="Center" />
+            <StackPanel Grid.Column="2" VerticalAlignment="Center" Margin="2,2,8,2">
+                <TextBlock ui:Bidi.Text="{Binding Title}" FontSize="12.5" Foreground="{StaticResource Brush.Text.Primary}" TextTrimming="CharacterEllipsis" />
+                <TextBlock Text="{Binding CategoryText}" FontSize="10.5" Foreground="#7F93AE" TextTrimming="CharacterEllipsis" />
+            </StackPanel>
+            <fin:MoneyText Grid.Column="3" Money="{Binding AmountText}" Style="{StaticResource Fin.Money}" VerticalAlignment="Center" Foreground="{Binding AmountTone, Converter={StaticResource Fin.Ink}}" />
+        </Grid>
+    </DataTemplate>
+
+    <!-- ═══════ chart legend swatch ═══════ -->
+    <DataTemplate DataType="{x:Type fvm:ChartLegend}">
+        <StackPanel Orientation="Horizontal" Margin="0,0,14,0">
+            <Border Width="10" Height="3" CornerRadius="1.5" Background="{Binding Tone, Converter={StaticResource Fin.Ink}}" VerticalAlignment="Center" />
+            <TextBlock Text="{Binding Label}" FontSize="11" Foreground="#9FB3CC" Margin="6,0,0,0" />
+        </StackPanel>
+    </DataTemplate>
+
+    <!-- ═══════ trip / project expenses panel ═══════ -->
+    <DataTemplate DataType="{x:Type fvm:ExpensePanelViewModel}">
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="12" />
+                <ColumnDefinition Width="340" />
+            </Grid.ColumnDefinitions>
+            <DockPanel>
+                <DockPanel DockPanel.Dock="Top" Margin="0,0,0,8">
+                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                        <ui:ArcadiaButton Icon="External" IconSize="12" Content="{l:Loc Exp_OpenInFinance}" Command="{Binding OpenInFinanceCommand}" Margin="0,0,8,0" />
+                        <ui:ArcadiaButton Variant="Primary" Icon="Plus" IconSize="12" Content="{l:Loc Exp_AddExpense}" Command="{Binding AddExpenseCommand}" />
+                    </StackPanel>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="{l:Loc Exp_Recorded}" Style="{StaticResource Fin.Kicker}" />
+                        <TextBlock Text="{Binding CountText}" Style="{StaticResource Fin.Meta}" Margin="0,2,0,0" />
+                    </StackPanel>
+                </DockPanel>
+                <Border Style="{StaticResource Fin.Panel}">
+                    <Border Style="{StaticResource Tool.TableInner}">
+                        <Grid>
+                            <ListBox x:Name="ExpenseList" ItemsSource="{Binding Items}" Style="{StaticResource Tr.List}" ItemTemplate="{StaticResource Fin.TxnLineTemplate}" AutomationProperties.Name="{l:Loc Exp_Recorded}" Padding="10,0">
+                                <ListBox.InputBindings>
+                                    <MouseBinding MouseAction="LeftDoubleClick" Command="{Binding EditCommand}" CommandParameter="{Binding SelectedItem, ElementName=ExpenseList}" />
+                                    <KeyBinding Key="Return" Command="{Binding EditCommand}" CommandParameter="{Binding SelectedItem, ElementName=ExpenseList}" />
+                                </ListBox.InputBindings>
+                            </ListBox>
+                            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="360" Visibility="{Binding IsEmpty, Converter={StaticResource Fin.HasValue}}">
+                                <ui:ArcadiaIcon Kind="Receipt" Width="30" Height="30" Opacity="0.55" />
+                                <TextBlock Text="{l:Loc Exp_Empty}" Style="{StaticResource Text.Body}" TextAlignment="Center" TextWrapping="Wrap" Margin="0,10,0,0" />
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                </Border>
+            </DockPanel>
+            <StackPanel Grid.Column="2">
+                <Border Style="{StaticResource Fin.Panel}">
+                    <Border Style="{StaticResource Fin.PanelInner}">
+                        <StackPanel>
+                            <TextBlock Text="{l:Loc Exp_TotalRecorded}" Style="{StaticResource Fin.Kicker}" />
+                            <ItemsControl ItemsSource="{Binding Totals}" Margin="0,6,0,0" Focusable="False" />
+                            <TextBlock Text="—" Style="{StaticResource Fin.Meta}" Visibility="{Binding IsEmpty, Converter={StaticResource Fin.HasValue}}" />
+                        </StackPanel>
+                    </Border>
+                </Border>
+                <Border Style="{StaticResource Fin.Panel}" Margin="0,10,0,0" Visibility="{Binding IsTrip, Converter={StaticResource Fin.HasValue}}">
+                    <Border Style="{StaticResource Fin.PanelInner}">
+                        <StackPanel>
+                            <DockPanel>
+                                <ui:ArcadiaButton DockPanel.Dock="Right" Variant="Link" Content="{l:Loc Exp_SetBudget}" Command="{Binding SetBudgetCommand}" />
+                                <TextBlock Text="{l:Loc Exp_TripBudget}" Style="{StaticResource Fin.Kicker}" VerticalAlignment="Center" />
+                            </DockPanel>
+                            <ContentControl Content="{Binding Budget}" ContentTemplate="{StaticResource Fin.BudgetRowTemplate}" Focusable="False" Margin="0,4,0,0"
+                                            Visibility="{Binding Budget, Converter={StaticResource Fin.HasValue}}" />
+                            <TextBlock Text="{l:Loc Exp_NoBudget}" Style="{StaticResource Fin.Meta}" TextWrapping="Wrap" Margin="0,6,0,0"
+                                       Visibility="{Binding Budget, Converter={StaticResource Fin.HasValue}, ConverterParameter=invert}" />
+                        </StackPanel>
+                    </Border>
+                </Border>
+                <Border Style="{StaticResource Fin.Panel}" Margin="0,10,0,0">
+                    <Border Style="{StaticResource Fin.PanelInner}">
+                        <StackPanel>
+                            <TextBlock Text="{l:Loc Fin_ByCategory}" Style="{StaticResource Fin.Kicker}" />
+                            <ItemsControl ItemsSource="{Binding CategoryBars}" ItemTemplate="{StaticResource Fin.CategoryBarTemplate}" Margin="0,6,0,0" Focusable="False" />
+                            <TextBlock Text="—" Style="{StaticResource Fin.Meta}" Visibility="{Binding IsEmpty, Converter={StaticResource Fin.HasValue}}" />
+                        </StackPanel>
+                    </Border>
+                </Border>
+            </StackPanel>
+        </Grid>
+    </DataTemplate>
+</ResourceDictionary>

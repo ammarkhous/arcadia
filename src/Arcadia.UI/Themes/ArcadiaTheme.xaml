@@ -1,0 +1,10 @@
+<!-- Merge this dictionary into Application.Resources to adopt the Arcadia look. -->
+<ResourceDictionary xmlns:shared="clr-namespace:Arcadia.UI" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <ResourceDictionary.MergedDictionaries>
+        <shared:SharedResourceDictionary Source="/Arcadia.UI;component/Themes/Palette.xaml" />
+        <shared:SharedResourceDictionary Source="/Arcadia.UI;component/Themes/Typography.xaml" />
+        <shared:SharedResourceDictionary Source="/Arcadia.UI;component/Themes/Icons.xaml" />
+        <shared:SharedResourceDictionary Source="/Arcadia.UI;component/Themes/StandardControls.xaml" />
+    </ResourceDictionary.MergedDictionaries>
+</ResourceDictionary>

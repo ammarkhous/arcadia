@@ -1,0 +1,138 @@
+<UserControl x:Class="Arcadia.App.Views.Travel.PlaceDetailsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:ui="urn:arcadia-ui"
+             xmlns:l="clr-namespace:Arcadia.App.Localization"
+             xmlns:tvm="clr-namespace:Arcadia.App.ViewModels.Travel"
+             xmlns:tv="clr-namespace:Arcadia.App.Views.Travel"
+             mc:Ignorable="d" d:DataContext="{d:DesignInstance tvm:PlaceDetailsViewModel}">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Focusable="False">
+        <StackPanel Margin="0,0,4,8">
+            <!-- cover: the chosen photo, or a small chart vignette -->
+            <Border Height="150" CornerRadius="3" ClipToBounds="True" BorderThickness="1" BorderBrush="#243650">
+                <Grid>
+                    <Border Background="#0B131F" />
+                    <tv:TopoLines Seed="{Binding Place.Id}" Spacing="16" />
+                    <ui:ArcadiaIcon Kind="{Binding Icon}" Width="46" Height="46" Opacity="0.85" Visibility="{Binding CoverPath, Converter={StaticResource HasValue}, ConverterParameter=invert}" />
+                    <tv:PhotoThumb Path="{Binding CoverPath}" DecodeWidth="720" Visibility="{Binding CoverPath, Converter={StaticResource HasValue}}" />
+                    <Border VerticalAlignment="Bottom" Height="60">
+                        <Border.Background>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                <GradientStop Offset="0" Color="#00060A10" />
+                                <GradientStop Offset="1" Color="#E6060A10" />
+                            </LinearGradientBrush>
+                        </Border.Background>
+                    </Border>
+                    <TextBlock Text="{Binding Coordinates}" Style="{StaticResource Tr.Coord}" Foreground="#9FB8D4" VerticalAlignment="Bottom" Margin="10,0,10,7" />
+                    <ui:ArcadiaIcon Kind="Star" Width="16" Height="16" Foreground="#FFD26A" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,8,8,0"
+                                    Visibility="{Binding IsFavorite, Converter={StaticResource BoolToVisibility}}" />
+                </Grid>
+            </Border>
+
+            <TextBlock ui:Bidi.Text="{Binding Name}" Style="{StaticResource Text.Title}" FontSize="21" Margin="0,10,0,0" TextWrapping="Wrap" />
+            <StackPanel Orientation="Horizontal" Margin="0,3,0,0">
+                <Image Source="{Binding Flag}" Style="{StaticResource Tr.Flag}" Margin="0,0,7,0" Visibility="{Binding Flag, Converter={StaticResource HasValue}}" />
+                <TextBlock Style="{StaticResource Text.Meta}" TextTrimming="CharacterEllipsis">
+                    <Run Text="{Binding TypeText, Mode=OneWay}" /><Run Text="  ·  " /><Run Text="{Binding Where, Mode=OneWay}" />
+                </TextBlock>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                <ui:ArcadiaStatusIndicator Text="{Binding StatusText}" Tone="{Binding StatusTone, Converter={StaticResource Tr.Tone}}" MinWidth="0" Height="20" />
+                <TextBlock Text="{Binding RatingText}" Foreground="#FFD26A" FontSize="13" Margin="10,0,0,0" VerticalAlignment="Center" />
+            </StackPanel>
+
+            <!-- actions -->
+            <WrapPanel Margin="0,12,0,4">
+                <ui:ArcadiaButton Style="{StaticResource Tool.Button}" Margin="0,0,6,6" Variant="Primary" Icon="Check" Content="{l:Loc Tr_MarkVisited}" Command="{Binding MarkVisitedCommand}" />
+                <ui:ArcadiaButton Style="{StaticResource Tool.Button}" Margin="0,0,6,6" Icon="Suitcase" Content="{l:Loc Tr_AddToTrip}" Command="{Binding AddToTripCommand}" />
+                <ui:ArcadiaButton Style="{StaticResource Tool.Button}" Margin="0,0,6,6" Icon="Star" Content="{l:Loc Tr_Favorite}" Command="{Binding ToggleFavoriteCommand}" />
+                <ui:ArcadiaButton Style="{StaticResource Tool.Button}" Margin="0,0,6,6" Icon="Map" Content="{l:Loc Tr_OpenOnMap}" Command="{Binding OpenOnMapCommand}" />
+                <ui:ArcadiaButton Style="{StaticResource Tool.Button}" Margin="0,0,6,6" Icon="Journal" Content="{l:Loc Tr_Edit}" Command="{Binding EditCommand}" />
+                <ui:ArcadiaButton Style="{StaticResource Tool.Button}" Margin="0,0,6,6" Icon="Camera" Content="{l:Loc Tr_AddPhoto}" Command="{Binding AddPhotoCommand}" />
+                <ui:ArcadiaButton Style="{StaticResource Tool.Button}" Margin="0,0,6,6" Icon="Notes" Content="{l:Loc Tr_AddNote}" Command="{Binding AddNoteCommand}" />
+                <ui:ArcadiaButton Style="{StaticResource Tool.Button}" Margin="0,0,6,6" Icon="Compass" Content="{l:Loc Tr_WantToVisit}" Command="{Binding SetWantedCommand}"
+                                  Visibility="{Binding IsVisited, Converter={StaticResource HasValue}, ConverterParameter=invert}" />
+                <ui:ArcadiaButton Style="{StaticResource Tool.Button}" Margin="0,0,6,6" Icon="Suitcase" Content="{l:Loc Tr_NewTripHere}" Command="{Binding NewTripHereCommand}" />
+                <ui:ArcadiaButton Style="{StaticResource Tool.Button}" Margin="0,0,6,6" Icon="Trash" Content="{l:Loc Proj_Delete}" Foreground="#FFB0B3" Command="{Binding DeleteCommand}" />
+            </WrapPanel>
+
+            <!-- visits -->
+            <TextBlock Text="{l:Loc Tr_VisitHistory}" Style="{StaticResource Tr.Kicker}" Margin="0,8,0,4" />
+            <TextBlock Text="{Binding VisitsSummary}" Style="{StaticResource Text.Body}" />
+            <ItemsControl ItemsSource="{Binding Visits}" Focusable="False" Margin="0,4,0,0">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate DataType="{x:Type tvm:VisitRow}">
+                        <Grid Margin="0,2">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <Border Width="7" Height="7" CornerRadius="3.5" Background="#45D2FF" VerticalAlignment="Center" />
+                            <TextBlock Grid.Column="1" Margin="9,0,6,0" Style="{StaticResource Text.Meta}" TextTrimming="CharacterEllipsis">
+                                <Run Text="{Binding DateText, Mode=OneWay}" Foreground="#DCE7F4" /><Run Text="  " /><Run Text="{Binding TripName, Mode=OneWay}" /><Run Text="  " /><Run Text="{Binding Note, Mode=OneWay}" FontStyle="Italic" />
+                            </TextBlock>
+                            <ui:ArcadiaButton Grid.Column="2" Variant="Tool" Icon="Close" IconSize="9" Width="18" Height="18" ToolTip="{l:Loc Tr_RemoveVisit}" AutomationProperties.Name="{l:Loc Tr_RemoveVisit}"
+                                              Command="{Binding DataContext.DeleteVisitCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" />
+                        </Grid>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <!-- trips -->
+            <StackPanel Visibility="{Binding Trips.Count, Converter={StaticResource HasValue}}">
+                <TextBlock Text="{l:Loc Tr_OnTrips}" Style="{StaticResource Tr.Kicker}" Margin="0,12,0,4" />
+                <ItemsControl ItemsSource="{Binding Trips}" Focusable="False">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Button Style="{StaticResource ListRowButton}" Padding="4,4" Command="{Binding DataContext.OpenTripCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}">
+                                <DockPanel>
+                                    <ui:ArcadiaIcon Kind="Suitcase" Width="14" Height="14" />
+                                    <TextBlock DockPanel.Dock="Right" Text="{Binding DatesText}" Style="{StaticResource Text.Meta}" Margin="8,0,0,0" />
+                                    <TextBlock ui:Bidi.Text="{Binding Name}" Style="{StaticResource Text.Body}" Margin="8,0,0,0" TextTrimming="CharacterEllipsis" />
+                                </DockPanel>
+                            </Button>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+
+            <!-- description & personal notes -->
+            <StackPanel Visibility="{Binding Description, Converter={StaticResource HasValue}}">
+                <TextBlock Text="{l:Loc Tr_Description}" Style="{StaticResource Tr.Kicker}" Margin="0,12,0,4" />
+                <TextBlock ui:Bidi.Text="{Binding Description}" Style="{StaticResource Text.Body}" TextWrapping="Wrap" />
+            </StackPanel>
+            <DockPanel Margin="0,12,0,4">
+                <TextBlock DockPanel.Dock="Right" Text="{Binding NotesState}" Style="{StaticResource Text.Meta}" FontSize="11" />
+                <TextBlock Text="{l:Loc Tr_PersonalNotes}" Style="{StaticResource Tr.Kicker}" />
+            </DockPanel>
+            <TextBox Style="{StaticResource TextArea}" MinHeight="84" Text="{Binding Notes, UpdateSourceTrigger=PropertyChanged}" ui:Bidi.AutoDirection="True"
+                     AutomationProperties.Name="{l:Loc Tr_PersonalNotes}" />
+            <TextBlock Text="{Binding Tags}" Style="{StaticResource Text.Meta}" Margin="0,6,0,0" Visibility="{Binding Tags, Converter={StaticResource HasValue}}" />
+
+            <!-- photos -->
+            <TextBlock Text="{l:Loc Tr_Photos}" Style="{StaticResource Tr.Kicker}" Margin="0,14,0,6" />
+            <tv:PhotoGridView DataContext="{Binding Photos}" MaxHeight="300" />
+
+            <!-- nearby -->
+            <StackPanel Visibility="{Binding Nearby.Count, Converter={StaticResource HasValue}}">
+                <TextBlock Text="{l:Loc Tr_Nearby}" Style="{StaticResource Tr.Kicker}" Margin="0,12,0,4" />
+                <ItemsControl ItemsSource="{Binding Nearby}" Focusable="False">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate DataType="{x:Type tvm:NearbyPlace}">
+                            <Button Style="{StaticResource ListRowButton}" Padding="4,3" Command="{Binding DataContext.OpenNearbyCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}">
+                                <DockPanel>
+                                    <ui:ArcadiaIcon Kind="{Binding Icon}" Width="14" Height="14" />
+                                    <TextBlock DockPanel.Dock="Right" Text="{Binding DistanceText}" Style="{StaticResource Tr.Coord}" Margin="8,0,0,0" />
+                                    <TextBlock ui:Bidi.Text="{Binding Name}" Style="{StaticResource Text.Body}" Margin="8,0,0,0" TextTrimming="CharacterEllipsis" />
+                                </DockPanel>
+                            </Button>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

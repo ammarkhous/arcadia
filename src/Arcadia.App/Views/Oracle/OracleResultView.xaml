@@ -1,0 +1,235 @@
+<UserControl x:Class="Arcadia.App.Views.Oracle.OracleResultView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:ui="urn:arcadia-ui"
+             xmlns:l="clr-namespace:Arcadia.App.Localization"
+             xmlns:ovm="clr-namespace:Arcadia.App.ViewModels.Oracle"
+             mc:Ignorable="d" d:DataContext="{d:DesignInstance ovm:OracleEntryViewModel}" x:Name="Root">
+    <!-- One command and its structured result. Actions run through the shell's Oracle console (Window.DataContext.Oracle). -->
+    <UserControl.Resources>
+        <FontFamily x:Key="Mono">Cascadia Mono, Consolas</FontFamily>
+
+        <!-- a compact action button on a row -->
+        <DataTemplate x:Key="RowAction" DataType="{x:Type ovm:OracleActionViewModel}">
+            <ui:ArcadiaButton Variant="Secondary" Icon="{Binding Icon}" IconSize="11" Content="{Binding Label}" Height="24" Padding="8,0" Margin="4,0,0,0" FontSize="11.5"
+                              IsEnabled="{Binding IsEnabled}" AutomationProperties.Name="{Binding Label}"
+                              Command="{Binding DataContext.Oracle.ExecuteCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}" />
+        </DataTemplate>
+
+        <Style x:Key="Badge" TargetType="Border">
+            <Setter Property="CornerRadius" Value="2" />
+            <Setter Property="Padding" Value="6,1" />
+            <Setter Property="Margin" Value="6,0,0,0" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="BorderBrush" Value="#2A4C6E" />
+            <Setter Property="Background" Value="#0F1B2A" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+
+        <!-- a result row: the whole row is a focusable button (Enter runs its primary action) -->
+        <Style x:Key="RowButton" TargetType="Button">
+            <Setter Property="Focusable" Value="True" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Grid Background="Transparent">
+                            <Border x:Name="bg" CornerRadius="3" Background="{StaticResource Brush.Nav.Selected}" Opacity="0" />
+                            <Border x:Name="edge" Width="2" HorizontalAlignment="Left" Margin="0,4" Background="{StaticResource Brush.Cyan}" Opacity="0" />
+                            <ContentPresenter Margin="10,6,8,6" />
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="bg" Property="Opacity" Value="0.6" /></Trigger>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="bg" Property="Opacity" Value="1" />
+                                <Setter TargetName="edge" Property="Opacity" Value="1" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+
+    <StackPanel>
+        <!-- ── echo line: › command ········ BADGE  CONFIDENCE  time ── -->
+        <DockPanel>
+            <TextBlock DockPanel.Dock="Right" Text="{Binding Time}" FontFamily="{StaticResource Mono}" FontSize="10.5" Foreground="#4E6480" VerticalAlignment="Center" Margin="8,0,0,0" />
+            <Border DockPanel.Dock="Right" Style="{StaticResource Badge}">
+                <TextBlock Text="{Binding ConfidenceLabel}" FontFamily="{StaticResource Mono}" FontSize="10">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="Foreground" Value="#5FE3A1" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Confidence}" Value="Medium"><Setter Property="Foreground" Value="#F0C064" /></DataTrigger>
+                                <DataTrigger Binding="{Binding Confidence}" Value="Low"><Setter Property="Foreground" Value="#F07A6A" /></DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
+            </Border>
+            <Border DockPanel.Dock="Right" Style="{StaticResource Badge}">
+                <TextBlock Text="{Binding Badge}" FontFamily="{StaticResource Mono}" FontSize="10" Foreground="#8FC8F0" />
+            </Border>
+            <TextBlock FontFamily="{StaticResource Mono}" FontSize="12.5" Foreground="#6F8BAA" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" FlowDirection="LeftToRight" HorizontalAlignment="Left">
+                <Run Text="›" Foreground="#45D2FF" /> <Run Text="{Binding Input, Mode=OneWay}" />
+            </TextBlock>
+        </DockPanel>
+
+        <!-- ── headline ── -->
+        <TextBlock ui:Bidi.Text="{Binding Headline}" Margin="0,8,0,0" FontSize="17" FontWeight="SemiBold" TextWrapping="Wrap">
+            <TextBlock.Style>
+                <Style TargetType="TextBlock">
+                    <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding Kind}" Value="Unknown"><Setter Property="Foreground" Value="#F0C064" /></DataTrigger>
+                        <DataTrigger Binding="{Binding Kind}" Value="Refused"><Setter Property="Foreground" Value="#F07A6A" /></DataTrigger>
+                        <DataTrigger Binding="{Binding Kind}" Value="Error"><Setter Property="Foreground" Value="#F07A6A" /></DataTrigger>
+                        <DataTrigger Binding="{Binding Kind}" Value="Done"><Setter Property="Foreground" Value="#5FE3A1" /></DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </TextBlock.Style>
+        </TextBlock>
+        <TextBlock ui:Bidi.Text="{Binding Detail}" Style="{StaticResource Text.Meta}" Margin="0,3,0,0" TextWrapping="Wrap" Visibility="{Binding Detail, Converter={StaticResource HasValue}}" />
+
+        <!-- ── metrics ── -->
+        <ItemsControl ItemsSource="{Binding Metrics}" Margin="0,10,0,0" Focusable="False" Visibility="{Binding Metrics, Converter={StaticResource HasValue}}">
+            <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate DataType="{x:Type ovm:OracleMetricViewModel}">
+                    <Border Margin="0,0,8,8" Padding="12,8" MinWidth="120" CornerRadius="3" Background="#0B1420" BorderBrush="#1E3048" BorderThickness="1">
+                        <StackPanel>
+                            <TextBlock ui:Bidi.Text="{Binding Label}" Style="{StaticResource Text.Caps}" FontSize="10" Foreground="#7F93AE" />
+                            <TextBlock ui:Bidi.Text="{Binding Value}" FontSize="18" FontWeight="SemiBold" Margin="0,3,0,0" Foreground="{Binding ToneBrush}" TextTrimming="CharacterEllipsis" MaxWidth="320" />
+                        </StackPanel>
+                    </Border>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <!-- ── confirmation preview ── -->
+        <Border Margin="0,10,0,0" Padding="14,12" CornerRadius="4" BorderThickness="1" BorderBrush="#3A5A8C" Visibility="{Binding HasPreview, Converter={StaticResource BoolToVisibility}}">
+            <Border.Background>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                    <GradientStop Offset="0" Color="#12203A" />
+                    <GradientStop Offset="1" Color="#0A111C" />
+                </LinearGradientBrush>
+            </Border.Background>
+            <StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <ui:ArcadiaIcon Kind="{Binding PreviewIcon}" Width="16" Height="16" Foreground="#45D2FF" />
+                    <TextBlock ui:Bidi.Text="{Binding PreviewTitle}" Style="{StaticResource Text.Caps}" FontSize="11.5" Foreground="#9FC4E6" Margin="8,0,0,0" VerticalAlignment="Center" />
+                </StackPanel>
+                <ItemsControl ItemsSource="{Binding PreviewFields}" Margin="0,10,0,0" Focusable="False">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate DataType="{x:Type ovm:OracleFieldViewModel}">
+                            <Grid Margin="0,2">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="130" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock ui:Bidi.Text="{Binding Label}" Style="{StaticResource Text.Meta}" />
+                                <TextBlock Grid.Column="1" ui:Bidi.Text="{Binding Value}" Style="{StaticResource Text.Base}" TextWrapping="Wrap" />
+                            </Grid>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <ItemsControl ItemsSource="{Binding PreviewNotes}" Margin="0,6,0,0" Focusable="False">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock ui:Bidi.Text="{Binding}" FontSize="11.5" FontStyle="Italic" Foreground="#E0B060" TextWrapping="Wrap" Margin="0,2,0,0" />
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <Grid Margin="0,12,0,0">
+                    <StackPanel Orientation="Horizontal" Visibility="{Binding IsResolved, Converter={StaticResource HasValue}, ConverterParameter=invert}">
+                        <ui:ArcadiaButton Variant="Primary" Icon="Check" IconSize="11" Content="{l:Loc Orc_ConfirmCaps}" MinWidth="104" Height="28" x:Name="ConfirmButton"
+                                          IsEnabled="{Binding Confirm.IsEnabled}" AutomationProperties.Name="{l:Loc Orc_Confirm}"
+                                          Command="{Binding DataContext.Oracle.ExecuteCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding Confirm}" />
+                        <ui:ArcadiaButton Variant="Secondary" Icon="Journal" IconSize="11" Content="{l:Loc Orc_EditCaps}" MinWidth="84" Height="28" Margin="8,0,0,0"
+                                          Visibility="{Binding Edit, Converter={StaticResource HasValue}}" AutomationProperties.Name="{l:Loc Orc_Edit}"
+                                          Command="{Binding DataContext.Oracle.ExecuteCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding Edit}" />
+                        <ui:ArcadiaButton Variant="Secondary" Icon="Close" IconSize="10" Content="{l:Loc Orc_CancelCaps}" MinWidth="84" Height="28" Margin="8,0,0,0" AutomationProperties.Name="{l:Loc Orc_Cancel}"
+                                          Command="{Binding DataContext.Oracle.ExecuteCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding Cancel}" />
+                    </StackPanel>
+                    <TextBlock Text="{Binding Resolution}" FontFamily="{StaticResource Mono}" FontSize="11.5" Foreground="#7F93AE" Visibility="{Binding IsResolved, Converter={StaticResource HasValue}}" />
+                </Grid>
+            </StackPanel>
+        </Border>
+
+        <!-- ── items ── -->
+        <ItemsControl ItemsSource="{Binding Items}" Margin="-10,8,0,0" Focusable="False" KeyboardNavigation.TabNavigation="Continue">
+            <ItemsControl.ItemTemplate>
+                <DataTemplate DataType="{x:Type ovm:OracleItemViewModel}">
+                    <StackPanel>
+                        <TextBlock ui:Bidi.Text="{Binding GroupHeader}" Style="{StaticResource Text.Caps}" FontSize="10.5" Foreground="#6FA6D6" Margin="10,10,0,2"
+                                   Visibility="{Binding GroupHeader, Converter={StaticResource HasValue}}" />
+                        <Button Style="{StaticResource RowButton}" AutomationProperties.Name="{Binding Title}"
+                                Command="{Binding DataContext.Oracle.ExecuteCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding Primary}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <Border Width="28" Height="28" CornerRadius="3" Background="#0E1826" BorderBrush="#1E3048" BorderThickness="1" VerticalAlignment="Center">
+                                    <ui:ArcadiaIcon Kind="{Binding Icon}" Width="15" Height="15" Foreground="{Binding AccentBrush}" />
+                                </Border>
+                                <StackPanel Grid.Column="1" Margin="10,0,10,0" VerticalAlignment="Center">
+                                    <TextBlock ui:Bidi.Text="{Binding Title}" FontSize="13" TextTrimming="CharacterEllipsis">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock" BasedOn="{StaticResource Text.Item}">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsMuted}" Value="True"><Setter Property="Opacity" Value="0.55" /></DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                    <TextBlock ui:Bidi.Text="{Binding Subtitle}" Style="{StaticResource Text.Meta}" FontSize="11.5" TextTrimming="CharacterEllipsis" Visibility="{Binding Subtitle, Converter={StaticResource HasValue}}" />
+                                    <Grid Height="3" Margin="0,5,0,0" Visibility="{Binding HasProgress, Converter={StaticResource BoolToVisibility}}">
+                                        <Border Background="#1A2638" CornerRadius="1.5" />
+                                        <!-- a static bar: the stock ProgressBar animates a glow forever (idle CPU) -->
+                                        <Border Background="{Binding AccentBrush}" CornerRadius="1.5" RenderTransformOrigin="0,0.5">
+                                            <Border.RenderTransform><ScaleTransform ScaleX="{Binding Progress, Mode=OneWay}" /></Border.RenderTransform>
+                                        </Border>
+                                    </Grid>
+                                </StackPanel>
+                                <TextBlock Grid.Column="2" ui:Bidi.Text="{Binding Value}" FontFamily="{StaticResource Mono}" FontSize="12" Foreground="#C9D6E6" VerticalAlignment="Center" Margin="0,0,6,0" />
+                                <ItemsControl Grid.Column="3" ItemsSource="{Binding Actions}" ItemTemplate="{StaticResource RowAction}" VerticalAlignment="Center" Focusable="False">
+                                    <ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel Orientation="Horizontal" /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                                </ItemsControl>
+                            </Grid>
+                        </Button>
+                    </StackPanel>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <!-- ── result actions and suggestions ── -->
+        <ItemsControl ItemsSource="{Binding Actions}" ItemTemplate="{StaticResource RowAction}" Margin="-4,10,0,0" Focusable="False" Visibility="{Binding Actions, Converter={StaticResource HasValue}}">
+            <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+        </ItemsControl>
+        <ItemsControl ItemsSource="{Binding Suggestions}" Margin="0,10,0,0" Focusable="False" Visibility="{Binding Suggestions, Converter={StaticResource HasValue}}">
+            <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <Button Style="{StaticResource RowButton}" Margin="0,0,6,6" Padding="0" AutomationProperties.Name="{Binding}"
+                            Command="{Binding DataContext.Oracle.RunTextCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}">
+                        <Border CornerRadius="2" BorderBrush="#2A4C6E" BorderThickness="1" Padding="8,3" Margin="-10,-6,-8,-6">
+                            <TextBlock FontFamily="{StaticResource Mono}" FontSize="11.5" Foreground="#9FC4E6" FlowDirection="LeftToRight"><Run Text="›" Foreground="#45D2FF" /> <Run Text="{Binding Mode=OneWay}" /></TextBlock>
+                        </Border>
+                    </Button>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <!-- ── developer diagnostics ── -->
+        <Border Margin="0,10,0,0" Padding="10,7" CornerRadius="3" Background="#070B11" BorderBrush="#1A2638" BorderThickness="1" Visibility="{Binding Trace, Converter={StaticResource HasValue}}">
+            <TextBlock Text="{Binding Trace}" FlowDirection="LeftToRight" FontFamily="{StaticResource Mono}" FontSize="10.5" Foreground="#6F8BAA" TextWrapping="Wrap" />
+        </Border>
+    </StackPanel>
+</UserControl>

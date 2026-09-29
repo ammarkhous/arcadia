@@ -1,0 +1,139 @@
+<UserControl x:Class="Arcadia.App.Views.Organizer.TaskDetailsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="urn:arcadia-ui"
+             xmlns:l="clr-namespace:Arcadia.App.Localization"
+             xmlns:ovm="clr-namespace:Arcadia.App.ViewModels.Organizer"
+             x:Name="Root">
+    <UserControl.InputBindings>
+        <KeyBinding Key="S" Modifiers="Control" Command="{Binding SaveCommand}" />
+        <KeyBinding Key="Escape" Command="{Binding RevertCommand}" />
+    </UserControl.InputBindings>
+    <Border Style="{StaticResource Tool.TableFrame}">
+        <Border Style="{StaticResource Tool.TableInner}">
+            <Grid>
+                <!-- nothing selected -->
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Margin="24" Visibility="{Binding HasTask, Converter={StaticResource Org.HasValue}, ConverterParameter=invert}">
+                    <ui:ArcadiaIcon Kind="Tasks" Width="30" Height="30" Opacity="0.5" />
+                    <TextBlock Text="{l:Loc Task_SelectHint}" Style="{StaticResource Text.Meta}" TextAlignment="Center" TextWrapping="Wrap" Margin="0,10,0,0" />
+                </StackPanel>
+
+                <DockPanel Visibility="{Binding HasTask, Converter={StaticResource Org.HasValue}}">
+                    <!-- footer: save state and actions -->
+                    <Border DockPanel.Dock="Bottom" BorderBrush="#1E2E44" BorderThickness="0,1,0,0" Padding="12,8">
+                        <DockPanel>
+                            <ui:ArcadiaButton DockPanel.Dock="Left" Variant="Tool" Icon="Trash" IconSize="12" Width="30" Height="28" Command="{Binding DeleteCommand}"
+                                              ToolTip="{l:Loc Confirm_Delete}" AutomationProperties.Name="{l:Loc Confirm_Delete}" />
+                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                                <ui:ArcadiaButton Content="{l:Loc Task_Revert}" Command="{Binding RevertCommand}" Margin="0,0,6,0"
+                                                  Visibility="{Binding IsDirty, Converter={StaticResource Org.HasValue}}" ToolTip="Esc" />
+                                <ui:ArcadiaButton Variant="Primary" Icon="Check" IconSize="12" Content="{l:Loc Editor_Save}" Command="{Binding SaveCommand}" IsEnabled="{Binding IsDirty}" ToolTip="Ctrl+S" />
+                            </StackPanel>
+                            <TextBlock Text="{l:Loc Task_Unsaved}" Style="{StaticResource Text.Meta}" Foreground="#E0B060" VerticalAlignment="Center" Margin="10,0"
+                                       Visibility="{Binding IsDirty, Converter={StaticResource Org.HasValue}}" />
+                        </DockPanel>
+                    </Border>
+
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Focusable="False">
+                        <StackPanel Margin="14,12,14,14">
+                            <TextBlock Text="{Binding ParentTitle, StringFormat=↳ {0}}" Style="{StaticResource Text.Meta}" Margin="0,0,0,4" TextTrimming="CharacterEllipsis"
+                                       Visibility="{Binding ParentTitle, Converter={StaticResource Org.HasValue}}" />
+                            <TextBox x:Name="TitleBox" Text="{Binding Title, UpdateSourceTrigger=PropertyChanged}" FontSize="16" FontWeight="SemiBold" MinHeight="34" TextWrapping="Wrap"
+                                     ui:Bidi.AutoDirection="True" AutomationProperties.Name="{l:Loc Task_Title}" />
+                            <TextBlock Text="{Binding Error}" Style="{StaticResource FieldError}" Visibility="{Binding Error, Converter={StaticResource Org.HasValue}}" />
+
+                            <!-- context -->
+                            <DockPanel Margin="0,10,0,0">
+                                <ui:ArcadiaButton DockPanel.Dock="Right" Variant="Tool" Icon="Close" IconSize="9" Width="22" Height="22" Command="{Binding ClearContextCommand}"
+                                                  ToolTip="{l:Loc Org_Unlink}" AutomationProperties.Name="{l:Loc Org_Unlink}" Visibility="{Binding Context, Converter={StaticResource Org.HasValue}}" />
+                                <ui:ArcadiaButton DockPanel.Dock="Right" Variant="Link" Content="{l:Loc Org_LinkTo}" Command="{Binding PickContextCommand}" Margin="0,0,6,0" />
+                                <ContentControl Content="{Binding Context}" Focusable="False" HorizontalAlignment="Left" />
+                                <TextBlock Text="{l:Loc Org_NoContext}" Style="{StaticResource Text.Meta}" Visibility="{Binding Context, Converter={StaticResource Org.HasValue}, ConverterParameter=invert}" VerticalAlignment="Center" />
+                            </DockPanel>
+
+                            <Grid Margin="0,12,0,0">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="10" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="{l:Loc Task_Status}" Style="{StaticResource FieldLabel}" />
+                                    <ComboBox ItemsSource="{Binding StatusOptions}" SelectedItem="{Binding Status}" MinHeight="28" AutomationProperties.Name="{l:Loc Task_Status}" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="2">
+                                    <TextBlock Text="{l:Loc Proj_Priority}" Style="{StaticResource FieldLabel}" />
+                                    <ComboBox ItemsSource="{Binding PriorityOptions}" SelectedItem="{Binding Priority}" MinHeight="28" AutomationProperties.Name="{l:Loc Proj_Priority}" />
+                                </StackPanel>
+                            </Grid>
+
+                            <Grid Margin="0,10,0,0">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="10" /><ColumnDefinition Width="*" /><ColumnDefinition Width="10" /><ColumnDefinition Width="72" /></Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="{l:Loc Task_Start}" Style="{StaticResource FieldLabel}" />
+                                    <TextBox Text="{Binding StartText, UpdateSourceTrigger=PropertyChanged}" MinHeight="28" FlowDirection="LeftToRight" AutomationProperties.Name="{l:Loc Task_Start}" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="2">
+                                    <TextBlock Text="{l:Loc Task_Due}" Style="{StaticResource FieldLabel}" />
+                                    <TextBox Text="{Binding DueText, UpdateSourceTrigger=PropertyChanged}" MinHeight="28" FlowDirection="LeftToRight" AutomationProperties.Name="{l:Loc Task_Due}" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="4">
+                                    <TextBlock Text="{l:Loc Task_DueTime}" Style="{StaticResource FieldLabel}" />
+                                    <TextBox Text="{Binding DueTimeText, UpdateSourceTrigger=PropertyChanged}" MinHeight="28" FlowDirection="LeftToRight" AutomationProperties.Name="{l:Loc Task_DueTime}" />
+                                </StackPanel>
+                            </Grid>
+
+                            <!-- reminder -->
+                            <TextBlock Text="{l:Loc Task_Reminder}" Style="{StaticResource FieldLabel}" Margin="0,10,0,0" />
+                            <Grid>
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="10" /><ColumnDefinition Width="72" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                <TextBox Text="{Binding ReminderDateText, UpdateSourceTrigger=PropertyChanged}" MinHeight="28" FlowDirection="LeftToRight" AutomationProperties.Name="{l:Loc Task_ReminderDate}" />
+                                <TextBox Grid.Column="2" Text="{Binding ReminderTimeText, UpdateSourceTrigger=PropertyChanged}" MinHeight="28" FlowDirection="LeftToRight" AutomationProperties.Name="{l:Loc Task_ReminderTime}" />
+                                <ui:ArcadiaButton Grid.Column="3" Variant="Tool" Icon="Close" IconSize="9" Width="24" Height="24" Margin="4,0,0,0" Command="{Binding ClearReminderCommand}"
+                                                  ToolTip="{l:Loc Task_ClearReminder}" AutomationProperties.Name="{l:Loc Task_ClearReminder}" />
+                            </Grid>
+                            <WrapPanel Margin="0,5,0,0">
+                                <ui:ArcadiaButton Content="{l:Loc Rem_In30}" Command="{Binding RemindInCommand}" CommandParameter="30" Height="24" Padding="8,0" Margin="0,0,5,4" />
+                                <ui:ArcadiaButton Content="{l:Loc Rem_InHour}" Command="{Binding RemindInCommand}" CommandParameter="hour" Height="24" Padding="8,0" Margin="0,0,5,4" />
+                                <ui:ArcadiaButton Content="{l:Loc Rem_Evening}" Command="{Binding RemindInCommand}" CommandParameter="evening" Height="24" Padding="8,0" Margin="0,0,5,4" />
+                                <ui:ArcadiaButton Content="{l:Loc Rem_TomorrowMorning}" Command="{Binding RemindInCommand}" CommandParameter="tomorrow" Height="24" Padding="8,0" Margin="0,0,5,4" />
+                            </WrapPanel>
+
+                            <CheckBox Content="{l:Loc Task_Pinned}" IsChecked="{Binding IsPinned}" Margin="0,8,0,0" Foreground="{StaticResource Brush.Text.Secondary}" />
+
+                            <!-- subtasks -->
+                            <StackPanel Margin="0,14,0,0" Visibility="{Binding CanHaveSubtasks, Converter={StaticResource Org.HasValue}}">
+                                <TextBlock Text="{l:Loc Task_Subtasks}" Style="{StaticResource FieldLabel}" />
+                                <ItemsControl ItemsSource="{Binding Subtasks}" Focusable="False">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate DataType="{x:Type ovm:SubtaskItem}">
+                                            <DockPanel Margin="0,2">
+                                                <CheckBox DockPanel.Dock="Left" Style="{StaticResource Org.TaskCheck}" Margin="0,0,8,0" IsChecked="{Binding IsDone}"
+                                                          Command="{Binding DataContext.ToggleSubtaskCommand, ElementName=Root}" CommandParameter="{Binding}" AutomationProperties.Name="{Binding Title}" />
+                                                <Button Style="{StaticResource Org.EntryButton}" Command="{Binding DataContext.OpenSubtaskCommand, ElementName=Root}" CommandParameter="{Binding}" AutomationProperties.Name="{Binding Title}">
+                                                    <TextBlock ui:Bidi.Text="{Binding Title}" Style="{StaticResource Text.Body}" FontSize="12.5" TextTrimming="CharacterEllipsis" />
+                                                </Button>
+                                            </DockPanel>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                                <Grid Margin="0,4,0,0">
+                                    <TextBox x:Name="SubBox" Text="{Binding NewSubtask, UpdateSourceTrigger=PropertyChanged}" MinHeight="26" Padding="6,0" VerticalContentAlignment="Center"
+                                             ui:Bidi.AutoDirection="True" AutomationProperties.Name="{l:Loc Task_AddSubtask}">
+                                        <TextBox.InputBindings><KeyBinding Key="Return" Command="{Binding AddSubtaskCommand}" /></TextBox.InputBindings>
+                                    </TextBox>
+                                    <TextBlock Text="{l:Loc Task_AddSubtask}" Margin="8,0" VerticalAlignment="Center" FontSize="12" Foreground="{StaticResource Brush.Text.Muted}" IsHitTestVisible="False"
+                                               Visibility="{Binding Text, ElementName=SubBox, Converter={StaticResource Org.HasValue}, ConverterParameter=invert}" />
+                                </Grid>
+                            </StackPanel>
+
+                            <TextBlock Text="{l:Loc Task_Description}" Style="{StaticResource FieldLabel}" Margin="0,14,0,0" />
+                            <TextBox Style="{StaticResource TextArea}" Height="64" Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}" ui:Bidi.AutoDirection="True" AutomationProperties.Name="{l:Loc Task_Description}" />
+                            <TextBlock Text="{l:Loc Task_Notes}" Style="{StaticResource FieldLabel}" Margin="0,10,0,0" />
+                            <TextBox Style="{StaticResource TextArea}" Height="84" Text="{Binding Notes, UpdateSourceTrigger=PropertyChanged}" ui:Bidi.AutoDirection="True" AutomationProperties.Name="{l:Loc Task_Notes}" />
+                            <TextBlock Text="{l:Loc Proj_Tags}" Style="{StaticResource FieldLabel}" Margin="0,10,0,0" />
+                            <TextBox Text="{Binding Tags, UpdateSourceTrigger=PropertyChanged}" MinHeight="28" ui:Bidi.AutoDirection="True" AutomationProperties.Name="{l:Loc Proj_Tags}" />
+                            <TextBlock Text="{Binding Stamp}" Style="{StaticResource Text.Meta}" FontSize="10.5" TextWrapping="Wrap" Margin="0,12,0,0" />
+                        </StackPanel>
+                    </ScrollViewer>
+                </DockPanel>
+            </Grid>
+        </Border>
+    </Border>
+</UserControl>

@@ -1,0 +1,118 @@
+<UserControl x:Class="Arcadia.App.Views.Finance.FinanceBudgetsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:ui="urn:arcadia-ui"
+             xmlns:l="clr-namespace:Arcadia.App.Localization"
+             xmlns:fvm="clr-namespace:Arcadia.App.ViewModels.Finance"
+             xmlns:fin="clr-namespace:Arcadia.App.Views.Finance"
+             mc:Ignorable="d" d:DataContext="{d:DesignInstance fvm:FinanceBudgetsViewModel}" x:Name="Root">
+    <UserControl.Resources>
+        <DataTemplate x:Key="BudgetRow" DataType="{x:Type fvm:BudgetItem}">
+            <Grid Margin="12,4">
+                <Grid.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem Header="{l:Loc Bud_Edit}" Command="{Binding PlacementTarget.Tag.EditCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}" />
+                        <MenuItem Header="{l:Loc Fin_ShowTransactions}" Command="{Binding PlacementTarget.Tag.ShowTransactionsCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}" />
+                    </ContextMenu>
+                </Grid.ContextMenu>
+                <Grid.Tag><Binding Path="DataContext" ElementName="Root" /></Grid.Tag>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="170" />
+                </Grid.ColumnDefinitions>
+                <ContentPresenter Content="{Binding}" ContentTemplate="{StaticResource Fin.BudgetRowTemplate}" />
+                <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="16,0,0,0">
+                    <TextBlock Text="{Binding PeriodText}" Style="{StaticResource Fin.Meta}" TextAlignment="Right" />
+                    <TextBlock Text="{Binding CountText}" Style="{StaticResource Fin.Meta}" TextAlignment="Right" FontSize="10.5" />
+                </StackPanel>
+            </Grid>
+        </DataTemplate>
+    </UserControl.Resources>
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="10" />
+            <ColumnDefinition Width="300" />
+        </Grid.ColumnDefinitions>
+        <DockPanel>
+            <DockPanel DockPanel.Dock="Top" Margin="0,0,0,8">
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                    <ui:ArcadiaButton Icon="Tag" IconSize="13" Content="{l:Loc Cat_ManageTitle}" Command="{Binding ManageCategoriesCommand}" Margin="0,0,8,0" />
+                    <ui:ArcadiaButton Variant="Primary" Icon="Plus" IconSize="12" Content="{l:Loc Bud_New}" Command="{Binding NewCommand}" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <ui:ArcadiaButton Variant="Tool" Icon="ChevronLeft" IconSize="11" Width="28" Height="28" Command="{Binding PreviousCommand}" AutomationProperties.Name="{l:Loc Cal_Previous}" />
+                    <TextBlock Text="{Binding MonthTitle}" Style="{StaticResource Text.Title}" FontSize="17" MinWidth="170" TextAlignment="Center" VerticalAlignment="Center" Margin="6,0" />
+                    <ui:ArcadiaButton Variant="Tool" Icon="ChevronRight" IconSize="11" Width="28" Height="28" Command="{Binding NextCommand}" AutomationProperties.Name="{l:Loc Cal_Next}" />
+                    <ui:ArcadiaButton Variant="Link" Content="{l:Loc Bud_ThisMonth}" Command="{Binding ThisMonthCommand}" Margin="10,0,0,0" />
+                </StackPanel>
+            </DockPanel>
+            <Border Style="{StaticResource Fin.Panel}">
+                <Border Style="{StaticResource Tool.TableInner}">
+                    <Grid>
+                        <ScrollViewer VerticalScrollBarVisibility="Auto" Focusable="False">
+                            <StackPanel Margin="0,6">
+                                <TextBlock Text="{l:Loc Bud_MonthlyHeading}" Style="{StaticResource Fin.Kicker}" Margin="12,4,12,2" />
+                                <ListBox x:Name="List" ItemsSource="{Binding Monthly}" SelectedItem="{Binding Selected}" Style="{StaticResource Tr.List}" ItemTemplate="{StaticResource BudgetRow}"
+                                         AutomationProperties.Name="{l:Loc FinSec_Budgets}" ScrollViewer.VerticalScrollBarVisibility="Disabled">
+                                    <ListBox.InputBindings>
+                                        <MouseBinding MouseAction="LeftDoubleClick" Command="{Binding EditCommand}" CommandParameter="{Binding SelectedItem, ElementName=List}" />
+                                        <KeyBinding Key="Return" Command="{Binding EditCommand}" CommandParameter="{Binding SelectedItem, ElementName=List}" />
+                                    </ListBox.InputBindings>
+                                </ListBox>
+                                <StackPanel Visibility="{Binding HasRanges, Converter={StaticResource Fin.HasValue}}">
+                                    <TextBlock Text="{l:Loc Bud_RangeHeading}" Style="{StaticResource Fin.Kicker}" Margin="12,14,12,2" />
+                                    <ListBox x:Name="Ranges" ItemsSource="{Binding Ranges}" Style="{StaticResource Tr.List}" ItemTemplate="{StaticResource BudgetRow}" AutomationProperties.Name="{l:Loc Bud_RangeHeading}"
+                                             ScrollViewer.VerticalScrollBarVisibility="Disabled">
+                                        <ListBox.InputBindings>
+                                            <MouseBinding MouseAction="LeftDoubleClick" Command="{Binding EditCommand}" CommandParameter="{Binding SelectedItem, ElementName=Ranges}" />
+                                        </ListBox.InputBindings>
+                                    </ListBox>
+                                </StackPanel>
+                            </StackPanel>
+                        </ScrollViewer>
+                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="420" Visibility="{Binding IsEmpty, Converter={StaticResource Fin.HasValue}}">
+                            <ui:ArcadiaIcon Kind="Chart" Width="30" Height="30" Opacity="0.55" />
+                            <TextBlock Text="{l:Loc Bud_Empty}" Style="{StaticResource Text.Body}" TextAlignment="Center" TextWrapping="Wrap" Margin="0,10,0,0" />
+                            <ui:ArcadiaButton Variant="Primary" Icon="Plus" IconSize="12" Content="{l:Loc Bud_New}" Command="{Binding NewCommand}" HorizontalAlignment="Center" Margin="0,12,0,0" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+            </Border>
+        </DockPanel>
+        <StackPanel Grid.Column="2">
+            <Border Style="{StaticResource Fin.Panel}">
+                <Border Style="{StaticResource Fin.PanelInner}">
+                    <StackPanel>
+                        <TextBlock Text="{l:Loc Bud_Summary}" Style="{StaticResource Fin.Kicker}" />
+                        <ItemsControl ItemsSource="{Binding Totals}" Margin="0,6,0,0" Focusable="False">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate DataType="{x:Type fvm:CurrencyTotal}">
+                                    <StackPanel Margin="0,4">
+                                        <fin:MoneyText Money="{Binding TotalText}" Style="{StaticResource Fin.Money}" TextAlignment="Left" FontSize="13" />
+                                        <TextBlock Text="{Binding Detail}" Style="{StaticResource Fin.Meta}" Foreground="{Binding Tone, Converter={StaticResource Fin.Ink}}" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+            </Border>
+            <Border Style="{StaticResource Fin.Panel}" Margin="0,10,0,0">
+                <Border Style="{StaticResource Fin.PanelInner}">
+                    <StackPanel>
+                        <TextBlock Text="{l:Loc Bud_HowTitle}" Style="{StaticResource Fin.Kicker}" />
+                        <TextBlock Text="{l:Loc Bud_HowBody}" Style="{StaticResource Text.Meta}" FontSize="11" TextWrapping="Wrap" Margin="0,6,0,0" />
+                        <StackPanel Margin="0,8,0,0">
+                            <ContentPresenter Content="{l:Loc FinLevel_Within}" Tag="Green" ContentTemplate="{StaticResource Fin.StateChip}" HorizontalAlignment="Left" Margin="0,0,0,4" />
+                            <ContentPresenter Content="{l:Loc FinLevel_Approaching}" Tag="Amber" ContentTemplate="{StaticResource Fin.StateChip}" HorizontalAlignment="Left" Margin="0,0,0,4" />
+                            <ContentPresenter Content="{l:Loc FinLevel_Over}" Tag="Red" ContentTemplate="{StaticResource Fin.StateChip}" HorizontalAlignment="Left" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </Border>
+        </StackPanel>
+    </Grid>
+</UserControl>

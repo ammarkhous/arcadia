@@ -1,0 +1,68 @@
+<UserControl x:Class="Arcadia.App.Dialogs.LogSessionView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:ui="urn:arcadia-ui"
+             xmlns:l="clr-namespace:Arcadia.App.Localization"
+             xmlns:dialogs="clr-namespace:Arcadia.App.Dialogs"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance dialogs:LogSessionViewModel}">
+    <StackPanel>
+        <!-- game banner -->
+        <Grid Height="74" ClipToBounds="True">
+            <ui:ArtworkPresenter Theme="{Binding Theme}" Seed="{Binding Seed}" Vignette="0.3" BottomShade="0.8" CornerRadius="0" />
+            <TextBlock Margin="22,0,22,12" VerticalAlignment="Bottom" ui:Bidi.Text="{Binding GameTitle}" Style="{StaticResource Text.Title}" Effect="{StaticResource TextOnArt}" />
+        </Grid>
+
+        <StackPanel Margin="22,16,22,18">
+            <Grid Margin="0,0,0,14">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="1.4*" />
+                    <ColumnDefinition Width="14" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <StackPanel>
+                    <TextBlock Text="{l:Loc Session_Day}" Style="{StaticResource FieldLabel}" />
+                    <ComboBox ItemsSource="{Binding DayOptions}" SelectedItem="{Binding Day}" DisplayMemberPath="Label" AutomationProperties.Name="{l:Loc Session_Day}" />
+                </StackPanel>
+                <StackPanel Grid.Column="2">
+                    <TextBlock Text="{l:Loc Session_Duration}" Style="{StaticResource FieldLabel}" />
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <ComboBox ItemsSource="{Binding HourOptions}" SelectedItem="{Binding Hours}" AutomationProperties.Name="{l:Loc Session_Hours}" />
+                        <TextBlock Grid.Column="1" Margin="5,0,8,0" Text="{l:Loc Session_Hours}" Style="{StaticResource Text.Meta}" VerticalAlignment="Center" />
+                        <ComboBox Grid.Column="2" ItemsSource="{Binding MinuteOptions}" SelectedItem="{Binding Minutes}" AutomationProperties.Name="{l:Loc Session_Minutes}" />
+                        <TextBlock Grid.Column="3" Margin="5,0,0,0" Text="{l:Loc Session_Minutes}" Style="{StaticResource Text.Meta}" VerticalAlignment="Center" />
+                    </Grid>
+                </StackPanel>
+            </Grid>
+            <TextBlock Text="{Binding DurationError}" Style="{StaticResource FieldError}" Margin="0,-8,0,10" Visibility="{Binding DurationError, Converter={StaticResource HasValue}}" />
+
+            <TextBlock Text="{l:Loc Session_Note}" Style="{StaticResource FieldLabel}" />
+            <TextBox Style="{StaticResource TextArea}" Height="64" Text="{Binding Note, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="{l:Loc Session_Note}" />
+
+            <CheckBox Margin="0,16,0,0" Style="{StaticResource ToggleSwitch}" IsChecked="{Binding UpdateProgress}" AutomationProperties.Name="{l:Loc Session_UpdateProgress}">
+                <TextBlock Text="{l:Loc Session_UpdateProgress}" Style="{StaticResource Text.Item}" />
+            </CheckBox>
+            <StackPanel Margin="0,10,0,0" Visibility="{Binding UpdateProgress, Converter={StaticResource BoolToVisibility}}">
+                <Grid>
+                    <Slider Minimum="0" Maximum="100" SmallChange="1" LargeChange="10" Value="{Binding Completion}" Margin="0,0,52,0" AutomationProperties.Name="{l:Loc Editor_Progress}" />
+                    <TextBlock Text="{Binding CompletionText}" Style="{StaticResource Text.Numeric}" HorizontalAlignment="Right" VerticalAlignment="Center" />
+                </Grid>
+                <TextBlock Margin="0,12,0,0" Text="{l:Loc Session_Objective}" Style="{StaticResource FieldLabel}" />
+                <TextBox Text="{Binding Objective, UpdateSourceTrigger=PropertyChanged}" MinHeight="30" AutomationProperties.Name="{l:Loc Session_Objective}" />
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,22,0,0">
+                <ui:ArcadiaButton Content="{l:Loc Editor_Cancel}" Command="{Binding CancelCommand}" MinWidth="96" Margin="0,0,10,0" />
+                <ui:ArcadiaButton Variant="Primary" Icon="Check" IconSize="14" Content="{l:Loc Game_LogSession}" Command="{Binding SaveCommand}" MinWidth="120" IsDefault="True" />
+            </StackPanel>
+        </StackPanel>
+    </StackPanel>
+</UserControl>

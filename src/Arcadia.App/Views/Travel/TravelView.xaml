@@ -1,0 +1,127 @@
+<UserControl x:Class="Arcadia.App.Views.Travel.TravelView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:ui="urn:arcadia-ui"
+             xmlns:l="clr-namespace:Arcadia.App.Localization"
+             xmlns:tvm="clr-namespace:Arcadia.App.ViewModels.Travel"
+             xmlns:tv="clr-namespace:Arcadia.App.Views.Travel"
+             xmlns:ctl="clr-namespace:Arcadia.App.Views.Controls"
+             xmlns:ov="clr-namespace:Arcadia.App.Views.Organizer"
+             mc:Ignorable="d" d:DataContext="{d:DesignInstance tvm:TravelViewModel}">
+    <Grid>
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="{Binding RailWidth, RelativeSource={RelativeSource AncestorType=UserControl}}" />
+                <ColumnDefinition Width="10" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!-- ═══════ explorer rail ═══════ -->
+            <Border Style="{StaticResource Tool.TableFrame}">
+                <Border Style="{StaticResource Tool.TableInner}">
+                    <Grid>
+                        <tv:TopoLines Seed="3" Spacing="18" Stroke="#1445D2FF" />
+                        <DockPanel Margin="6,8,6,8">
+                            <!-- heading -->
+                            <StackPanel DockPanel.Dock="Top" Margin="8,2,4,10">
+                                <StackPanel Orientation="Horizontal">
+                                    <ui:ArcadiaIcon Kind="Compass" Width="22" Height="22" />
+                                    <TextBlock Text="{l:Loc TrTitle}" Style="{StaticResource Text.Title}" FontSize="19" Margin="9,0,0,0" VerticalAlignment="Center" />
+                                </StackPanel>
+                                <TextBlock Text="{l:Loc Tr_Tagline}" Style="{StaticResource Text.Meta}" FontSize="11" Margin="0,3,0,0" TextWrapping="Wrap" />
+                            </StackPanel>
+                            <!-- world explored gauge -->
+                            <Border DockPanel.Dock="Bottom" Margin="4,10,4,0" Padding="10,8" CornerRadius="3" BorderThickness="1" BorderBrush="#1E3048" Background="#C0080E17">
+                                <StackPanel>
+                                    <TextBlock Text="{l:Loc Tr_WorldExploredTitle}" Style="{StaticResource Tr.Kicker}" />
+                                    <ui:ArcadiaProgressBar Height="5" Margin="0,6,0,4" Value="{Binding WorldPercent}" Tone="#45D2FF" />
+                                    <TextBlock Text="{Binding WorldText}" Style="{StaticResource Text.Meta}" FontSize="11" TextWrapping="Wrap" />
+                                </StackPanel>
+                            </Border>
+                            <ov:RailItemsControl ItemsSource="{Binding Sections}" Focusable="False">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate DataType="{x:Type tvm:TravelSectionItem}">
+                                        <ui:ArcadiaNavigationItem Style="{StaticResource Tool.RailItem}" GroupName="TravelRail" Height="34" Margin="0,0,0,1"
+                                                                  IsChecked="{Binding IsSelected, Mode=OneWay}" AutomationProperties.Name="{Binding Label}"
+                                                                  Command="{Binding DataContext.SelectSectionCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}">
+                                            <DockPanel>
+                                                <TextBlock DockPanel.Dock="Right" Text="{Binding Count}" Style="{StaticResource Tr.Coord}" FontSize="10.5" VerticalAlignment="Center" Margin="6,0,0,0" />
+                                                <ui:ArcadiaIcon Kind="{Binding Icon}" Width="16" Height="16" />
+                                                <TextBlock Text="{Binding Label}" Margin="10,0,0,0" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                                            </DockPanel>
+                                        </ui:ArcadiaNavigationItem>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ov:RailItemsControl>
+                        </DockPanel>
+                    </Grid>
+                </Border>
+            </Border>
+
+            <!-- ═══════ sections ═══════ -->
+            <Grid Grid.Column="2">
+                <tv:TravelDeskView Visibility="{Binding Section, Converter={StaticResource Tr.Visible}, ConverterParameter=Desk}" />
+                <tv:TravelMapView x:Name="MapSection" Visibility="{Binding Section, Converter={StaticResource Tr.Visible}, ConverterParameter=Map}" />
+                <ctl:LazySection Key="Trips" Current="{Binding Section}">
+                    <ctl:LazySection.SectionTemplate>
+                        <DataTemplate>
+                            <tv:TravelTripsView />
+                        </DataTemplate>
+                    </ctl:LazySection.SectionTemplate>
+                </ctl:LazySection>
+                <ctl:LazySection Key="Places" Current="{Binding Section}">
+                    <ctl:LazySection.SectionTemplate>
+                        <DataTemplate>
+                            <tv:TravelPlacesView />
+                        </DataTemplate>
+                    </ctl:LazySection.SectionTemplate>
+                </ctl:LazySection>
+                <ctl:LazySection Key="Journal" Current="{Binding Section}">
+                    <ctl:LazySection.SectionTemplate>
+                        <DataTemplate>
+                            <tv:TravelJournalView DataContext="{Binding Journal}" />
+                        </DataTemplate>
+                    </ctl:LazySection.SectionTemplate>
+                </ctl:LazySection>
+                <ctl:LazySection Key="Memories" Current="{Binding Section}">
+                    <ctl:LazySection.SectionTemplate>
+                        <DataTemplate>
+                            <tv:TravelMemoriesView Chapters="{Binding Memories}" OpenCommand="{Binding OpenMemoryCommand}" OpenTripCommand="{Binding OpenChapterTripCommand}" />
+                        </DataTemplate>
+                    </ctl:LazySection.SectionTemplate>
+                </ctl:LazySection>
+                <ctl:LazySection Key="Bucket" Current="{Binding Section}">
+                    <ctl:LazySection.SectionTemplate>
+                        <DataTemplate>
+                            <tv:TravelBucketView />
+                        </DataTemplate>
+                    </ctl:LazySection.SectionTemplate>
+                </ctl:LazySection>
+                <ctl:LazySection Key="Countries" Current="{Binding Section}">
+                    <ctl:LazySection.SectionTemplate>
+                        <DataTemplate>
+                            <tv:TravelCountriesView />
+                        </DataTemplate>
+                    </ctl:LazySection.SectionTemplate>
+                </ctl:LazySection>
+                <ctl:LazySection Key="Timeline" Current="{Binding Section}">
+                    <ctl:LazySection.SectionTemplate>
+                        <DataTemplate>
+                            <tv:TravelTimelineView />
+                        </DataTemplate>
+                    </ctl:LazySection.SectionTemplate>
+                </ctl:LazySection>
+
+                <!-- trip dossier -->
+                <Border Background="{StaticResource Brush.Window}" Visibility="{Binding Workspace, Converter={StaticResource HasValue}}">
+                    <ui:TransitioningContentControl Content="{Binding Workspace}" />
+                </Border>
+            </Grid>
+        </Grid>
+
+        <!-- ═══════ photo viewer ═══════ -->
+        <ContentControl Content="{Binding Viewer}" Focusable="False" Visibility="{Binding Viewer, Converter={StaticResource HasValue}}" />
+    </Grid>
+</UserControl>

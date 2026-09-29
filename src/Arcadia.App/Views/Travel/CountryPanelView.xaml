@@ -1,0 +1,74 @@
+<UserControl x:Class="Arcadia.App.Views.Travel.CountryPanelView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:ui="urn:arcadia-ui"
+             xmlns:l="clr-namespace:Arcadia.App.Localization"
+             xmlns:tvm="clr-namespace:Arcadia.App.ViewModels.Travel"
+             xmlns:tv="clr-namespace:Arcadia.App.Views.Travel"
+             mc:Ignorable="d" d:DataContext="{d:DesignInstance tvm:TravelViewModel}">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Focusable="False">
+        <StackPanel Margin="0,0,4,8">
+            <Border Height="118" CornerRadius="3" ClipToBounds="True" BorderThickness="1" BorderBrush="#243650" Background="#0B131F">
+                <Grid>
+                    <tv:TopoLines Seed="5" Spacing="15" />
+                    <Border HorizontalAlignment="Center" VerticalAlignment="Center" BorderThickness="1" BorderBrush="#3A5070" Padding="2" Background="#060A10">
+                        <Border.Effect><DropShadowEffect Color="Black" BlurRadius="12" ShadowDepth="2" Opacity="0.6" /></Border.Effect>
+                        <Image Source="{Binding Country.Flag}" Height="56" Stretch="Uniform" RenderOptions.BitmapScalingMode="HighQuality" />
+                    </Border>
+                </Grid>
+            </Border>
+            <TextBlock ui:Bidi.Text="{Binding Country.Name}" Style="{StaticResource Text.Title}" FontSize="22" Margin="0,10,0,0" TextWrapping="Wrap" />
+            <TextBlock Style="{StaticResource Text.Meta}" Margin="0,2,0,0"><Run Text="{Binding Country.Continent, Mode=OneWay}" /><Run Text="  ·  " /><Run Text="{Binding Country.Code, Mode=OneWay}" FontFamily="{StaticResource Tr.Mono}" /></TextBlock>
+            <ui:ArcadiaStatusIndicator HorizontalAlignment="Left" Margin="0,8,0,0" Text="{Binding Country.StateText}" Tone="{Binding Country.StateTone, Converter={StaticResource Tr.Tone}}" MinWidth="0" Height="20" />
+            <TextBlock Text="{l:Loc Tr_VisitedMeaning}" Style="{StaticResource Text.Meta}" FontSize="11" TextWrapping="Wrap" Margin="0,6,0,0" />
+
+            <WrapPanel Margin="0,12,0,4">
+                <ui:ArcadiaButton Style="{StaticResource Tool.Button}" Margin="0,0,6,6" Icon="Check" Content="{l:Loc Tr_BeenThere}" Command="{Binding MarkCountryVisitedCommand}" ToolTip="{l:Loc Tr_BeenThereTip}" />
+                <ui:ArcadiaButton Style="{StaticResource Tool.Button}" Margin="0,0,6,6" Icon="Compass" Content="{l:Loc Tr_WantToVisit}" Command="{Binding ToggleCountryWantedCommand}" />
+                <ui:ArcadiaButton Style="{StaticResource Tool.Button}" Margin="0,0,6,6" Icon="Star" Content="{l:Loc Tr_Favorite}" Command="{Binding ToggleCountryFavoriteCommand}" />
+                <ui:ArcadiaButton Style="{StaticResource Tool.Button}" Margin="0,0,6,6" Icon="Flag" Content="{l:Loc Tr_AddToBucket}" Command="{Binding AddCountryToBucketCommand}" />
+            </WrapPanel>
+
+            <UniformGrid Columns="4" Margin="0,8,0,0">
+                <StackPanel><TextBlock Text="{Binding Country.PlacesText}" Style="{StaticResource Text.Stat}" FontSize="20" /><TextBlock Text="{l:Loc Tr_StatPlaces}" Style="{StaticResource Text.Caps}" FontSize="9.5" /></StackPanel>
+                <StackPanel><TextBlock Text="{Binding Country.VisitsText}" Style="{StaticResource Text.Stat}" FontSize="20" /><TextBlock Text="{l:Loc Tr_StatVisits}" Style="{StaticResource Text.Caps}" FontSize="9.5" /></StackPanel>
+                <StackPanel><TextBlock Text="{Binding Country.TripsText}" Style="{StaticResource Text.Stat}" FontSize="20" /><TextBlock Text="{l:Loc Tr_StatTrips}" Style="{StaticResource Text.Caps}" FontSize="9.5" /></StackPanel>
+                <StackPanel><TextBlock Text="{Binding Country.LastVisitText}" Style="{StaticResource Text.Body}" FontSize="12" Margin="0,5,0,4" TextWrapping="Wrap" /><TextBlock Text="{l:Loc Tr_LastVisit}" Style="{StaticResource Text.Caps}" FontSize="9.5" /></StackPanel>
+            </UniformGrid>
+
+            <TextBlock Text="{l:Loc Tr_SavedPlacesHere}" Style="{StaticResource Tr.Kicker}" Margin="0,14,0,4" />
+            <TextBlock Text="{l:Loc Tr_NoPlacesHere}" Style="{StaticResource Text.Meta}" Visibility="{Binding CountryPlaces.Count, Converter={StaticResource HasValue}, ConverterParameter=invert}" />
+            <ItemsControl ItemsSource="{Binding CountryPlaces}" Focusable="False">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate DataType="{x:Type tvm:PlaceItem}">
+                        <Button Style="{StaticResource ListRowButton}" Padding="4,4" Command="{Binding DataContext.ShowPlaceItemOnMapCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}">
+                            <DockPanel>
+                                <ui:ArcadiaIcon Kind="{Binding Icon}" Width="14" Height="14" />
+                                <ui:ArcadiaStatusIndicator DockPanel.Dock="Right" Text="{Binding StatusText}" Tone="{Binding StatusTone, Converter={StaticResource Tr.Tone}}" MinWidth="0" Height="18" Margin="6,0,0,0" />
+                                <TextBlock ui:Bidi.Text="{Binding Name}" Style="{StaticResource Text.Body}" Margin="8,0,0,0" TextTrimming="CharacterEllipsis" />
+                            </DockPanel>
+                        </Button>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            <StackPanel Visibility="{Binding CountryTrips.Count, Converter={StaticResource HasValue}}">
+                <TextBlock Text="{l:Loc Tr_TripsHere}" Style="{StaticResource Tr.Kicker}" Margin="0,12,0,4" />
+                <ItemsControl ItemsSource="{Binding CountryTrips}" Focusable="False">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate DataType="{x:Type tvm:TripCard}">
+                            <Button Style="{StaticResource ListRowButton}" Padding="4,4" Command="{Binding DataContext.OpenTripCardCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}">
+                                <DockPanel>
+                                    <ui:ArcadiaIcon Kind="Suitcase" Width="14" Height="14" />
+                                    <TextBlock DockPanel.Dock="Right" Text="{Binding DatesText}" Style="{StaticResource Text.Meta}" Margin="8,0,0,0" />
+                                    <TextBlock ui:Bidi.Text="{Binding Name}" Style="{StaticResource Text.Body}" Margin="8,0,0,0" TextTrimming="CharacterEllipsis" />
+                                </DockPanel>
+                            </Button>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

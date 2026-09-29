@@ -1,0 +1,101 @@
+<!--
+    Typography roles. Fonts ship with Windows:
+      Bahnschrift  – display, headings, statistics (DIN-style, crisp at small sizes)
+      Segoe UI     – body text (full Arabic coverage for RTL)
+      Segoe Script – hand-lettered decorative accents
+-->
+<ResourceDictionary xmlns:shared="clr-namespace:Arcadia.UI" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=System.Runtime">
+
+    <ResourceDictionary.MergedDictionaries>
+        <shared:SharedResourceDictionary Source="/Arcadia.UI;component/Themes/Palette.xaml" />
+    </ResourceDictionary.MergedDictionaries>
+
+    <FontFamily x:Key="Font.Display">Bahnschrift, Segoe UI</FontFamily>
+    <FontFamily x:Key="Font.Body">Segoe UI</FontFamily>
+    <FontFamily x:Key="Font.Script">Segoe Script, Segoe Print</FontFamily>
+
+    <sys:Double x:Key="FontSize.Caption">11</sys:Double>
+    <sys:Double x:Key="FontSize.Meta">11.5</sys:Double>
+    <sys:Double x:Key="FontSize.Body">12.5</sys:Double>
+    <sys:Double x:Key="FontSize.Item">13.5</sys:Double>
+    <sys:Double x:Key="FontSize.Section">15</sys:Double>
+    <sys:Double x:Key="FontSize.Title">20</sys:Double>
+    <sys:Double x:Key="FontSize.Stat">24</sys:Double>
+
+    <Style x:Key="Text.Base" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{StaticResource Font.Body}" />
+        <Setter Property="FontSize" Value="{StaticResource FontSize.Body}" />
+        <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
+        <Setter Property="TextOptions.TextFormattingMode" Value="Display" />
+        <Setter Property="TextOptions.TextRenderingMode" Value="ClearType" />
+    </Style>
+
+    <!-- Panel captions: "Recent Games", "My Games Overview" -->
+    <Style x:Key="Text.Section" TargetType="TextBlock" BasedOn="{StaticResource Text.Base}">
+        <Setter Property="FontFamily" Value="{StaticResource Font.Display}" />
+        <Setter Property="FontSize" Value="{StaticResource FontSize.Section}" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+
+    <!-- Hero titles inside panels -->
+    <Style x:Key="Text.Title" TargetType="TextBlock" BasedOn="{StaticResource Text.Base}">
+        <Setter Property="FontFamily" Value="{StaticResource Font.Display}" />
+        <Setter Property="FontSize" Value="{StaticResource FontSize.Title}" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+    </Style>
+
+    <!-- List item titles -->
+    <Style x:Key="Text.Item" TargetType="TextBlock" BasedOn="{StaticResource Text.Base}">
+        <Setter Property="FontSize" Value="{StaticResource FontSize.Item}" />
+        <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+    </Style>
+
+    <Style x:Key="Text.Body" TargetType="TextBlock" BasedOn="{StaticResource Text.Base}">
+        <Setter Property="Foreground" Value="{StaticResource Brush.Text.Secondary}" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+        <Setter Property="LineHeight" Value="18" />
+    </Style>
+
+    <Style x:Key="Text.Meta" TargetType="TextBlock" BasedOn="{StaticResource Text.Base}">
+        <Setter Property="FontSize" Value="{StaticResource FontSize.Meta}" />
+        <Setter Property="Foreground" Value="{StaticResource Brush.Text.Muted}" />
+        <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+    </Style>
+
+    <!-- Key/value labels -->
+    <Style x:Key="Text.Label" TargetType="TextBlock" BasedOn="{StaticResource Text.Base}">
+        <Setter Property="FontSize" Value="{StaticResource FontSize.Body}" />
+        <Setter Property="Foreground" Value="{StaticResource Brush.Text.Secondary}" />
+    </Style>
+
+    <!-- Big numbers -->
+    <Style x:Key="Text.Stat" TargetType="TextBlock" BasedOn="{StaticResource Text.Base}">
+        <Setter Property="FontFamily" Value="{StaticResource Font.Display}" />
+        <Setter Property="FontSize" Value="{StaticResource FontSize.Stat}" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="TextOptions.TextFormattingMode" Value="Ideal" />
+    </Style>
+
+    <!-- Numerals in tables (percentages, hours) -->
+    <Style x:Key="Text.Numeric" TargetType="TextBlock" BasedOn="{StaticResource Text.Base}">
+        <Setter Property="FontFamily" Value="{StaticResource Font.Display}" />
+        <Setter Property="FontSize" Value="13" />
+    </Style>
+
+    <!-- Small uppercase console labels -->
+    <Style x:Key="Text.Caps" TargetType="TextBlock" BasedOn="{StaticResource Text.Base}">
+        <Setter Property="FontFamily" Value="{StaticResource Font.Display}" />
+        <Setter Property="FontSize" Value="{StaticResource FontSize.Caption}" />
+        <Setter Property="Foreground" Value="{StaticResource Brush.Text.Muted}" />
+        <Setter Property="Typography.Capitals" Value="AllSmallCaps" />
+    </Style>
+
+    <Style x:Key="Text.Script" TargetType="TextBlock" BasedOn="{StaticResource Text.Base}">
+        <Setter Property="FontFamily" Value="{StaticResource Font.Script}" />
+        <Setter Property="TextOptions.TextFormattingMode" Value="Ideal" />
+        <Setter Property="Foreground" Value="#F2F5FA" />
+    </Style>
+</ResourceDictionary>

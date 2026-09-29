@@ -1,0 +1,526 @@
+<UserControl x:Class="Arcadia.App.Views.HomeView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:ui="urn:arcadia-ui"
+             xmlns:l="clr-namespace:Arcadia.App.Localization"
+             xmlns:home="clr-namespace:Arcadia.App.ViewModels.Home"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance home:HomeViewModel}"
+             d:DesignWidth="1680" d:DesignHeight="880">
+
+    <UserControl.Resources>
+        <!-- small cover thumbnail used in list rows -->
+        <DataTemplate x:Key="Cover">
+            <Border Style="{StaticResource ArtworkWell}" CornerRadius="3" Padding="1">
+                <ui:ArtworkPresenter Theme="{Binding Theme}" Seed="{Binding Seed}" ImagePath="{Binding CoverPath}" Vignette="0.15" CornerRadius="2" />
+            </Border>
+        </DataTemplate>
+
+        <ContextMenu x:Key="FeaturedMenu">
+            <MenuItem Header="{l:Loc Home_Details}" Command="{Binding OpenFeaturedDetailsCommand}">
+                <MenuItem.Icon>
+                    <ui:ArcadiaIcon Kind="Library" Width="15" Height="15" />
+                </MenuItem.Icon>
+            </MenuItem>
+            <MenuItem Header="{l:Loc Game_FindOnline}" Command="{Binding FindOnlineCommand}">
+                <MenuItem.Icon>
+                    <ui:ArcadiaIcon Kind="Search" Width="15" Height="15" />
+                </MenuItem.Icon>
+            </MenuItem>
+            <MenuItem Header="{l:Loc Game_LogSession}" Command="{Binding LogSessionCommand}">
+                <MenuItem.Icon>
+                    <ui:ArcadiaIcon Kind="Clock" Width="15" Height="15" />
+                </MenuItem.Icon>
+            </MenuItem>
+            <MenuItem Header="{l:Loc Home_AddScreenshot}" Command="{Binding AddScreenshotCommand}">
+                <MenuItem.Icon>
+                    <ui:ArcadiaIcon Kind="Camera" Width="15" Height="15" />
+                </MenuItem.Icon>
+            </MenuItem>
+        </ContextMenu>
+    </UserControl.Resources>
+
+    <Grid>
+        <ScrollViewer x:Name="Scroller" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Focusable="False">
+            <Grid x:Name="Layout" Margin="-5">
+
+                <!-- ═══════════════════ FEATURED GAME ═══════════════════ -->
+                <ui:ArcadiaPanel x:Name="FeaturedPanel" Margin="5" Header="{l:Loc Home_FeaturedGame}" Icon="Pin" ui:Reveal.Delay="0" Padding="12,10,14,12">
+                    <Grid>
+                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" MaxWidth="460" Margin="0,24"
+                                Visibility="{Binding Featured, Converter={StaticResource HasValue}, ConverterParameter=invert}">
+                        <ui:ArcadiaIcon Kind="Games" Width="54" Height="54" HorizontalAlignment="Center" />
+                        <TextBlock Text="{l:Loc Home_EmptyTitle}" Style="{StaticResource Text.Title}" FontSize="20" HorizontalAlignment="Center" Margin="0,12,0,0" />
+                        <TextBlock Text="{l:Loc Home_EmptyBody}" Style="{StaticResource Text.Meta}" TextWrapping="Wrap" TextAlignment="Center" Margin="0,6,0,0" />
+                        <ui:ArcadiaButton Variant="Primary" Icon="Games" Content="{l:Loc Home_EmptyAction}" Command="{Binding NavigateCommand}" CommandParameter="games"
+                                          HorizontalAlignment="Center" Margin="0,14,0,0" />
+                    </StackPanel>
+                    <Grid DataContext="{Binding Featured}" Visibility="{Binding Converter={StaticResource HasValue}}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="1.6*" MinWidth="300" />
+                            <ColumnDefinition Width="18" />
+                            <ColumnDefinition Width="*" MinWidth="280" />
+                        </Grid.ColumnDefinitions>
+
+                        <!-- artwork + carousel -->
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                            <Border Style="{StaticResource ArtworkWell}">
+                                <Grid>
+                                    <ui:ArtworkPresenter Theme="{Binding Hero.Theme}" Seed="{Binding Hero.Seed}" ImagePath="{Binding Hero.ImagePath}" AmbientFill="True"
+                                                         Vignette="0.35" BottomShade="0.35" AutomationProperties.Name="{Binding Title}" />
+                                    <Viewbox StretchDirection="DownOnly" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,30,26,0" MaxWidth="330"
+                                             Visibility="{Binding LogoPath, Converter={StaticResource HasValue}, ConverterParameter=invert}">
+                                        <ui:ArcadiaWordmark Text="{Binding TitleMark}" FontSize="40" Tracking="0.05" GlowColor="#000000" />
+                                    </Viewbox>
+                                    <ui:ArtworkPresenter ImagePath="{Binding LogoPath}" ShowScene="False" Stretch="Uniform" Vignette="0" CornerRadius="0"
+                                                         HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="18,0,0,14" Width="230" Height="84"
+                                                         Visibility="{Binding LogoPath, Converter={StaticResource HasValue}}">
+                                        <ui:ArtworkPresenter.Effect>
+                                            <DropShadowEffect ShadowDepth="0" BlurRadius="18" Opacity="0.8" Color="Black" />
+                                        </ui:ArtworkPresenter.Effect>
+                                    </ui:ArtworkPresenter>
+                                    <!-- latest journal entry pinned onto the artwork -->
+                                    <Border HorizontalAlignment="Left" VerticalAlignment="Top" Margin="12" MaxWidth="300" Padding="10,7" CornerRadius="3"
+                                            Background="#B80A0F18" BorderBrush="#4045D2FF" BorderThickness="1"
+                                            Visibility="{Binding LatestNote, Converter={StaticResource HasValue}}">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <ui:ArcadiaIcon Kind="Journal" Width="14" Height="14" VerticalAlignment="Top" Margin="0,2,8,0" />
+                                            <StackPanel Grid.Column="1">
+                                                <TextBlock Text="{l:Loc Home_LatestNote}" Style="{StaticResource Text.Caps}" Foreground="#8FD8FF" />
+                                                <TextBlock ui:Bidi.Text="{Binding LatestNote}" Style="{StaticResource Text.Base}" FontStyle="Italic" TextWrapping="Wrap" MaxHeight="36" TextTrimming="WordEllipsis" />
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+                                </Grid>
+                            </Border>
+                            <ItemsControl Grid.Row="1" Margin="0,8,-6,0" ItemsSource="{Binding Thumbnails}" Focusable="False">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <UniformGrid Rows="1" />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate DataType="{x:Type home:ArtworkThumbViewModel}">
+                                        <Button Style="{StaticResource ThumbButton}" Height="50" Margin="0,0,6,0"
+                                                Command="{Binding DataContext.SelectThumbnailCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                CommandParameter="{Binding}" ToolTip="{Binding Caption}" AutomationProperties.Name="{Binding Caption}">
+                                            <ui:ArtworkPresenter Theme="{Binding Theme}" Seed="{Binding Seed}" ImagePath="{Binding ImagePath}" Vignette="0.25" CornerRadius="2" />
+                                        </Button>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </Grid>
+
+                        <!-- facts -->
+                        <DockPanel Grid.Column="2">
+                            <Grid DockPanel.Dock="Bottom" Margin="0,10,0,0" Height="40">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="8" />
+                                    <ColumnDefinition Width="46" />
+                                </Grid.ColumnDefinitions>
+                                <ui:ArcadiaButton Variant="Primary" Icon="Play" IconSize="18" FontSize="16" Content="{Binding PrimaryActionText}"
+                                                  Command="{Binding DataContext.ContinuePlayingCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" />
+                                <ui:ArcadiaButton x:Name="MoreButton" Grid.Column="2" Variant="Primary" Icon="ChevronDown" IconSize="14" Click="OnMoreActions"
+                                                  ToolTip="{l:Loc Home_MoreActions}" AutomationProperties.Name="{l:Loc Home_MoreActions}" />
+                            </Grid>
+
+                            <StackPanel>
+                                <Button Command="{Binding DataContext.OpenFeaturedDetailsCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" Cursor="Hand" HorizontalAlignment="Left"
+                                        ToolTip="{l:Loc Home_Details}" FocusVisualStyle="{StaticResource Arcadia.FocusVisual}">
+                                    <Button.Template>
+                                        <ControlTemplate TargetType="Button">
+                                            <TextBlock x:Name="t" ui:Bidi.Text="{Binding Title}" Style="{StaticResource Text.Title}" FontSize="21" />
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="t" Property="TextDecorations" Value="Underline" />
+                                                    <Setter TargetName="t" Property="Foreground" Value="#9CCBFF" />
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Button.Template>
+                                </Button>
+                                <ItemsControl Margin="0,7,0,0" ItemsSource="{Binding Tags}" Focusable="False">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <WrapPanel />
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Style="{StaticResource Chip}">
+                                                <TextBlock Text="{Binding}" FontSize="11.5" Foreground="{StaticResource Brush.Text.Secondary}" />
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                                <TextBlock Text="{Binding Meta}" Style="{StaticResource Text.Meta}" Margin="0,2,0,0" />
+                                <TextBlock x:Name="FeaturedDescription" ui:Bidi.Text="{Binding Description}" Style="{StaticResource Text.Body}" Margin="0,7,0,0" MaxHeight="36" TextTrimming="WordEllipsis" ToolTip="{Binding Description}" />
+                                <StackPanel x:Name="FeaturedLinks" Orientation="Horizontal" Margin="0,5,0,0">
+                                    <ui:ArcadiaButton Variant="Link" Content="{l:Loc Home_ViewOnWikipedia}"
+                                                      Command="{Binding DataContext.OpenWikipediaCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" />
+                                    <Border Width="1" Height="12" Margin="8,0" Background="{StaticResource Brush.LineStrong}" />
+                                    <ui:ArcadiaButton Variant="Link" Content="{l:Loc Home_ViewOnSteam}"
+                                                      Command="{Binding DataContext.OpenSteamCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" />
+                                </StackPanel>
+
+                                <Grid Margin="0,11,0,0">
+                                    <TextBlock Text="{l:Loc Home_Progress}" Style="{StaticResource Text.Label}" />
+                                    <TextBlock Text="{Binding ProgressText}" Style="{StaticResource Text.Numeric}" FontSize="14" HorizontalAlignment="Right" />
+                                </Grid>
+                                <ui:ArcadiaProgressBar Margin="0,5,0,0" Height="9" Value="{Binding Progress}" Tone="{Binding ProgressTone, Converter={StaticResource ToneToColor}}"
+                                                       AutomationProperties.Name="{l:Loc Home_Progress}" />
+
+                                <Grid Margin="0,11,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+                                    <StackPanel>
+                                        <TextBlock Text="{l:Loc Home_Playtime}" Style="{StaticResource Text.Meta}" />
+                                        <StackPanel Orientation="Horizontal" Margin="0,1,0,0">
+                                            <ui:ArcadiaIcon Kind="Clock" Width="13" Height="13" Margin="0,0,6,0" />
+                                            <TextBlock Text="{Binding Playtime}" Style="{StaticResource Text.Numeric}" />
+                                        </StackPanel>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="1">
+                                        <TextBlock Text="{l:Loc Home_Achievements}" Style="{StaticResource Text.Meta}" />
+                                        <StackPanel Orientation="Horizontal" Margin="0,1,0,0">
+                                            <ui:ArcadiaIcon Kind="Trophy" Width="13" Height="13" Margin="0,0,6,0" AccentBrush="{StaticResource Brush.Gold}" />
+                                            <TextBlock Text="{Binding Achievements}" Style="{StaticResource Text.Numeric}" />
+                                        </StackPanel>
+                                    </StackPanel>
+                                    <StackPanel Grid.Row="1" Grid.ColumnSpan="2" Margin="0,8,0,0">
+                                        <TextBlock Text="{l:Loc Home_CurrentQuest}" Style="{StaticResource Text.Meta}" />
+                                        <StackPanel Orientation="Horizontal" Margin="0,1,0,0">
+                                            <ui:ArcadiaIcon Kind="Flag" Width="13" Height="13" Margin="0,0,6,0" />
+                                            <TextBlock ui:Bidi.Text="{Binding CurrentQuest}" Style="{StaticResource Text.Base}" TextTrimming="CharacterEllipsis" />
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Grid>
+                            </StackPanel>
+                        </DockPanel>
+                    </Grid>
+                    </Grid>
+                </ui:ArcadiaPanel>
+
+                <!-- ═══════════════════ OVERVIEW ═══════════════════ -->
+                <ui:ArcadiaPanel x:Name="OverviewPanel" Margin="5" Header="{l:Loc Home_Overview}" ui:Reveal.Delay="60" Padding="10,8,10,10">
+                    <ui:ArcadiaPanel.HeaderAction>
+                        <ui:ArcadiaButton Variant="Link" Content="{l:Loc Home_ViewAll}" Command="{Binding NavigateCommand}" CommandParameter="games" />
+                    </ui:ArcadiaPanel.HeaderAction>
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <ItemsControl ItemsSource="{Binding Stats}" Focusable="False">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <UniformGrid Columns="1" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate DataType="{x:Type home:StatRowViewModel}">
+                                    <ui:ArcadiaStatDisplay Margin="0,0,0,6" MinHeight="44" Value="{Binding Value}" Label="{Binding Label}" PercentText="{Binding PercentText}"
+                                                           Icon="{Binding Icon}" Bars="{Binding Bars}" Tone="{Binding Tone, Converter={StaticResource ToneToColor}}"
+                                                           AutomationProperties.Name="{Binding Label}" />
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <Grid Grid.Row="1" Margin="2,2,2,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Orientation="Horizontal" ToolTip="{l:Loc Stat_TotalPlaytime}">
+                                <ui:ArcadiaIcon Kind="Clock" Width="16" Height="16" VerticalAlignment="Center" />
+                                <StackPanel Margin="8,0,0,0">
+                                    <TextBlock Text="{Binding TotalPlaytime}" Style="{StaticResource Text.Numeric}" FontSize="15" />
+                                    <TextBlock Text="{l:Loc Stat_TotalPlaytime}" Style="{StaticResource Text.Meta}" FontSize="10.5" />
+                                </StackPanel>
+                            </StackPanel>
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" ToolTip="{l:Loc Stat_Achievements}">
+                                <ui:ArcadiaIcon Kind="Trophy" Width="16" Height="16" VerticalAlignment="Center" AccentBrush="{StaticResource Brush.Gold}" />
+                                <StackPanel Margin="8,0,0,0">
+                                    <TextBlock Text="{Binding AchievementsSummary}" Style="{StaticResource Text.Numeric}" FontSize="15" />
+                                    <TextBlock Text="{l:Loc Stat_Achievements}" Style="{StaticResource Text.Meta}" FontSize="10.5" />
+                                </StackPanel>
+                            </StackPanel>
+                        </Grid>
+                    </Grid>
+                </ui:ArcadiaPanel>
+
+                <!-- ═══════════════════ TODAY STRIP (Phase 6) ═══════════════════ -->
+                <Border x:Name="TodayStrip" Margin="5" Height="74" ui:Reveal.Delay="90" DataContext="{Binding Today}" Background="#05070A" CornerRadius="5" Padding="1"
+                        Visibility="{Binding IsVisible, Converter={StaticResource BoolToVisibility}}">
+                    <Border BorderBrush="#2A3E58" BorderThickness="1" CornerRadius="4">
+                        <Border.Background>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                <GradientStop Offset="0" Color="#131D2B" />
+                                <GradientStop Offset="1" Color="#0A1019" />
+                            </LinearGradientBrush>
+                        </Border.Background>
+                        <UniformGrid Rows="1">
+                            <!-- today + next event -->
+                            <Button Style="{StaticResource ListRowButton}" Padding="14,8" Command="{Binding OpenNextCommand}" Visibility="{Binding ShowToday, Converter={StaticResource BoolToVisibility}}"
+                                    AutomationProperties.Name="{l:Loc HomeToday_Title}">
+                                <DockPanel>
+                                    <StackPanel DockPanel.Dock="Left" Margin="0,0,14,0" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding DayName}" FontFamily="{StaticResource Font.Display}" FontSize="19" Foreground="#E6F0FA" />
+                                        <TextBlock Text="{Binding DateText}" Style="{StaticResource Text.Meta}" FontSize="11" />
+                                    </StackPanel>
+                                    <Border DockPanel.Dock="Left" Width="1" Margin="0,4,14,4" Background="#223248" />
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="{l:Loc Today_NextUp}" Style="{StaticResource Text.Caps}" FontSize="9.5" Foreground="#7FA9C8" />
+                                        <TextBlock ui:Bidi.Text="{Binding NextTitle}" Style="{StaticResource Text.Item}" FontSize="13" TextTrimming="CharacterEllipsis" Margin="0,2,0,0"
+                                                   Visibility="{Binding NextTitle, Converter={StaticResource HasValue}}" />
+                                        <TextBlock Style="{StaticResource Text.Meta}" FontSize="11">
+                                            <Run Text="{Binding NextWhen, Mode=OneWay}" Foreground="#9FD8FF" FontFamily="Cascadia Mono, Consolas" /><Run Text=" " /><Run Text="{Binding AgendaText, Mode=OneWay}" />
+                                        </TextBlock>
+                                    </StackPanel>
+                                </DockPanel>
+                            </Button>
+                            <!-- tasks due -->
+                            <Button Style="{StaticResource ListRowButton}" Padding="14,8" Command="{Binding OpenTasksCommand}" Visibility="{Binding ShowTasks, Converter={StaticResource BoolToVisibility}}"
+                                    AutomationProperties.Name="{l:Loc HomeToday_TasksDue}" BorderBrush="#1C2A3C" BorderThickness="1,0,0,0">
+                                <DockPanel>
+                                    <TextBlock DockPanel.Dock="Left" Text="{Binding TasksCount}" FontFamily="{StaticResource Font.Display}" FontSize="26" Foreground="#B98CFF" VerticalAlignment="Center" Margin="0,0,12,0" />
+                                    <StackPanel VerticalAlignment="Center">
+                                        <DockPanel>
+                                            <TextBlock DockPanel.Dock="Right" Text="{Binding TasksWarning}" FontSize="10.5" Foreground="#FF7A6A" Margin="6,0,0,0" Visibility="{Binding TasksWarning, Converter={StaticResource HasValue}}" />
+                                            <TextBlock Text="{Binding TasksText}" Style="{StaticResource Text.Caps}" FontSize="9.5" Foreground="#7FA9C8" />
+                                        </DockPanel>
+                                        <ItemsControl ItemsSource="{Binding TaskTitles}" Focusable="False" Margin="0,2,0,0">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate><TextBlock ui:Bidi.Text="{Binding}" Style="{StaticResource Text.Body}" FontSize="12" TextTrimming="CharacterEllipsis" /></DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </StackPanel>
+                                </DockPanel>
+                            </Button>
+                            <!-- next deadline -->
+                            <Button Style="{StaticResource ListRowButton}" Padding="14,8" Command="{Binding OpenDeadlineCommand}" Visibility="{Binding ShowDeadline, Converter={StaticResource BoolToVisibility}}"
+                                    AutomationProperties.Name="{l:Loc HomeToday_Deadline}" BorderBrush="#1C2A3C" BorderThickness="1,0,0,0">
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock Text="{l:Loc HomeToday_Deadline}" Style="{StaticResource Text.Caps}" FontSize="9.5" Foreground="#7FA9C8" />
+                                    <StackPanel Orientation="Horizontal" Margin="0,4,0,0" Visibility="{Binding DeadlineTitle, Converter={StaticResource HasValue}}">
+                                        <ui:ArcadiaIcon Kind="{Binding DeadlineIcon}" Width="14" Height="14" Foreground="{Binding DeadlineAccent, Converter={StaticResource ToneToColor}}" />
+                                        <TextBlock ui:Bidi.Text="{Binding DeadlineTitle}" Style="{StaticResource Text.Item}" FontSize="13" Margin="7,0,0,0" TextTrimming="CharacterEllipsis" MaxWidth="240" />
+                                    </StackPanel>
+                                    <TextBlock Text="{Binding DeadlineWhen}" FontFamily="Cascadia Mono, Consolas" FontSize="11" Foreground="#8FB6D8" Visibility="{Binding DeadlineTitle, Converter={StaticResource HasValue}}" />
+                                    <TextBlock Text="{l:Loc HomeToday_NoDeadline}" Style="{StaticResource Text.Meta}" FontSize="11.5" Margin="0,4,0,0"
+                                               Visibility="{Binding DeadlineTitle, Converter={StaticResource HasValue}, ConverterParameter=invert}" />
+                                </StackPanel>
+                            </Button>
+                            <!-- pinned note -->
+                            <Button Style="{StaticResource ListRowButton}" Padding="14,8" Command="{Binding OpenNoteCommand}" Visibility="{Binding ShowPinnedNote, Converter={StaticResource BoolToVisibility}}"
+                                    AutomationProperties.Name="{l:Loc HomeToday_PinnedNote}" BorderBrush="#1C2A3C" BorderThickness="1,0,0,0">
+                                <StackPanel VerticalAlignment="Center">
+                                    <StackPanel Orientation="Horizontal">
+                                        <ui:ArcadiaIcon Kind="Pin" Width="11" Height="11" />
+                                        <TextBlock Text="{l:Loc HomeToday_PinnedNote}" Style="{StaticResource Text.Caps}" FontSize="9.5" Foreground="#7FA9C8" Margin="5,0,0,0" />
+                                    </StackPanel>
+                                    <TextBlock ui:Bidi.Text="{Binding NoteTitle}" Style="{StaticResource Text.Item}" FontSize="13" Margin="0,3,0,0" TextTrimming="CharacterEllipsis"
+                                               Visibility="{Binding NoteTitle, Converter={StaticResource HasValue}}" />
+                                    <TextBlock ui:Bidi.Text="{Binding NoteExcerpt}" Style="{StaticResource Text.Meta}" FontSize="11" TextTrimming="CharacterEllipsis" />
+                                    <TextBlock Text="{l:Loc HomeToday_NoPinned}" Style="{StaticResource Text.Meta}" FontSize="11.5" Margin="0,3,0,0"
+                                               Visibility="{Binding NoteTitle, Converter={StaticResource HasValue}, ConverterParameter=invert}" />
+                                </StackPanel>
+                            </Button>
+                        </UniformGrid>
+                    </Border>
+                </Border>
+
+                <!-- ═══════════════════ RECENT GAMES ═══════════════════ -->
+                <ui:ArcadiaPanel x:Name="RecentPanel" Margin="5" Header="{l:Loc Home_RecentGames}" ui:Reveal.Delay="120" Padding="8,4,10,8">
+                    <ui:ArcadiaPanel.HeaderAction>
+                        <ui:ArcadiaButton Variant="Link" Content="{l:Loc Home_ViewAll}" Command="{Binding NavigateCommand}" CommandParameter="games" />
+                    </ui:ArcadiaPanel.HeaderAction>
+                    <Grid>
+                    <ItemsControl ItemsSource="{Binding RecentGames}" Focusable="False">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <UniformGrid Columns="1" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="{x:Type home:GameRowViewModel}">
+                                <Border BorderBrush="{StaticResource Brush.Separator}" BorderThickness="0,0,0,1">
+                                    <Button Style="{StaticResource ListRowButton}" Padding="4,3"
+                                            Command="{Binding DataContext.ShowInFeaturedCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}"
+                                            ToolTip="{l:Loc Home_ShowInFeatured}" AutomationProperties.Name="{Binding Title}">
+                                        <Grid VerticalAlignment="Center">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="38" />
+                                                <ColumnDefinition Width="1.3*" MinWidth="90" />
+                                                <ColumnDefinition Width="*" MinWidth="50" />
+                                                <ColumnDefinition Width="42" />
+                                            </Grid.ColumnDefinitions>
+                                            <ContentPresenter Content="{Binding}" ContentTemplate="{StaticResource Cover}" Width="38" Height="38" />
+                                            <StackPanel Grid.Column="1" Margin="10,0,8,0" VerticalAlignment="Center">
+                                                <TextBlock ui:Bidi.Text="{Binding Title}" Style="{StaticResource Text.Item}" FontSize="13" />
+                                                <TextBlock Text="{Binding Meta}" Style="{StaticResource Text.Meta}" FontSize="10.5" />
+                                            </StackPanel>
+                                            <ui:ArcadiaProgressBar Grid.Column="2" Height="7" Value="{Binding Progress}" Tone="{Binding ProgressTone, Converter={StaticResource ToneToColor}}" />
+                                            <TextBlock Grid.Column="3" Text="{Binding ProgressText}" Style="{StaticResource Text.Numeric}" FontSize="12.5" HorizontalAlignment="Right" VerticalAlignment="Center" />
+                                        </Grid>
+                                    </Button>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <TextBlock Text="{l:Loc Home_NoRecent}" Style="{StaticResource Text.Meta}" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,24"
+                               Visibility="{Binding RecentGames.Count, Converter={StaticResource HasValue}, ConverterParameter=invert}" />
+                    </Grid>
+                </ui:ArcadiaPanel>
+
+                <!-- ═══════════════════ SCREENSHOTS & NOTES ═══════════════════ -->
+                <ui:ArcadiaPanel x:Name="ScreenshotsPanel" Margin="5" Header="{l:Loc Home_Screenshots}" ui:Reveal.Delay="170" Padding="10,8,10,10"
+                                 AllowDrop="True" DragEnter="OnShotsDragOver" DragOver="OnShotsDragOver" Drop="OnShotsDrop" ToolTip="{l:Loc Drop_Screenshots}">
+                    <ui:ArcadiaPanel.HeaderAction>
+                        <ui:ArcadiaButton Variant="Link" Content="{l:Loc Home_ViewAll}" Command="{Binding NavigateCommand}" CommandParameter="games" />
+                    </ui:ArcadiaPanel.HeaderAction>
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*" MinHeight="70" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <Border Style="{StaticResource ArtworkWell}">
+                            <ui:ArtworkPresenter Theme="{Binding SelectedScreenshot.Theme}" Seed="{Binding SelectedScreenshot.Seed}" ImagePath="{Binding SelectedScreenshot.ImagePath}"
+                                                 Vignette="0.3" AutomationProperties.Name="{Binding SelectedScreenshot.Title}" />
+                        </Border>
+                        <Grid Grid.Row="1" Margin="2,8,2,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <ui:ArcadiaIcon Kind="Image" Width="18" Height="18" VerticalAlignment="Top" Margin="0,1,9,0" />
+                            <StackPanel Grid.Column="1">
+                                <TextBlock ui:Bidi.Text="{Binding SelectedScreenshot.Title}" Style="{StaticResource Text.Item}" FontSize="13" />
+                                <TextBlock ui:Bidi.Text="{Binding SelectedScreenshot.Note}" Style="{StaticResource Text.Meta}" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Top" Margin="8,2,0,0">
+                                <ui:ArcadiaIcon Kind="Calendar" Width="12" Height="12" Foreground="{StaticResource Brush.Icon.Dim}" Margin="0,0,5,0" />
+                                <TextBlock Text="{Binding SelectedScreenshot.DateText}" Style="{StaticResource Text.Meta}" />
+                            </StackPanel>
+                        </Grid>
+                        <Grid Grid.Row="2" Margin="0,8,0,0" Height="54">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="3*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <ItemsControl ItemsSource="{Binding OtherScreenshots}" Focusable="False">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <UniformGrid Rows="1" Columns="3" />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate DataType="{x:Type home:ScreenshotViewModel}">
+                                        <Button Style="{StaticResource ThumbButton}" Margin="0,0,6,0"
+                                                Command="{Binding DataContext.SelectScreenshotCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}"
+                                                ToolTip="{Binding Title}" AutomationProperties.Name="{Binding Title}">
+                                            <ui:ArtworkPresenter Theme="{Binding Theme}" Seed="{Binding Seed}" ImagePath="{Binding ThumbnailPath}" Vignette="0.25" CornerRadius="2" />
+                                        </Button>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <ui:ArcadiaButton Grid.Column="1" Icon="Plus" IconSize="20" Padding="0" Command="{Binding AddScreenshotCommand}" Visibility="{Binding Featured, Converter={StaticResource HasValue}}"
+                                              ToolTip="{l:Loc Home_AddScreenshot}" AutomationProperties.Name="{l:Loc Home_AddScreenshot}" />
+                        </Grid>
+                    </Grid>
+                </ui:ArcadiaPanel>
+
+                <!-- ═══════════════════ UPCOMING / BACKLOG ═══════════════════ -->
+                <ui:ArcadiaPanel x:Name="BacklogPanel" Margin="5" Header="{l:Loc Home_Backlog}" ui:Reveal.Delay="220" Padding="8,4,10,8">
+                    <ui:ArcadiaPanel.HeaderAction>
+                        <ui:ArcadiaButton Variant="Link" Content="{l:Loc Home_ViewAll}" Command="{Binding NavigateCommand}" CommandParameter="games" />
+                    </ui:ArcadiaPanel.HeaderAction>
+                    <Grid>
+                    <ItemsControl ItemsSource="{Binding Upcoming}" Focusable="False">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <UniformGrid Columns="1" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="{x:Type home:GameRowViewModel}">
+                                <Border BorderBrush="{StaticResource Brush.Separator}" BorderThickness="0,0,0,1">
+                                    <Button Style="{StaticResource ListRowButton}" Padding="4,3"
+                                            Command="{Binding DataContext.ShowInFeaturedCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}"
+                                            ToolTip="{l:Loc Home_ShowInFeatured}" AutomationProperties.Name="{Binding Title}">
+                                        <Grid VerticalAlignment="Center">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="36" />
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <ContentPresenter Content="{Binding}" ContentTemplate="{StaticResource Cover}" Width="36" Height="36" />
+                                            <StackPanel Grid.Column="1" Margin="10,0,8,0" VerticalAlignment="Center">
+                                                <TextBlock ui:Bidi.Text="{Binding Title}" Style="{StaticResource Text.Item}" FontSize="13" />
+                                                <TextBlock Text="{Binding Meta}" Style="{StaticResource Text.Meta}" FontSize="10.5" />
+                                            </StackPanel>
+                                            <ui:ArcadiaStatusIndicator Grid.Column="2" Text="{Binding StatusText}" Tone="{Binding StatusTone, Converter={StaticResource ToneToColor}}" />
+                                        </Grid>
+                                    </Button>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <TextBlock Text="{l:Loc Home_NoBacklog}" Style="{StaticResource Text.Meta}" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,24"
+                               Visibility="{Binding Upcoming.Count, Converter={StaticResource HasValue}, ConverterParameter=invert}" />
+                    </Grid>
+                </ui:ArcadiaPanel>
+
+                <!-- ═══════════════════ MODULES ═══════════════════ -->
+                <ItemsControl x:Name="ModulesStrip" ItemsSource="{Binding Modules}" Focusable="False" ui:Reveal.Delay="280" Margin="0">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <UniformGrid Rows="1" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate DataType="{x:Type home:ModuleTileViewModel}">
+                            <ui:ModuleTile Margin="5" Title="{Binding Title}" Description="{Binding Description}" ActionText="{Binding ActionText}"
+                                           Icon="{Binding Icon}" SecondaryIcon="{Binding SecondaryIcon}" Seed="{Binding Seed}"
+                                           Tone="{Binding Tone, Converter={StaticResource ToneToColor}}"
+                                           Command="{Binding DataContext.NavigateCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding Key}" />
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </Grid>
+        </ScrollViewer>
+
+        <!-- Loading and error states -->
+        <Border Background="#C006080C" Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisibility}}">
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                <ui:ArcadiaIcon Kind="Logo" Width="42" Height="42" Foreground="{StaticResource Brush.Gold}" />
+                <TextBlock Margin="0,12,0,0" Text="{l:Loc Home_Loading}" Style="{StaticResource Text.Section}" Foreground="{StaticResource Brush.Text.Secondary}" />
+            </StackPanel>
+        </Border>
+        <Border Background="#E006080C" Visibility="{Binding HasError, Converter={StaticResource BoolToVisibility}}">
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="520">
+                <ui:ArcadiaIcon Kind="Warning" Width="36" Height="36" Foreground="{StaticResource Brush.Tone.Amber}" />
+                <TextBlock Margin="0,12,0,0" Text="{Binding ErrorText}" Style="{StaticResource Text.Body}" TextAlignment="Center" />
+                <ui:ArcadiaButton Margin="0,14,0,0" HorizontalAlignment="Center" Variant="Primary" Content="{l:Loc Home_Retry}" Command="{Binding LoadCommand}" />
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>

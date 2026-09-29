@@ -1,0 +1,285 @@
+<Window x:Class="Arcadia.App.Shell.WelcomeWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ui="urn:arcadia-ui"
+        xmlns:l="clr-namespace:Arcadia.App.Localization"
+        xmlns:sh="clr-namespace:Arcadia.App.Shell"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        d:DataContext="{d:DesignInstance sh:WelcomeViewModel}"
+        Title="Arcadia"
+        Icon="/Arcadia;component/Assets/arcadia.ico"
+        Width="880" Height="600" ResizeMode="NoResize"
+        WindowStartupLocation="CenterScreen"
+        Background="{StaticResource Brush.Window}"
+        Foreground="{StaticResource Brush.Text.Primary}"
+        FontFamily="{StaticResource Font.Body}"
+        FlowDirection="{Binding FlowDirection, Source={x:Static l:LocalizationManager.Instance}}"
+        Language="{Binding XmlLanguage, Source={x:Static l:LocalizationManager.Instance}}"
+        UseLayoutRounding="True"
+        TextOptions.TextFormattingMode="Display">
+
+    <WindowChrome.WindowChrome>
+        <WindowChrome CaptionHeight="170" ResizeBorderThickness="0" GlassFrameThickness="0" CornerRadius="0" UseAeroCaptionButtons="False" />
+    </WindowChrome.WindowChrome>
+
+    <Window.Resources>
+        <sh:NotVisibleConverter x:Key="NotVisible" />
+        <!-- a step in the left rail: number plate + name, lit when current -->
+        <Style x:Key="StepItem" TargetType="Button">
+            <Setter Property="Focusable" Value="False" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Foreground" Value="{StaticResource Brush.Text.Muted}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd" Background="Transparent" Padding="14,9" BorderThickness="3,0,0,0" BorderBrush="Transparent">
+                            <ContentPresenter />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <DataTrigger Binding="{Binding Tag, RelativeSource={RelativeSource Self}}" Value="True">
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource Brush.Accent}" />
+                                <Setter TargetName="Bd" Property="Background" Value="#142033" />
+                                <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
+                            </DataTrigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Foreground" Value="{StaticResource Brush.Text.Secondary}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- a choice card (language, performance) -->
+        <Style x:Key="Choice" TargetType="RadioButton">
+            <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
+            <Setter Property="Margin" Value="0,0,0,8" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FocusVisualStyle" Value="{StaticResource Arcadia.FocusVisual}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Border x:Name="Bd" Background="{StaticResource Brush.Sunken}" BorderBrush="{StaticResource Brush.Line}" BorderThickness="1" CornerRadius="3" Padding="14,10">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Ellipse x:Name="Lamp" Width="10" Height="10" Margin="0,4,12,0" VerticalAlignment="Top" Fill="#1A2230" Stroke="#2C3848" />
+                                <ContentPresenter Grid.Column="1" />
+                            </Grid>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource Brush.Accent}" />
+                                <Setter TargetName="Bd" Property="Background" Value="#101B2B" />
+                                <Setter TargetName="Lamp" Property="Fill" Value="{StaticResource Brush.Cyan}" />
+                                <Setter TargetName="Lamp" Property="Stroke" Value="{StaticResource Brush.Cyan}" />
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource Brush.LineStrong}" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.5" />
+                                <Setter Property="Cursor" Value="Arrow" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="StepTitle" TargetType="TextBlock" BasedOn="{StaticResource Text.Title}">
+            <Setter Property="FontSize" Value="22" />
+            <Setter Property="Margin" Value="0,0,0,4" />
+        </Style>
+    </Window.Resources>
+
+    <Border BorderBrush="#1C2738" BorderThickness="1" Background="{StaticResource Brush.Window}">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="170" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <!-- banner: the Arcadia landscape, brand, close -->
+            <Grid ClipToBounds="True">
+                <ui:ArtworkPresenter Theme="arcadia-header" Seed="7" Vignette="0" CornerRadius="0" />
+                <Rectangle>
+                    <Rectangle.Fill>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                            <GradientStop Offset="0" Color="#E606080C" />
+                            <GradientStop Offset="0.45" Color="#5506080C" />
+                            <GradientStop Offset="1" Color="#0006080C" />
+                        </LinearGradientBrush>
+                    </Rectangle.Fill>
+                </Rectangle>
+                <Rectangle>
+                    <Rectangle.Fill>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                            <GradientStop Offset="0.6" Color="#0006080C" />
+                            <GradientStop Offset="1" Color="#E006080C" />
+                        </LinearGradientBrush>
+                    </Rectangle.Fill>
+                </Rectangle>
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="30,0,0,0">
+                    <ui:ArcadiaIcon Kind="Logo" Width="64" Height="64" Foreground="{StaticResource Brush.Gold}" AccentBrush="{StaticResource Brush.Icon.Accent}">
+                        <ui:ArcadiaIcon.Effect>
+                            <DropShadowEffect Color="#F2B64A" BlurRadius="18" ShadowDepth="0" Opacity="0.45" />
+                        </ui:ArcadiaIcon.Effect>
+                    </ui:ArcadiaIcon>
+                    <StackPanel Margin="16,2,0,0" VerticalAlignment="Center">
+                        <ui:ArcadiaWordmark Text="ARCADIA" FontSize="40" Tracking="0.14" HorizontalAlignment="Left" />
+                        <TextBlock Text="{l:Loc Welcome_Tagline}" Style="{StaticResource Text.Meta}" Foreground="#9FB3CC" FontSize="12.5" Margin="2,2,0,0" />
+                    </StackPanel>
+                </StackPanel>
+                <Button Style="{StaticResource CaptionButton.Close}" HorizontalAlignment="Right" VerticalAlignment="Top" Width="46" Height="32"
+                        WindowChrome.IsHitTestVisibleInChrome="True" Click="OnClose" AutomationProperties.Name="{l:Loc Window_Close}">
+                    <ui:ArcadiaIcon Kind="WindowClose" Width="16" Height="16" Foreground="#D8E0EC" />
+                </Button>
+            </Grid>
+
+            <!-- body: step rail + current step -->
+            <Grid Grid.Row="1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="210" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Border Background="#0A0E15" BorderBrush="{StaticResource Brush.LineDark}" BorderThickness="0,0,1,0">
+                    <StackPanel Margin="0,16,0,0">
+                        <Button Style="{StaticResource StepItem}" Tag="{Binding IsStep0}" Command="{Binding GoToCommand}" CommandParameter="0">
+                            <TextBlock Text="{l:Loc Welcome_StepWelcome}" FontSize="13" />
+                        </Button>
+                        <Button Style="{StaticResource StepItem}" Tag="{Binding IsStep1}" Command="{Binding GoToCommand}" CommandParameter="1">
+                            <TextBlock Text="{l:Loc Welcome_StepLanguage}" FontSize="13" />
+                        </Button>
+                        <Button Style="{StaticResource StepItem}" Tag="{Binding IsStep2}" Command="{Binding GoToCommand}" CommandParameter="2">
+                            <TextBlock Text="{l:Loc Welcome_StepData}" FontSize="13" />
+                        </Button>
+                        <Button Style="{StaticResource StepItem}" Tag="{Binding IsStep3}" Command="{Binding GoToCommand}" CommandParameter="3">
+                            <TextBlock Text="{l:Loc Welcome_StepPerformance}" FontSize="13" />
+                        </Button>
+                        <Button Style="{StaticResource StepItem}" Tag="{Binding IsStep4}" Command="{Binding GoToCommand}" CommandParameter="4">
+                            <TextBlock Text="{l:Loc Welcome_StepStartup}" FontSize="13" />
+                        </Button>
+                    </StackPanel>
+                </Border>
+
+                <Grid Grid.Column="1" Margin="32,22,32,10">
+                    <!-- 1 welcome -->
+                    <StackPanel Visibility="{Binding IsStep0, Converter={StaticResource BoolToVisibility}}">
+                        <TextBlock Text="{l:Loc Welcome_Title}" Style="{StaticResource StepTitle}" />
+                        <TextBlock Text="{l:Loc Welcome_Body}" Style="{StaticResource Text.Body}" TextWrapping="Wrap" Foreground="{StaticResource Brush.Text.Secondary}" LineHeight="21" />
+                        <TextBlock Text="{l:Loc Welcome_Private}" Style="{StaticResource Text.Meta}" TextWrapping="Wrap" Margin="0,14,0,0" />
+                    </StackPanel>
+
+                    <!-- 2 language -->
+                    <StackPanel Visibility="{Binding IsStep1, Converter={StaticResource BoolToVisibility}}">
+                        <TextBlock Text="{l:Loc Welcome_LanguageTitle}" Style="{StaticResource StepTitle}" />
+                        <TextBlock Text="{l:Loc Welcome_LanguageHint}" Style="{StaticResource Text.Meta}" TextWrapping="Wrap" Margin="0,0,0,12" />
+                        <RadioButton Style="{StaticResource Choice}" GroupName="lang" IsChecked="{Binding IsEnglish}" AutomationProperties.Name="English">
+                            <TextBlock Text="English" Style="{StaticResource Text.Item}" FlowDirection="LeftToRight" HorizontalAlignment="Left" />
+                        </RadioButton>
+                        <RadioButton Style="{StaticResource Choice}" GroupName="lang" IsChecked="{Binding IsArabic}" AutomationProperties.Name="العربية">
+                            <StackPanel>
+                                <TextBlock Text="العربية" Style="{StaticResource Text.Item}" />
+                                <TextBlock Text="{l:Loc Welcome_ArabicNote}" Style="{StaticResource Text.Meta}" TextWrapping="Wrap" />
+                            </StackPanel>
+                        </RadioButton>
+                        <RadioButton Style="{StaticResource Choice}" GroupName="lang" IsEnabled="False" AutomationProperties.Name="Deutsch">
+                            <StackPanel FlowDirection="LeftToRight" HorizontalAlignment="Left">
+                                <TextBlock Text="Deutsch" Style="{StaticResource Text.Item}" />
+                                <TextBlock Text="Die deutsche Oberfläche folgt; Oracle versteht Deutsch bereits." Style="{StaticResource Text.Meta}" TextWrapping="Wrap" />
+                            </StackPanel>
+                        </RadioButton>
+                    </StackPanel>
+
+                    <!-- 3 data location -->
+                    <StackPanel Visibility="{Binding IsStep2, Converter={StaticResource BoolToVisibility}}">
+                        <TextBlock Text="{l:Loc Welcome_DataTitle}" Style="{StaticResource StepTitle}" />
+                        <TextBlock Text="{l:Loc Welcome_DataHint}" Style="{StaticResource Text.Meta}" TextWrapping="Wrap" Margin="0,0,0,12" />
+                        <Border Background="{StaticResource Brush.Sunken}" BorderBrush="{StaticResource Brush.Line}" BorderThickness="1" CornerRadius="3" Padding="14,12">
+                            <StackPanel>
+                                <TextBlock Text="{Binding DataFolder}" FontFamily="Cascadia Mono, Consolas" FontSize="12" FlowDirection="LeftToRight" HorizontalAlignment="Left" TextWrapping="Wrap" />
+                                <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                                    <ui:ArcadiaButton Icon="Documents" Content="{l:Loc Welcome_ChooseFolder}" Command="{Binding ChangeFolderCommand}" Margin="0,0,8,0"
+                                                      IsEnabled="{Binding CanChangeFolder}" />
+                                    <ui:ArcadiaButton Variant="Link" Content="{l:Loc Welcome_UseDefault}" Command="{Binding UseDefaultFolderCommand}"
+                                                      Visibility="{Binding IsDefaultFolder, Converter={StaticResource NotVisible}}" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+                        <TextBlock Text="{l:Loc Welcome_DataNote}" Style="{StaticResource Text.Meta}" TextWrapping="Wrap" Margin="0,10,0,0" />
+                    </StackPanel>
+
+                    <!-- 4 performance -->
+                    <StackPanel Visibility="{Binding IsStep3, Converter={StaticResource BoolToVisibility}}">
+                        <TextBlock Text="{l:Loc Welcome_PerfTitle}" Style="{StaticResource StepTitle}" />
+                        <TextBlock Text="{l:Loc Welcome_PerfHint}" Style="{StaticResource Text.Meta}" TextWrapping="Wrap" Margin="0,0,0,12" />
+                        <RadioButton Style="{StaticResource Choice}" GroupName="perf" IsChecked="{Binding IsPerfAuto}" AutomationProperties.Name="{l:Loc Settings_PerfAuto}">
+                            <StackPanel>
+                                <TextBlock Text="{l:Loc Settings_PerfAuto}" Style="{StaticResource Text.Item}" />
+                                <TextBlock Text="{l:Loc Welcome_PerfAutoHint}" Style="{StaticResource Text.Meta}" TextWrapping="Wrap" />
+                            </StackPanel>
+                        </RadioButton>
+                        <RadioButton Style="{StaticResource Choice}" GroupName="perf" IsChecked="{Binding IsPerfNormal}" AutomationProperties.Name="{l:Loc Settings_PerfNormal}">
+                            <StackPanel>
+                                <TextBlock Text="{l:Loc Settings_PerfNormal}" Style="{StaticResource Text.Item}" />
+                                <TextBlock Text="{l:Loc Welcome_PerfNormalHint}" Style="{StaticResource Text.Meta}" TextWrapping="Wrap" />
+                            </StackPanel>
+                        </RadioButton>
+                        <RadioButton Style="{StaticResource Choice}" GroupName="perf" IsChecked="{Binding IsPerfSaver}" AutomationProperties.Name="{l:Loc Perf_PowerSaver}">
+                            <StackPanel>
+                                <TextBlock Text="{l:Loc Perf_PowerSaver}" Style="{StaticResource Text.Item}" />
+                                <TextBlock Text="{l:Loc Welcome_PerfSaverHint}" Style="{StaticResource Text.Meta}" TextWrapping="Wrap" />
+                            </StackPanel>
+                        </RadioButton>
+                    </StackPanel>
+
+                    <!-- 5 start with Windows -->
+                    <StackPanel Visibility="{Binding IsStep4, Converter={StaticResource BoolToVisibility}}">
+                        <TextBlock Text="{l:Loc Welcome_StartupTitle}" Style="{StaticResource StepTitle}" />
+                        <TextBlock Text="{l:Loc Welcome_StartupHint}" Style="{StaticResource Text.Meta}" TextWrapping="Wrap" Margin="0,0,0,14" />
+                        <CheckBox Style="{StaticResource ToggleSwitch}" IsChecked="{Binding StartWithWindows}" AutomationProperties.Name="{l:Loc Welcome_StartWithWindows}">
+                            <StackPanel>
+                                <TextBlock Text="{l:Loc Welcome_StartWithWindows}" Style="{StaticResource Text.Item}" />
+                                <TextBlock Text="{l:Loc Welcome_StartWithWindowsHint}" Style="{StaticResource Text.Meta}" TextWrapping="Wrap" />
+                            </StackPanel>
+                        </CheckBox>
+                        <TextBlock Text="{l:Loc Welcome_Ready}" Style="{StaticResource Text.Body}" Foreground="{StaticResource Brush.Text.Secondary}" TextWrapping="Wrap" Margin="0,22,0,0" />
+                    </StackPanel>
+                </Grid>
+            </Grid>
+
+            <!-- footer -->
+            <Border Grid.Row="2" Background="#090C12" BorderBrush="{StaticResource Brush.LineDark}" BorderThickness="0,1,0,0" Padding="20,12">
+                <Grid>
+                    <TextBlock VerticalAlignment="Center" Style="{StaticResource Text.Meta}">
+                        <Run Text="{Binding StepNumber, Mode=OneWay}" /><Run Text=" / 5" />
+                    </TextBlock>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <ui:ArcadiaButton Content="{l:Loc Welcome_Back}" Command="{Binding BackCommand}" MinWidth="90" Margin="0,0,8,0"
+                                          Visibility="{Binding IsFirst, Converter={StaticResource NotVisible}}" />
+                        <ui:ArcadiaButton x:Name="NextButton" Variant="Primary" Command="{Binding NextCommand}" MinWidth="140" IsDefault="True">
+                            <ui:ArcadiaButton.Style>
+                                <Style TargetType="ui:ArcadiaButton" BasedOn="{StaticResource {x:Type ui:ArcadiaButton}}">
+                                    <Setter Property="Content" Value="{l:Loc Welcome_Next}" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsFirst}" Value="True">
+                                            <Setter Property="Content" Value="{l:Loc Welcome_Begin}" />
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding IsLast}" Value="True">
+                                            <Setter Property="Content" Value="{l:Loc Welcome_Enter}" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </ui:ArcadiaButton.Style>
+                        </ui:ArcadiaButton>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Grid>
+    </Border>
+</Window>

@@ -1,0 +1,293 @@
+<UserControl x:Class="Arcadia.App.Views.Games.GamesView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:ui="urn:arcadia-ui"
+             xmlns:l="clr-namespace:Arcadia.App.Localization"
+             xmlns:games="clr-namespace:Arcadia.App.ViewModels.Games"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance games:GamesViewModel}">
+
+    <UserControl.Resources>
+        <Style x:Key="VirtualList" TargetType="ItemsControl">
+            <Setter Property="Focusable" Value="False" />
+            <Setter Property="VirtualizingPanel.IsVirtualizing" Value="True" />
+            <Setter Property="VirtualizingPanel.VirtualizationMode" Value="Recycling" />
+            <Setter Property="VirtualizingPanel.ScrollUnit" Value="Pixel" />
+            <Setter Property="VirtualizingPanel.CacheLengthUnit" Value="Page" />
+            <Setter Property="VirtualizingPanel.CacheLength" Value="1,1" />
+            <Setter Property="ScrollViewer.CanContentScroll" Value="True" />
+            <Setter Property="ItemsPanel">
+                <Setter.Value>
+                    <ItemsPanelTemplate>
+                        <VirtualizingStackPanel />
+                    </ItemsPanelTemplate>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ItemsControl">
+                        <ScrollViewer Focusable="False" CanContentScroll="True" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+                            <ItemsPresenter />
+                        </ScrollViewer>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <ContextMenu x:Key="CardMenu" x:Shared="False" DataContext="{Binding PlacementTarget.Tag, RelativeSource={RelativeSource Self}}">
+            <MenuItem Header="{l:Loc Game_Launch}" Command="{Binding LaunchGameCommand}" CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}">
+                <MenuItem.Icon><ui:ArcadiaIcon Kind="Play" Width="14" Height="14" /></MenuItem.Icon>
+            </MenuItem>
+            <MenuItem Header="{l:Loc Game_FindOnline}" Command="{Binding FindOnlineCommand}" CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}">
+                <MenuItem.Icon><ui:ArcadiaIcon Kind="Search" Width="14" Height="14" /></MenuItem.Icon>
+            </MenuItem>
+            <MenuItem Header="{l:Loc Game_LogSession}" Command="{Binding LogSessionCommand}" CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}">
+                <MenuItem.Icon><ui:ArcadiaIcon Kind="Clock" Width="14" Height="14" /></MenuItem.Icon>
+            </MenuItem>
+            <MenuItem Header="{l:Loc Game_Edit}" Command="{Binding EditGameCommand}" CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}">
+                <MenuItem.Icon><ui:ArcadiaIcon Kind="Journal" Width="14" Height="14" /></MenuItem.Icon>
+            </MenuItem>
+            <MenuItem Header="{l:Loc Game_SetFeatured}" Command="{Binding SetFeaturedCommand}" CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}">
+                <MenuItem.Icon><ui:ArcadiaIcon Kind="Star" Width="14" Height="14" /></MenuItem.Icon>
+            </MenuItem>
+            <Separator Background="#26344A" Margin="4" />
+            <MenuItem Header="{l:Loc Game_Delete}" Command="{Binding DeleteGameCommand}" CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}">
+                <MenuItem.Icon><ui:ArcadiaIcon Kind="Trash" Width="14" Height="14" Foreground="#FF8A8E" /></MenuItem.Icon>
+            </MenuItem>
+        </ContextMenu>
+
+        <!-- Grid card: portrait box art at its true 2:3 proportion, facts below -->
+        <DataTemplate x:Key="CardTemplate" DataType="{x:Type games:GameCardViewModel}">
+            <Button Style="{StaticResource GameCardButton}" Margin="6"
+                    Command="{Binding DataContext.OpenGameCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}"
+                    Tag="{Binding DataContext, RelativeSource={RelativeSource AncestorType=UserControl}}" ContextMenu="{StaticResource CardMenu}"
+                    AutomationProperties.Name="{Binding Title}">
+                <StackPanel>
+                    <Grid Margin="6,6,6,0" Height="{Binding CardArtHeight, RelativeSource={RelativeSource AncestorType=UserControl}}">
+                        <Border Style="{StaticResource ArtworkWell}">
+                            <ui:ArtworkPresenter Theme="{Binding Theme}" Seed="{Binding Seed}" ImagePath="{Binding PosterPath}" Vignette="0.3" BottomShade="0.35" />
+                        </Border>
+                        <ui:ArcadiaStatusIndicator Text="{Binding StatusText}" Tone="{Binding StatusTone, Converter={StaticResource ToneToColor}}"
+                                                   HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,8,8,0" MinWidth="0" Height="20" />
+                        <ui:ArcadiaIcon Kind="Star" Width="16" Height="16" Foreground="{StaticResource Brush.Gold}" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,9,0,0"
+                                        Visibility="{Binding IsFeatured, Converter={StaticResource BoolToVisibility}}" ToolTip="{l:Loc Game_IsFeatured}">
+                            <ui:ArcadiaIcon.Effect>
+                                <DropShadowEffect ShadowDepth="0" BlurRadius="6" Color="Black" Opacity="0.9" />
+                            </ui:ArcadiaIcon.Effect>
+                        </ui:ArcadiaIcon>
+                        <Border HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="9,0,0,8" Style="{StaticResource Chip}" Background="#D00A0F18">
+                            <TextBlock Text="{Binding Platform}" FontSize="11" Foreground="{StaticResource Brush.Text.Secondary}" />
+                        </Border>
+                    </Grid>
+                    <StackPanel Margin="12,9,12,11">
+                        <TextBlock ui:Bidi.Text="{Binding Title}" Style="{StaticResource Text.Item}" FontFamily="{StaticResource Font.Display}" FontSize="14" />
+                        <Grid Margin="0,6,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <ui:ArcadiaProgressBar Height="6" Value="{Binding Progress}" Tone="{Binding ProgressTone, Converter={StaticResource ToneToColor}}" VerticalAlignment="Center" />
+                            <TextBlock Grid.Column="1" Margin="8,0,0,0" Text="{Binding ProgressText}" Style="{StaticResource Text.Numeric}" FontSize="12" />
+                        </Grid>
+                        <TextBlock Margin="0,4,0,0" Style="{StaticResource Text.Meta}" FontSize="11">
+                            <Run Text="{Binding Playtime, Mode=OneWay}" /><Run Text=" · " /><Run Text="{Binding LastPlayed, Mode=OneWay}" />
+                        </TextBlock>
+                    </StackPanel>
+                </StackPanel>
+            </Button>
+        </DataTemplate>
+
+        <!-- List row -->
+        <DataTemplate x:Key="RowTemplate" DataType="{x:Type games:GameCardViewModel}">
+            <Border BorderBrush="{StaticResource Brush.Separator}" BorderThickness="0,0,0,1">
+                <Button Style="{StaticResource ListRowButton}" Padding="6,5"
+                        Command="{Binding DataContext.OpenGameCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}"
+                        Tag="{Binding DataContext, RelativeSource={RelativeSource AncestorType=UserControl}}" ContextMenu="{StaticResource CardMenu}"
+                        AutomationProperties.Name="{Binding Title}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="64" />
+                            <ColumnDefinition Width="2.4*" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="1.4*" />
+                            <ColumnDefinition Width="0.8*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Border Style="{StaticResource ArtworkWell}" CornerRadius="3" Width="64" Height="30">
+                            <ui:ArtworkPresenter Theme="{Binding Theme}" Seed="{Binding Seed}" ImagePath="{Binding ImagePath}" CornerRadius="2" Vignette="0.15" />
+                        </Border>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="12,0,8,0" VerticalAlignment="Center">
+                            <TextBlock ui:Bidi.Text="{Binding Title}" Style="{StaticResource Text.Item}" />
+                            <ui:ArcadiaIcon Kind="Star" Width="13" Height="13" Margin="8,0,0,0" Foreground="{StaticResource Brush.Gold}"
+                                            Visibility="{Binding IsFeatured, Converter={StaticResource BoolToVisibility}}" />
+                        </StackPanel>
+                        <TextBlock Grid.Column="2" Text="{Binding Platform}" Style="{StaticResource Text.Label}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                        <ui:ArcadiaStatusIndicator Grid.Column="3" Text="{Binding StatusText}" Tone="{Binding StatusTone, Converter={StaticResource ToneToColor}}" HorizontalAlignment="Left" />
+                        <Grid Grid.Column="4" Margin="0,0,16,0" VerticalAlignment="Center">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="40" />
+                            </Grid.ColumnDefinitions>
+                            <ui:ArcadiaProgressBar Height="6" Value="{Binding Progress}" Tone="{Binding ProgressTone, Converter={StaticResource ToneToColor}}" />
+                            <TextBlock Grid.Column="1" Text="{Binding ProgressText}" Style="{StaticResource Text.Numeric}" FontSize="12" HorizontalAlignment="Right" />
+                        </Grid>
+                        <TextBlock Grid.Column="5" Text="{Binding Playtime}" Style="{StaticResource Text.Numeric}" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="6" Text="{Binding LastPlayed}" Style="{StaticResource Text.Meta}" VerticalAlignment="Center" />
+                    </Grid>
+                </Button>
+            </Border>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <Grid>
+        <!-- ═══════════════ LIBRARY ═══════════════ -->
+        <Grid x:Name="Library">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <!-- title plate -->
+            <Grid Margin="4,0,0,12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel Orientation="Horizontal">
+                    <ui:ArcadiaIcon Kind="Games" Width="30" Height="30" />
+                    <StackPanel Margin="14,0,0,0">
+                        <TextBlock Text="{l:Loc Games_Title}" Style="{StaticResource Text.Title}" FontSize="26" />
+                        <TextBlock Text="{Binding Subtitle}" Style="{StaticResource Text.Meta}" />
+                    </StackPanel>
+                </StackPanel>
+                <ui:ArcadiaButton Grid.Column="1" Variant="Primary" Icon="Plus" Content="{l:Loc Games_AddGame}" Command="{Binding AddGameCommand}"
+                                  VerticalAlignment="Center" MinHeight="36" Padding="16,6" />
+            </Grid>
+
+            <!-- toolbar -->
+            <Border Grid.Row="1" Background="#05070A" CornerRadius="5" Padding="1" Margin="0,0,0,10">
+                <Border Background="{StaticResource Brush.Surface}" BorderBrush="{StaticResource Brush.Bevel}" BorderThickness="1" CornerRadius="4" Padding="10,8">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <Grid Width="260" Height="30">
+                            <TextBox x:Name="SearchBox" Padding="28,0,8,0" Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged, Delay=150}"
+                                     AutomationProperties.Name="{l:Loc Games_Search}" />
+                            <ui:ArcadiaIcon Kind="Search" Width="14" Height="14" HorizontalAlignment="Left" Margin="9,0,0,0" IsHitTestVisible="False" Foreground="{StaticResource Brush.Icon.Dim}" />
+                            <TextBlock Text="{l:Loc Games_Search}" Margin="29,0,8,0" VerticalAlignment="Center" FontSize="12" Foreground="{StaticResource Brush.Text.Muted}" IsHitTestVisible="False"
+                                       Visibility="{Binding Text, ElementName=SearchBox, Converter={StaticResource HasValue}, ConverterParameter=invert}" />
+                        </Grid>
+                        <ItemsControl Grid.Column="1" Margin="14,0" ItemsSource="{Binding Filters}" Focusable="False" VerticalAlignment="Center">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate DataType="{x:Type games:FilterOption}">
+                                    <RadioButton Style="{StaticResource FilterChip}" GroupName="GameStatusFilter" Content="{Binding Label}" Tag="{Binding Count}"
+                                                 IsChecked="{Binding IsSelected, Mode=OneWay}"
+                                                 Command="{Binding DataContext.SelectFilterCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" />
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                            <ComboBox Width="150" ItemsSource="{Binding PlatformOptions}" SelectedItem="{Binding SelectedPlatform}" AutomationProperties.Name="{l:Loc Games_ColPlatform}" />
+                            <ui:ArcadiaIcon Kind="Sort" Width="16" Height="16" Margin="12,0,6,0" Foreground="{StaticResource Brush.Icon.Dim}" />
+                            <ComboBox Width="150" ItemsSource="{Binding SortOptions}" SelectedItem="{Binding SelectedSort}" DisplayMemberPath="Label" AutomationProperties.Name="{l:Loc Games_SortTitle}" />
+                            <StackPanel Orientation="Horizontal" Margin="12,0,0,0">
+                                <RadioButton Style="{StaticResource SegmentButton}" GroupName="GamesView" Tag="ViewGrid" IsChecked="{Binding IsListView, Converter={StaticResource InverseBool}, Mode=OneWay}"
+                                             Command="{Binding ShowGridCommand}" ToolTip="{l:Loc Games_ViewGrid}" AutomationProperties.Name="{l:Loc Games_ViewGrid}" />
+                                <RadioButton Style="{StaticResource SegmentButton}" GroupName="GamesView" Tag="ViewList" IsChecked="{Binding IsListView, Mode=OneWay}"
+                                             Command="{Binding ShowListCommand}" ToolTip="{l:Loc Games_ViewList}" AutomationProperties.Name="{l:Loc Games_ViewList}" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+            </Border>
+
+            <!-- results: both views virtualize (only visible rows plus a page of look-ahead exist), so large libraries stay fast -->
+            <ItemsControl x:Name="CardList" Grid.Row="2" ItemsSource="{Binding CardRows, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                          Style="{StaticResource VirtualList}" Visibility="{Binding IsListView, Converter={StaticResource HasValue}, ConverterParameter=invert}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <ItemsControl ItemsSource="{Binding}" ItemTemplate="{StaticResource CardTemplate}" Margin="-6,0" Focusable="False">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <UniformGrid Rows="1" Columns="{Binding CardColumns, RelativeSource={RelativeSource AncestorType=UserControl}}" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                        </ItemsControl>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <Border Grid.Row="2" Visibility="{Binding IsListView, Converter={StaticResource BoolToVisibility}}" Background="#05070A" CornerRadius="5" Padding="1">
+                <Border Background="{StaticResource Brush.Surface}" BorderBrush="{StaticResource Brush.Bevel}" BorderThickness="1" CornerRadius="4" Padding="8,4,8,8">
+                    <DockPanel>
+                        <Grid DockPanel.Dock="Top" Margin="6,6,16,6">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="64" />
+                                <ColumnDefinition Width="2.4*" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="1.4*" />
+                                <ColumnDefinition Width="0.8*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="1" Margin="12,0,0,0" Text="{l:Loc Games_ColTitle}" Style="{StaticResource Text.Caps}" />
+                            <TextBlock Grid.Column="2" Text="{l:Loc Games_ColPlatform}" Style="{StaticResource Text.Caps}" />
+                            <TextBlock Grid.Column="3" Text="{l:Loc Games_ColStatus}" Style="{StaticResource Text.Caps}" />
+                            <TextBlock Grid.Column="4" Text="{l:Loc Games_ColProgress}" Style="{StaticResource Text.Caps}" />
+                            <TextBlock Grid.Column="5" Text="{l:Loc Games_ColPlaytime}" Style="{StaticResource Text.Caps}" />
+                            <TextBlock Grid.Column="6" Text="{l:Loc Games_ColLastPlayed}" Style="{StaticResource Text.Caps}" />
+                        </Grid>
+                        <Border DockPanel.Dock="Top" Style="{StaticResource EtchedDivider}" Margin="0,0,0,2" />
+                        <ItemsControl ItemsSource="{Binding Items}" ItemTemplate="{StaticResource RowTemplate}" Style="{StaticResource VirtualList}" />
+                    </DockPanel>
+                </Border>
+            </Border>
+            <!-- empty library -->
+            <StackPanel Grid.Row="2" HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="460"
+                        Visibility="{Binding IsLibraryEmpty, Converter={StaticResource BoolToVisibility}}">
+                <Border Width="320" Height="170" Style="{StaticResource ArtworkWell}">
+                    <ui:ModuleIllustration Icon="Games" SecondaryIcon="Trophy" Tone="#2F7BFF" Seed="4" Glow="0.6" />
+                </Border>
+                <TextBlock Margin="0,18,0,0" Text="{l:Loc Games_Empty}" Style="{StaticResource Text.Title}" HorizontalAlignment="Center" />
+                <TextBlock Margin="0,6,0,0" Text="{l:Loc Games_EmptyHint}" Style="{StaticResource Text.Body}" TextAlignment="Center" />
+                <ui:ArcadiaButton Margin="0,16,0,0" HorizontalAlignment="Center" Variant="Primary" Icon="Plus" Content="{l:Loc Games_AddGame}" Command="{Binding AddGameCommand}" />
+            </StackPanel>
+
+            <!-- no matches -->
+            <StackPanel Grid.Row="2" HorizontalAlignment="Center" VerticalAlignment="Center"
+                        Visibility="{Binding HasNoMatches, Converter={StaticResource BoolToVisibility}}">
+                <ui:ArcadiaIcon Kind="Search" Width="34" Height="34" />
+                <TextBlock Margin="0,12,0,0" Text="{l:Loc Games_NoMatches}" Style="{StaticResource Text.Body}" HorizontalAlignment="Center" />
+                <ui:ArcadiaButton Margin="0,12,0,0" HorizontalAlignment="Center" Content="{l:Loc Games_ClearFilters}" Command="{Binding ClearFiltersCommand}" />
+            </StackPanel>
+        </Grid>
+
+        <!-- ═══════════════ DETAIL ═══════════════ -->
+        <Border Background="{StaticResource Brush.Window}" Visibility="{Binding Detail, Converter={StaticResource HasValue}}">
+            <ui:TransitioningContentControl Content="{Binding Detail}" />
+        </Border>
+
+        <!-- loading / error -->
+        <Border Background="#C006080C" Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisibility}}">
+            <TextBlock Text="{l:Loc Home_Loading}" Style="{StaticResource Text.Section}" Foreground="{StaticResource Brush.Text.Secondary}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+        </Border>
+        <Border Background="#E006080C" Visibility="{Binding HasError, Converter={StaticResource BoolToVisibility}}">
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                <TextBlock Text="{l:Loc Home_LoadFailed}" Style="{StaticResource Text.Body}" TextAlignment="Center" />
+                <ui:ArcadiaButton Margin="0,14,0,0" HorizontalAlignment="Center" Variant="Primary" Content="{l:Loc Home_Retry}" Command="{Binding LoadCommand}" />
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>

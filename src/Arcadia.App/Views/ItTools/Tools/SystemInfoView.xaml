@@ -1,0 +1,54 @@
+<UserControl x:Class="Arcadia.App.Views.ItTools.Tools.SystemInfoView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:ui="urn:arcadia-ui"
+             xmlns:l="clr-namespace:Arcadia.App.Localization"
+             xmlns:it="clr-namespace:Arcadia.App.ViewModels.ItTools"
+             xmlns:itv="clr-namespace:Arcadia.App.Views.ItTools"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance it:SystemInfoToolViewModel}">
+    <DockPanel>
+        <itv:ToolHeader DockPanel.Dock="Top" />
+
+        <Border DockPanel.Dock="Top" Style="{StaticResource Tool.CommandBar}">
+            <Border Style="{StaticResource Tool.CommandBarInner}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="{Binding Headline}" FontFamily="{StaticResource Font.Display}" FontSize="18" Foreground="{StaticResource Brush.Text.Primary}" />
+                        <TextBlock Text="{Binding Subline}" Style="{StaticResource Text.Meta}" TextTrimming="CharacterEllipsis" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,10,0">
+                            <ui:ArcadiaIcon Kind="Shield" Width="14" Height="14" Foreground="{StaticResource Brush.Icon.Dim}" />
+                            <TextBlock Text="{l:Loc It_LocalOnly}" Style="{StaticResource Text.Meta}" Margin="6,0,0,0" VerticalAlignment="Center" />
+                        </StackPanel>
+                        <ui:ArcadiaButton Style="{StaticResource Tool.Button}" Icon="Refresh" Content="{l:Loc It_Refresh}" Command="{Binding RefreshCommand}" IsEnabled="{Binding IsIdle}" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Border>
+
+        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Focusable="False">
+            <ItemsControl ItemsSource="{Binding Groups}" Focusable="False">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <UniformGrid Columns="{Binding Columns, RelativeSource={RelativeSource AncestorType=UserControl}}" VerticalAlignment="Top" />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate DataType="{x:Type it:InfoGroup}">
+                        <ui:ArcadiaPanel Header="{Binding Title}" Icon="{Binding Icon}" Margin="0,0,10,10">
+                            <ItemsControl ItemsSource="{Binding Rows}" Tag="150" Focusable="False" />
+                        </ui:ArcadiaPanel>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+    </DockPanel>
+</UserControl>

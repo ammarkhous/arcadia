@@ -1,0 +1,25 @@
+<UserControl x:Class="Arcadia.App.Dialogs.DiagnosticSessionEditorView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:ui="urn:arcadia-ui"
+             xmlns:l="clr-namespace:Arcadia.App.Localization"
+             xmlns:dialogs="clr-namespace:Arcadia.App.Dialogs"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance dialogs:DiagnosticSessionEditorViewModel}">
+    <StackPanel Margin="22,18,22,18">
+        <TextBlock Text="{l:Loc Diag_EditorHint}" Style="{StaticResource Text.Body}" TextWrapping="Wrap" Margin="0,0,0,14" />
+        <TextBlock Text="{l:Loc Diag_TitleLabel}" Style="{StaticResource FieldLabel}" />
+        <TextBox Text="{Binding SessionTitle, UpdateSourceTrigger=PropertyChanged}" MinHeight="30" MaxLength="200" ui:Bidi.AutoDirection="True"
+                 AutomationProperties.Name="{l:Loc Diag_TitleLabel}" />
+        <TextBlock Text="{Binding TitleError}" Style="{StaticResource FieldError}" Visibility="{Binding TitleError, Converter={StaticResource HasValue}}" />
+        <TextBlock Margin="0,14,0,0" Text="{l:Loc Diag_ReferenceLabel}" Style="{StaticResource FieldLabel}" />
+        <TextBox Text="{Binding Reference, UpdateSourceTrigger=PropertyChanged}" MinHeight="30" MaxLength="200" ui:Bidi.AutoDirection="True"
+                 AutomationProperties.Name="{l:Loc Diag_ReferenceLabel}" />
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0">
+            <ui:ArcadiaButton Content="{l:Loc Editor_Cancel}" Command="{Binding CancelCommand}" MinWidth="96" Margin="0,0,10,0" />
+            <ui:ArcadiaButton Variant="Primary" Icon="Diagnostic" IconSize="14" Content="{Binding ConfirmText}" Command="{Binding ConfirmCommand}" MinWidth="120" IsDefault="True" />
+        </StackPanel>
+    </StackPanel>
+</UserControl>

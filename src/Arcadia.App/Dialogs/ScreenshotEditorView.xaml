@@ -1,0 +1,40 @@
+<UserControl x:Class="Arcadia.App.Dialogs.ScreenshotEditorView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:ui="urn:arcadia-ui"
+             xmlns:l="clr-namespace:Arcadia.App.Localization"
+             xmlns:dialogs="clr-namespace:Arcadia.App.Dialogs"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance dialogs:ScreenshotEditorViewModel}">
+    <StackPanel Margin="22,18,22,18">
+        <Border Style="{StaticResource ArtworkWell}" Height="220">
+            <ui:ArtworkPresenter Theme="{Binding Theme}" Seed="{Binding Seed}" ImagePath="{Binding ImagePath}" Vignette="0.1" />
+        </Border>
+        <TextBlock Margin="0,16,0,0" Text="{l:Loc Shot_Name}" Style="{StaticResource FieldLabel}" />
+        <TextBox Text="{Binding ShotTitle, UpdateSourceTrigger=PropertyChanged}" MinHeight="30" AutomationProperties.Name="{l:Loc Shot_Name}" />
+        <TextBlock Text="{Binding TitleError}" Style="{StaticResource FieldError}" Visibility="{Binding TitleError, Converter={StaticResource HasValue}}" />
+        <Grid Margin="0,14,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="12" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <StackPanel>
+                <TextBlock Text="{l:Loc Shot_Location}" Style="{StaticResource FieldLabel}" />
+                <TextBox Text="{Binding Location, UpdateSourceTrigger=PropertyChanged}" MinHeight="30" AutomationProperties.Name="{l:Loc Shot_Location}" />
+            </StackPanel>
+            <StackPanel Grid.Column="2">
+                <TextBlock Text="{l:Loc Shot_Tags}" Style="{StaticResource FieldLabel}" />
+                <TextBox Text="{Binding Tags, UpdateSourceTrigger=PropertyChanged}" MinHeight="30" AutomationProperties.Name="{l:Loc Shot_Tags}" />
+            </StackPanel>
+        </Grid>
+        <TextBlock Margin="0,14,0,0" Text="{l:Loc Shot_Note}" Style="{StaticResource FieldLabel}" />
+        <TextBox Style="{StaticResource TextArea}" Height="64" Text="{Binding Note, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="{l:Loc Shot_Note}" />
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0">
+            <ui:ArcadiaButton Content="{l:Loc Editor_Cancel}" Command="{Binding CancelCommand}" MinWidth="96" Margin="0,0,10,0" />
+            <ui:ArcadiaButton Variant="Primary" Icon="Check" IconSize="14" Content="{l:Loc Editor_Save}" Command="{Binding SaveCommand}" MinWidth="110" IsDefault="True" />
+        </StackPanel>
+    </StackPanel>
+</UserControl>

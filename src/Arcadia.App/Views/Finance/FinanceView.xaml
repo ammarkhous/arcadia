@@ -1,0 +1,137 @@
+<UserControl x:Class="Arcadia.App.Views.Finance.FinanceView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:ui="urn:arcadia-ui"
+             xmlns:l="clr-namespace:Arcadia.App.Localization"
+             xmlns:fvm="clr-namespace:Arcadia.App.ViewModels.Finance"
+             xmlns:fin="clr-namespace:Arcadia.App.Views.Finance"
+             xmlns:tv="clr-namespace:Arcadia.App.Views.Travel"
+             xmlns:ov="clr-namespace:Arcadia.App.Views.Organizer"
+             mc:Ignorable="d" d:DataContext="{d:DesignInstance fvm:FinanceViewModel}" x:Name="Root">
+    <UserControl.Resources>
+        <DataTemplate DataType="{x:Type fvm:FinanceOverviewViewModel}"><fin:FinanceOverviewView /></DataTemplate>
+        <DataTemplate DataType="{x:Type fvm:FinanceRegisterViewModel}"><fin:FinanceRegisterView /></DataTemplate>
+        <DataTemplate DataType="{x:Type fvm:FinanceAccountsViewModel}"><fin:FinanceAccountsView /></DataTemplate>
+        <DataTemplate DataType="{x:Type fvm:FinanceBudgetsViewModel}"><fin:FinanceBudgetsView /></DataTemplate>
+        <DataTemplate DataType="{x:Type fvm:FinanceRecurringViewModel}"><fin:FinanceRecurringView /></DataTemplate>
+        <DataTemplate DataType="{x:Type fvm:FinanceGoalsViewModel}"><fin:FinanceGoalsView /></DataTemplate>
+        <DataTemplate DataType="{x:Type fvm:FinanceReportsViewModel}"><fin:FinanceReportsView /></DataTemplate>
+        <DataTemplate DataType="{x:Type fvm:FinanceHistoryViewModel}"><fin:FinanceHistoryView /></DataTemplate>
+    </UserControl.Resources>
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="206" />
+            <ColumnDefinition Width="10" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <!-- ═══════ rail ═══════ -->
+        <Border Style="{StaticResource Tool.TableFrame}">
+            <Border Style="{StaticResource Tool.TableInner}">
+                <Grid>
+                    <tv:TopoLines Seed="41" Spacing="22" Stroke="#0E45D2FF" />
+                    <DockPanel Margin="6,8,6,8">
+                        <StackPanel DockPanel.Dock="Top" Margin="8,2,4,10">
+                            <StackPanel Orientation="Horizontal">
+                                <ui:ArcadiaIcon Kind="Finance" Width="22" Height="22" />
+                                <TextBlock Text="{l:Loc Nav_Finance}" Style="{StaticResource Text.Title}" FontSize="19" Margin="9,0,0,0" VerticalAlignment="Center" />
+                            </StackPanel>
+                            <TextBlock Text="{l:Loc Fin_Tagline}" Style="{StaticResource Text.Meta}" FontSize="11" Margin="0,3,0,0" TextWrapping="Wrap" />
+                        </StackPanel>
+                        <!-- privacy -->
+                        <Border DockPanel.Dock="Bottom" Margin="4,10,4,0" Padding="10,8" CornerRadius="3" BorderThickness="1" BorderBrush="#1E3048" Background="#C0080E17">
+                            <StackPanel>
+                                <DockPanel>
+                                    <ToggleButton DockPanel.Dock="Right" Style="{StaticResource Tr.Legend}" IsChecked="{Binding Privacy.IsHidden}" Height="24" Padding="6,0"
+                                                  AutomationProperties.Name="{l:Loc Fin_PrivacyMode}" ToolTip="{l:Loc Fin_PrivacyTip}">
+                                        <ui:ArcadiaIcon Kind="EyeOff" Width="13" Height="13" />
+                                    </ToggleButton>
+                                    <TextBlock Text="{l:Loc Fin_PrivacyMode}" Style="{StaticResource Fin.Kicker}" VerticalAlignment="Center" />
+                                </DockPanel>
+                                <TextBlock Text="{l:Loc Fin_PrivacyBody}" Style="{StaticResource Text.Meta}" FontSize="10.5" TextWrapping="Wrap" Margin="0,5,0,0" />
+                            </StackPanel>
+                        </Border>
+                        <ov:RailItemsControl ItemsSource="{Binding Sections}" Focusable="False">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate DataType="{x:Type fvm:FinanceSectionItem}">
+                                    <ui:ArcadiaNavigationItem Style="{StaticResource Tool.RailItem}" GroupName="FinanceRail" Height="34" Margin="0,0,0,1"
+                                                              IsChecked="{Binding IsSelected, Mode=OneWay}" AutomationProperties.Name="{Binding Label}"
+                                                              Command="{Binding DataContext.SelectSectionCommand, ElementName=Root}" CommandParameter="{Binding}">
+                                        <DockPanel>
+                                            <TextBlock DockPanel.Dock="Right" Text="{Binding Count}" Style="{StaticResource Tr.Coord}" FontSize="10.5" VerticalAlignment="Center" Margin="6,0,0,0" />
+                                            <ui:ArcadiaIcon Kind="{Binding Icon}" Width="16" Height="16" />
+                                            <TextBlock Text="{Binding Label}" Margin="10,0,0,0" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                                        </DockPanel>
+                                    </ui:ArcadiaNavigationItem>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ov:RailItemsControl>
+                    </DockPanel>
+                </Grid>
+            </Border>
+        </Border>
+
+        <!-- ═══════ content ═══════ -->
+        <DockPanel Grid.Column="2">
+            <Border DockPanel.Dock="Top" Style="{StaticResource Tool.CommandBar}" Margin="0,0,0,8">
+                <Border Style="{StaticResource Tool.CommandBarInner}" Padding="12,7">
+                    <DockPanel>
+                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                            <ui:ArcadiaButton Variant="Tool" Icon="Import" IconSize="14" Width="32" Height="30" Command="{Binding ImportCommand}" ToolTip="{l:Loc Fin_ImportCsv}" AutomationProperties.Name="{l:Loc Fin_ImportCsv}" Margin="0,0,4,0" />
+                            <ui:ArcadiaButton Variant="Tool" Icon="Export" IconSize="14" Width="32" Height="30" Command="{Binding ExportCommand}" ToolTip="{l:Loc Fin_Export}" AutomationProperties.Name="{l:Loc Fin_Export}" Margin="0,0,4,0" />
+                            <ui:ArcadiaButton Variant="Tool" Icon="Tag" IconSize="14" Width="32" Height="30" Command="{Binding ManageCategoriesCommand}" ToolTip="{l:Loc Cat_ManageTitle}" AutomationProperties.Name="{l:Loc Cat_ManageTitle}" Margin="0,0,10,0" />
+                            <ui:ArcadiaButton Icon="Income" IconSize="13" Content="{l:Loc Fin_AddIncome}" Command="{Binding NewIncomeCommand}" Margin="0,0,6,0" />
+                            <ui:ArcadiaButton Icon="Transfer" IconSize="13" Content="{l:Loc Fin_AddTransfer}" Command="{Binding NewTransferCommand}" Margin="0,0,6,0" />
+                            <ui:ArcadiaButton Variant="Primary" Icon="Plus" IconSize="12" Content="{l:Loc Fin_NewTransaction}" Command="{Binding NewTransactionCommand}" ToolTip="Ctrl+N" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <ItemsControl ItemsSource="{Binding Sections}" Focusable="False" VerticalAlignment="Center">
+                                <ItemsControl.ItemsPanel><ItemsPanelTemplate><Grid /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate DataType="{x:Type fvm:FinanceSectionItem}">
+                                        <TextBlock Text="{Binding Label}" Style="{StaticResource Text.Title}" FontSize="18" Visibility="{Binding IsSelected, Converter={StaticResource Fin.HasValue}}" />
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <Border Margin="12,0,0,0" CornerRadius="2" Padding="6,1" BorderThickness="1" BorderBrush="#2A3E58" Background="#0C1622" VerticalAlignment="Center"
+                                    Visibility="{Binding Privacy.IsHidden, Converter={StaticResource Fin.HasValue}}">
+                                <StackPanel Orientation="Horizontal">
+                                    <ui:ArcadiaIcon Kind="EyeOff" Width="11" Height="11" />
+                                    <TextBlock Text="{l:Loc Fin_AmountsHidden}" FontSize="10.5" Foreground="#9FC4E6" Margin="5,0,0,0" />
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </DockPanel>
+                </Border>
+            </Border>
+
+            <Grid>
+                <ContentControl Content="{Binding Current}" Focusable="False" Visibility="{Binding HasAccounts, Converter={StaticResource Fin.HasValue}}" />
+
+                <!-- first run: no accounts yet -->
+                <Border Style="{StaticResource Tool.TableFrame}" Visibility="{Binding HasAccounts, Converter={StaticResource Fin.HasValue}, ConverterParameter=invert}">
+                    <Border Style="{StaticResource Tool.TableInner}">
+                        <Grid>
+                            <tv:TopoLines Seed="7" Spacing="26" Stroke="#0C45D2FF" />
+                            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="520">
+                                <ui:ArcadiaIcon Kind="Wallet" Width="46" Height="46" />
+                                <TextBlock Text="{l:Loc Fin_WelcomeTitle}" Style="{StaticResource Text.Title}" FontSize="22" HorizontalAlignment="Center" Margin="0,14,0,0" />
+                                <TextBlock Text="{l:Loc Fin_WelcomeBody}" Style="{StaticResource Text.Body}" TextAlignment="Center" TextWrapping="Wrap" Margin="0,8,0,0" />
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,18,0,0">
+                                    <ui:ArcadiaButton Variant="Primary" Icon="Plus" IconSize="12" Content="{l:Loc Acct_New}" Command="{Binding NewAccountCommand}" MinWidth="150" Margin="0,0,10,0" />
+                                    <ui:ArcadiaButton Icon="Import" IconSize="13" Content="{l:Loc Fin_ImportCsv}" Command="{Binding ImportCommand}" MinWidth="150" />
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,18,0,0">
+                                    <ui:ArcadiaIcon Kind="Shield" Width="12" Height="12" Opacity="0.8" />
+                                    <TextBlock Text="{l:Loc Fin_LocalOnly}" Style="{StaticResource Text.Meta}" FontSize="11" Margin="6,0,0,0" />
+                                </StackPanel>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                </Border>
+            </Grid>
+        </DockPanel>
+    </Grid>
+</UserControl>

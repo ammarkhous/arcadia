@@ -1,0 +1,766 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:ui="urn:arcadia-ui"
+                    xmlns:l="clr-namespace:Arcadia.App.Localization"
+                    xmlns:conv="clr-namespace:Arcadia.App.Converters"
+                    xmlns:dialogs="clr-namespace:Arcadia.App.Dialogs"
+                    xmlns:fvm="clr-namespace:Arcadia.App.ViewModels.Finance"
+                    xmlns:fin="clr-namespace:Arcadia.App.Views.Finance">
+
+    <conv:HasValueToVisibilityConverter x:Key="FD.HasValue" />
+    <conv:ToneToColorConverter x:Key="FD.Tone" />
+    <fin:InkConverter x:Key="FD.Ink" />
+    <conv:InverseBoolConverter x:Key="FD.Not" />
+
+    <!-- a choice with an icon (accounts, categories) -->
+    <DataTemplate DataType="{x:Type fvm:FinanceOption}">
+        <StackPanel Orientation="Horizontal">
+            <ui:ArcadiaIcon Kind="{Binding Icon}" Width="12" Height="12" Foreground="{Binding Accent, Converter={StaticResource FD.Tone}}" VerticalAlignment="Center" />
+            <TextBlock Text="{Binding Label}" Margin="7,0,0,0" VerticalAlignment="Center" />
+        </StackPanel>
+    </DataTemplate>
+
+    <!-- icon and accent pickers shared by the editors -->
+    <DataTemplate x:Key="FD.IconChoice">
+        <RadioButton Style="{StaticResource Tool.RadioChip}" GroupName="FinIcon" Margin="0,0,4,4" Width="34" Height="28" ToolTip="{Binding}" AutomationProperties.Name="{Binding}"
+                     Command="{Binding DataContext.ChooseIconCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}">
+            <RadioButton.IsChecked>
+                <MultiBinding Converter="{StaticResource It.Same}" Mode="OneWay">
+                    <Binding />
+                    <Binding Path="DataContext.Glyph" RelativeSource="{RelativeSource AncestorType=ItemsControl}" />
+                </MultiBinding>
+            </RadioButton.IsChecked>
+            <ui:ArcadiaIcon Kind="{Binding}" Width="14" Height="14" />
+        </RadioButton>
+    </DataTemplate>
+    <DataTemplate x:Key="FD.AccentChoice">
+        <RadioButton Style="{StaticResource Tool.RadioChip}" GroupName="FinAccent" Margin="0,0,4,4" Height="26" Padding="8,0" ToolTip="{Binding}" AutomationProperties.Name="{Binding}"
+                     Command="{Binding DataContext.ChooseAccentCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}">
+            <RadioButton.IsChecked>
+                <MultiBinding Converter="{StaticResource It.Same}" Mode="OneWay">
+                    <Binding />
+                    <Binding Path="DataContext.Accent" RelativeSource="{RelativeSource AncestorType=ItemsControl}" />
+                </MultiBinding>
+            </RadioButton.IsChecked>
+            <Border Width="18" Height="10" CornerRadius="2" Background="{Binding Converter={StaticResource FD.Tone}}" />
+        </RadioButton>
+    </DataTemplate>
+
+    <!-- ═══════════ Transaction ═══════════ -->
+    <DataTemplate DataType="{x:Type dialogs:TransactionEditorViewModel}">
+        <StackPanel Margin="22,16,22,18" FocusManager.FocusedElement="{Binding ElementName=AmountBox}">
+            <StackPanel Orientation="Horizontal">
+                <RadioButton Style="{StaticResource Tool.RadioChip}" GroupName="TxnType" IsChecked="{Binding IsExpense}" Margin="0,0,5,0" Height="30" Padding="10,0" AutomationProperties.Name="{l:Loc FinType_Expense}">
+                    <StackPanel Orientation="Horizontal"><ui:ArcadiaIcon Kind="Expense" Width="13" Height="13" /><TextBlock Text="{l:Loc FinType_Expense}" Margin="7,0,0,0" /></StackPanel>
+                </RadioButton>
+                <RadioButton Style="{StaticResource Tool.RadioChip}" GroupName="TxnType" IsChecked="{Binding IsIncome}" Margin="0,0,5,0" Height="30" Padding="10,0" AutomationProperties.Name="{l:Loc FinType_Income}">
+                    <StackPanel Orientation="Horizontal"><ui:ArcadiaIcon Kind="Income" Width="13" Height="13" /><TextBlock Text="{l:Loc FinType_Income}" Margin="7,0,0,0" /></StackPanel>
+                </RadioButton>
+                <RadioButton Style="{StaticResource Tool.RadioChip}" GroupName="TxnType" IsChecked="{Binding IsTransfer}" Height="30" Padding="10,0" AutomationProperties.Name="{l:Loc FinType_Transfer}">
+                    <StackPanel Orientation="Horizontal"><ui:ArcadiaIcon Kind="Transfer" Width="13" Height="13" /><TextBlock Text="{l:Loc FinType_Transfer}" Margin="7,0,0,0" /></StackPanel>
+                </RadioButton>
+            </StackPanel>
+
+            <!-- amount + date -->
+            <Grid Margin="0,14,0,0">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="12" /><ColumnDefinition Width="150" /><ColumnDefinition Width="8" /><ColumnDefinition Width="74" /></Grid.ColumnDefinitions>
+                <StackPanel>
+                    <TextBlock Text="{l:Loc Txn_Amount}" Style="{StaticResource FieldLabel}" />
+                    <Border CornerRadius="3" BorderThickness="1" BorderBrush="#2E4462" Background="#0A111B">
+                        <DockPanel>
+                            <TextBlock DockPanel.Dock="Left" Text="{Binding CurrencySymbol}" FontFamily="Bahnschrift, Segoe UI" FontSize="18" Foreground="#7FA9C8" VerticalAlignment="Center" Margin="10,0,4,0" />
+                            <TextBox x:Name="AmountBox" Text="{Binding AmountText, UpdateSourceTrigger=PropertyChanged}" FontFamily="Bahnschrift, Segoe UI" FontSize="20" BorderThickness="0" Background="Transparent"
+                                     MinHeight="38" VerticalContentAlignment="Center" FlowDirection="LeftToRight" AutomationProperties.Name="{l:Loc Txn_Amount}" />
+                        </DockPanel>
+                    </Border>
+                    <TextBlock Text="{Binding AmountPreview}" FontSize="11.5" Margin="2,4,0,0" Visibility="{Binding AmountPreview, Converter={StaticResource FD.HasValue}}">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock" BasedOn="{StaticResource Org.Time}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding AmountInvalid}" Value="True"><Setter Property="Foreground" Value="#E0B060" /></DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </StackPanel>
+                <StackPanel Grid.Column="2">
+                    <TextBlock Text="{l:Loc Txn_Date}" Style="{StaticResource FieldLabel}" />
+                    <TextBox Text="{Binding DateInput, UpdateSourceTrigger=PropertyChanged}" MinHeight="38" FlowDirection="LeftToRight" VerticalContentAlignment="Center" AutomationProperties.Name="{l:Loc Txn_Date}" />
+                    <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                        <ui:ArcadiaButton Variant="Link" Content="{l:Loc Cal_Today}" Command="{Binding SetTodayCommand}" Margin="0,0,10,0" />
+                        <ui:ArcadiaButton Variant="Link" Content="{l:Loc Cal_Yesterday}" Command="{Binding SetYesterdayCommand}" />
+                    </StackPanel>
+                </StackPanel>
+                <StackPanel Grid.Column="4">
+                    <TextBlock Text="{l:Loc Txn_Time}" Style="{StaticResource FieldLabel}" />
+                    <TextBox Text="{Binding TimeText, UpdateSourceTrigger=PropertyChanged}" MinHeight="38" FlowDirection="LeftToRight" VerticalContentAlignment="Center" AutomationProperties.Name="{l:Loc Txn_Time}" />
+                </StackPanel>
+            </Grid>
+
+            <!-- account / destination / category -->
+            <Grid Margin="0,8,0,0">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="12" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                <StackPanel>
+                    <TextBlock Text="{l:Loc Txn_Account}" Style="{StaticResource FieldLabel}" />
+                    <ComboBox ItemsSource="{Binding AccountOptions}" SelectedItem="{Binding Account}" MinHeight="30" AutomationProperties.Name="{l:Loc Txn_Account}" />
+                </StackPanel>
+                <StackPanel Grid.Column="2" Visibility="{Binding ShowCategory, Converter={StaticResource FD.HasValue}}">
+                    <TextBlock Text="{l:Loc Txn_Category}" Style="{StaticResource FieldLabel}" />
+                    <ComboBox ItemsSource="{Binding CategoryOptions}" SelectedItem="{Binding Category}" MinHeight="30" IsTextSearchEnabled="True" TextSearch.TextPath="Label" AutomationProperties.Name="{l:Loc Txn_Category}" />
+                </StackPanel>
+                <StackPanel Grid.Column="2" Visibility="{Binding IsTransfer, Converter={StaticResource FD.HasValue}}">
+                    <TextBlock Text="{l:Loc Txn_ToAccount}" Style="{StaticResource FieldLabel}" />
+                    <ComboBox ItemsSource="{Binding AccountOptions}" SelectedItem="{Binding ToAccount}" MinHeight="30" AutomationProperties.Name="{l:Loc Txn_ToAccount}" />
+                </StackPanel>
+            </Grid>
+            <StackPanel Margin="0,8,0,0" Visibility="{Binding ShowToAmount, Converter={StaticResource FD.HasValue}}">
+                <TextBlock Text="{l:Loc Txn_ToAmount}" Style="{StaticResource FieldLabel}" />
+                <DockPanel>
+                    <TextBlock DockPanel.Dock="Left" Text="{Binding ToCurrencySymbol}" FontFamily="Bahnschrift, Segoe UI" FontSize="14" Foreground="#7FA9C8" VerticalAlignment="Center" Margin="2,0,6,0" />
+                    <TextBox Text="{Binding ToAmountText, UpdateSourceTrigger=PropertyChanged}" MinHeight="30" FlowDirection="LeftToRight" AutomationProperties.Name="{l:Loc Txn_ToAmount}" />
+                </DockPanel>
+                <TextBlock Text="{l:Loc Txn_ToAmountHint}" Style="{StaticResource Text.Meta}" FontSize="11" TextWrapping="Wrap" Margin="0,3,0,0" />
+            </StackPanel>
+
+            <!-- what -->
+            <Grid Margin="0,8,0,0">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="12" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                <StackPanel>
+                    <TextBlock Text="{l:Loc Txn_Description}" Style="{StaticResource FieldLabel}" />
+                    <TextBox Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}" MinHeight="30" ui:Bidi.AutoDirection="True" AutomationProperties.Name="{l:Loc Txn_Description}" />
+                </StackPanel>
+                <StackPanel Grid.Column="2">
+                    <TextBlock Text="{Binding PayeeLabel}" Style="{StaticResource FieldLabel}" />
+                    <TextBox Text="{Binding Payee, UpdateSourceTrigger=PropertyChanged}" MinHeight="30" ui:Bidi.AutoDirection="True" AutomationProperties.Name="{Binding PayeeLabel}" />
+                </StackPanel>
+            </Grid>
+
+            <!-- links -->
+            <Grid Margin="0,10,0,0">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="12" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                <DockPanel>
+                    <ui:ArcadiaButton DockPanel.Dock="Right" Variant="Link" Content="{l:Loc Txn_PickProject}" Command="{Binding PickProjectCommand}" />
+                    <ui:ArcadiaButton DockPanel.Dock="Right" Variant="Tool" Icon="Close" IconSize="8" Width="18" Height="18" Margin="0,0,6,0" Command="{Binding ClearProjectCommand}"
+                                      AutomationProperties.Name="{l:Loc Org_Unlink}" Visibility="{Binding Project, Converter={StaticResource FD.HasValue}}" />
+                    <ContentControl Content="{Binding Project}" Focusable="False" HorizontalAlignment="Left" Visibility="{Binding Project, Converter={StaticResource FD.HasValue}}" />
+                    <TextBlock Text="{l:Loc Txn_NoProject}" Style="{StaticResource Text.Meta}" VerticalAlignment="Center" Visibility="{Binding Project, Converter={StaticResource FD.HasValue}, ConverterParameter=invert}" />
+                </DockPanel>
+                <DockPanel Grid.Column="2">
+                    <ui:ArcadiaButton DockPanel.Dock="Right" Variant="Link" Content="{l:Loc Txn_PickTrip}" Command="{Binding PickTripCommand}" />
+                    <ui:ArcadiaButton DockPanel.Dock="Right" Variant="Tool" Icon="Close" IconSize="8" Width="18" Height="18" Margin="0,0,6,0" Command="{Binding ClearTripCommand}"
+                                      AutomationProperties.Name="{l:Loc Org_Unlink}" Visibility="{Binding Trip, Converter={StaticResource FD.HasValue}}" />
+                    <ContentControl Content="{Binding Trip}" Focusable="False" HorizontalAlignment="Left" Visibility="{Binding Trip, Converter={StaticResource FD.HasValue}}" />
+                    <TextBlock Text="{l:Loc Txn_NoTrip}" Style="{StaticResource Text.Meta}" VerticalAlignment="Center" Visibility="{Binding Trip, Converter={StaticResource FD.HasValue}, ConverterParameter=invert}" />
+                </DockPanel>
+            </Grid>
+
+            <!-- more -->
+            <ToggleButton Margin="0,12,0,0" HorizontalAlignment="Left" IsChecked="{Binding ShowMore}" Cursor="Hand" AutomationProperties.Name="{l:Loc Txn_More}">
+                <ToggleButton.Template>
+                    <ControlTemplate TargetType="ToggleButton">
+                        <StackPanel Orientation="Horizontal" Background="Transparent">
+                            <ui:ArcadiaIcon x:Name="Chevron" Kind="ChevronRight" Width="10" Height="10" RenderTransformOrigin="0.5,0.5"><ui:ArcadiaIcon.RenderTransform><RotateTransform /></ui:ArcadiaIcon.RenderTransform></ui:ArcadiaIcon>
+                            <TextBlock Text="{l:Loc Txn_More}" Margin="7,0,0,0" Foreground="{StaticResource Brush.Text.Secondary}" />
+                        </StackPanel>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True"><Setter TargetName="Chevron" Property="RenderTransform"><Setter.Value><RotateTransform Angle="90" /></Setter.Value></Setter></Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </ToggleButton.Template>
+            </ToggleButton>
+            <StackPanel Visibility="{Binding ShowMore, Converter={StaticResource FD.HasValue}}" Margin="17,6,0,0">
+                <TextBlock Text="{l:Loc Proj_Tags}" Style="{StaticResource FieldLabel}" />
+                <TextBox Text="{Binding Tags, UpdateSourceTrigger=PropertyChanged}" MinHeight="28" ui:Bidi.AutoDirection="True" AutomationProperties.Name="{l:Loc Proj_Tags}" />
+                <TextBlock Text="{l:Loc Task_Notes}" Style="{StaticResource FieldLabel}" Margin="0,8,0,0" />
+                <TextBox Style="{StaticResource TextArea}" Height="54" Text="{Binding Notes, UpdateSourceTrigger=PropertyChanged}" ui:Bidi.AutoDirection="True" AutomationProperties.Name="{l:Loc Task_Notes}" />
+                <DockPanel Margin="0,10,0,0">
+                    <ui:ArcadiaButton DockPanel.Dock="Right" Icon="Receipt" IconSize="12" Content="{l:Loc Txn_AttachDocument}" Command="{Binding AttachDocumentCommand}" />
+                    <TextBlock Text="{l:Loc Txn_Documents}" Style="{StaticResource FieldLabel}" VerticalAlignment="Center" />
+                </DockPanel>
+                <ItemsControl ItemsSource="{Binding Documents}" Focusable="False" Margin="0,4,0,0">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate DataType="{x:Type dialogs:AttachedDocument}">
+                            <DockPanel Margin="0,2">
+                                <ui:ArcadiaButton DockPanel.Dock="Right" Variant="Tool" Icon="Close" IconSize="8" Width="20" Height="20" Margin="6,0,0,0"
+                                                  Command="{Binding DataContext.RemoveDocumentCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}" AutomationProperties.Name="{l:Loc Org_Unlink}" />
+                                <ComboBox DockPanel.Dock="Right" ItemsSource="{Binding Roles}" SelectedItem="{Binding Role}" Width="120" MinHeight="24" AutomationProperties.Name="{l:Loc Txn_DocumentRole}" />
+                                <Button Style="{StaticResource Org.EntryButton}" Command="{Binding DataContext.OpenDocumentCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}" ToolTip="{l:Loc Txn_OpenDocument}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <ui:ArcadiaIcon Kind="Documents" Width="13" Height="13" />
+                                        <TextBlock Text="{Binding Name}" Margin="7,0,0,0" Foreground="{StaticResource Brush.Text.Primary}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Button>
+                            </DockPanel>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <CheckBox Content="{l:Loc Txn_NeedsReview}" IsChecked="{Binding NeedsReview}" Margin="0,10,0,0" Foreground="{StaticResource Brush.Text.Secondary}" />
+            </StackPanel>
+
+            <TextBlock Text="{Binding SavedNote}" Style="{StaticResource Text.Meta}" Foreground="#8CD9A6" Margin="0,10,0,0" Visibility="{Binding SavedNote, Converter={StaticResource FD.HasValue}}" />
+            <TextBlock Text="{Binding Error}" Style="{StaticResource FieldError}" Margin="0,10,0,0" TextWrapping="Wrap" Visibility="{Binding Error, Converter={StaticResource FD.HasValue}}" />
+            <DockPanel Margin="0,18,0,0">
+                <ui:ArcadiaButton DockPanel.Dock="Left" Icon="Trash" IconSize="12" Content="{l:Loc Confirm_Delete}" Command="{Binding DeleteCommand}"
+                                  Visibility="{Binding IsNew, Converter={StaticResource FD.HasValue}, ConverterParameter=invert}" />
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <ui:ArcadiaButton Content="{l:Loc Editor_Cancel}" Command="{Binding CancelCommand}" MinWidth="90" Margin="0,0,10,0" IsCancel="True" />
+                    <ui:ArcadiaButton Content="{l:Loc Txn_SaveAndNew}" Command="{Binding SaveAndNewCommand}" MinWidth="110" Margin="0,0,10,0" Visibility="{Binding IsNew, Converter={StaticResource FD.HasValue}}" />
+                    <ui:ArcadiaButton Variant="Primary" Icon="Check" IconSize="13" Content="{Binding ConfirmText}" Command="{Binding ConfirmCommand}" MinWidth="120" IsDefault="True" />
+                </StackPanel>
+            </DockPanel>
+        </StackPanel>
+    </DataTemplate>
+
+    <!-- ═══════════ Account ═══════════ -->
+    <DataTemplate DataType="{x:Type dialogs:AccountEditorViewModel}">
+        <StackPanel Margin="22,16,22,18">
+            <TextBlock Text="{l:Loc Acct_Name}" Style="{StaticResource FieldLabel}" />
+            <TextBox Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" MinHeight="32" FontSize="15" ui:Bidi.AutoDirection="True" AutomationProperties.Name="{l:Loc Acct_Name}" />
+            <Grid Margin="0,10,0,0">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="10" /><ColumnDefinition Width="110" /><ColumnDefinition Width="10" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                <StackPanel>
+                    <TextBlock Text="{l:Loc Acct_Type}" Style="{StaticResource FieldLabel}" />
+                    <ComboBox ItemsSource="{Binding TypeOptions}" SelectedItem="{Binding Type}" MinHeight="30" AutomationProperties.Name="{l:Loc Acct_Type}" />
+                </StackPanel>
+                <StackPanel Grid.Column="2">
+                    <TextBlock Text="{l:Loc Acct_Currency}" Style="{StaticResource FieldLabel}" />
+                    <ComboBox ItemsSource="{Binding CurrencyOptions}" Text="{Binding Currency, UpdateSourceTrigger=LostFocus}" IsEditable="True" MinHeight="30" IsEnabled="{Binding CurrencyLocked, Converter={StaticResource FD.Not}}"
+                              AutomationProperties.Name="{l:Loc Acct_Currency}" />
+                </StackPanel>
+                <StackPanel Grid.Column="4">
+                    <TextBlock Text="{l:Loc Acct_Opening}" Style="{StaticResource FieldLabel}" />
+                    <TextBox Text="{Binding OpeningText, UpdateSourceTrigger=PropertyChanged}" MinHeight="30" FlowDirection="LeftToRight" AutomationProperties.Name="{l:Loc Acct_Opening}" />
+                </StackPanel>
+            </Grid>
+            <TextBlock Text="{l:Loc Acct_CurrencyLocked}" Style="{StaticResource Text.Meta}" FontSize="11" Margin="0,4,0,0" Visibility="{Binding CurrencyLocked, Converter={StaticResource FD.HasValue}}" />
+            <TextBlock Text="{l:Loc Acct_OpeningHint}" Style="{StaticResource Text.Meta}" FontSize="11" TextWrapping="Wrap" Margin="0,4,0,0" />
+            <TextBlock Text="{l:Loc Acct_Description}" Style="{StaticResource FieldLabel}" Margin="0,10,0,0" />
+            <TextBox Style="{StaticResource TextArea}" Height="46" Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}" ui:Bidi.AutoDirection="True" AutomationProperties.Name="{l:Loc Acct_Description}" />
+            <TextBlock Text="{l:Loc Cat_Icon}" Style="{StaticResource FieldLabel}" Margin="0,10,0,0" />
+            <ItemsControl ItemsSource="{Binding Icons}" ItemTemplate="{StaticResource FD.IconChoice}" Focusable="False">
+                <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+            </ItemsControl>
+            <TextBlock Text="{l:Loc Cat_Accent}" Style="{StaticResource FieldLabel}" Margin="0,6,0,0" />
+            <ItemsControl ItemsSource="{Binding Accents}" ItemTemplate="{StaticResource FD.AccentChoice}" Focusable="False">
+                <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+            </ItemsControl>
+            <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                <ui:ArcadiaIcon Kind="Shield" Width="12" Height="12" Opacity="0.8" />
+                <TextBlock Text="{l:Loc Acct_NoBankData}" Style="{StaticResource Text.Meta}" FontSize="11" Margin="6,0,0,0" TextWrapping="Wrap" MaxWidth="440" />
+            </StackPanel>
+            <TextBlock Text="{Binding Error}" Style="{StaticResource FieldError}" Margin="0,10,0,0" TextWrapping="Wrap" Visibility="{Binding Error, Converter={StaticResource FD.HasValue}}" />
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,18,0,0">
+                <ui:ArcadiaButton Content="{l:Loc Editor_Cancel}" Command="{Binding CancelCommand}" MinWidth="96" Margin="0,0,10,0" IsCancel="True" />
+                <ui:ArcadiaButton Variant="Primary" Icon="Check" IconSize="13" Content="{l:Loc Editor_Save}" Command="{Binding ConfirmCommand}" MinWidth="110" IsDefault="True" />
+            </StackPanel>
+        </StackPanel>
+    </DataTemplate>
+
+    <!-- ═══════════ Budget ═══════════ -->
+    <DataTemplate DataType="{x:Type dialogs:BudgetEditorViewModel}">
+        <StackPanel Margin="22,16,22,18">
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,8" Visibility="{Binding IsTrip, Converter={StaticResource FD.HasValue}}">
+                <ui:ArcadiaIcon Kind="Suitcase" Width="14" Height="14" />
+                <TextBlock Text="{Binding TripName}" Style="{StaticResource Text.Item}" Margin="8,0,0,0" VerticalAlignment="Center" />
+            </StackPanel>
+            <TextBlock Text="{l:Loc Bud_Category}" Style="{StaticResource FieldLabel}" />
+            <ComboBox ItemsSource="{Binding CategoryOptions}" SelectedItem="{Binding Category}" MinHeight="30" AutomationProperties.Name="{l:Loc Bud_Category}" />
+            <Grid Margin="0,10,0,0">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="10" /><ColumnDefinition Width="110" /><ColumnDefinition Width="10" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                <StackPanel>
+                    <TextBlock Text="{l:Loc Bud_Amount}" Style="{StaticResource FieldLabel}" />
+                    <TextBox Text="{Binding AmountText, UpdateSourceTrigger=PropertyChanged}" MinHeight="30" FontSize="15" FlowDirection="LeftToRight" AutomationProperties.Name="{l:Loc Bud_Amount}" />
+                </StackPanel>
+                <StackPanel Grid.Column="2">
+                    <TextBlock Text="{l:Loc Acct_Currency}" Style="{StaticResource FieldLabel}" />
+                    <ComboBox ItemsSource="{Binding CurrencyOptions}" Text="{Binding Currency, UpdateSourceTrigger=LostFocus}" IsEditable="True" MinHeight="30" AutomationProperties.Name="{l:Loc Acct_Currency}" />
+                </StackPanel>
+                <StackPanel Grid.Column="4">
+                    <TextBlock Text="{l:Loc Bud_Period}" Style="{StaticResource FieldLabel}" />
+                    <ComboBox ItemsSource="{Binding PeriodOptions}" SelectedItem="{Binding Period}" MinHeight="30" AutomationProperties.Name="{l:Loc Bud_Period}" />
+                </StackPanel>
+            </Grid>
+            <Grid Margin="0,10,0,0">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="10" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                <StackPanel>
+                    <TextBlock Text="{l:Loc Bud_Start}" Style="{StaticResource FieldLabel}" />
+                    <TextBox Text="{Binding StartText, UpdateSourceTrigger=PropertyChanged}" MinHeight="30" FlowDirection="LeftToRight" AutomationProperties.Name="{l:Loc Bud_Start}" />
+                </StackPanel>
+                <StackPanel Grid.Column="2">
+                    <TextBlock Text="{l:Loc Bud_End}" Style="{StaticResource FieldLabel}" />
+                    <TextBox Text="{Binding EndText, UpdateSourceTrigger=PropertyChanged}" MinHeight="30" FlowDirection="LeftToRight" AutomationProperties.Name="{l:Loc Bud_End}" />
+                </StackPanel>
+            </Grid>
+            <TextBlock Text="{l:Loc Bud_DatesHint}" Style="{StaticResource Text.Meta}" FontSize="11" TextWrapping="Wrap" Margin="0,4,0,0" />
+            <CheckBox Content="{l:Loc Bud_Rollover}" IsChecked="{Binding Rollover}" Margin="0,10,0,0" Foreground="{StaticResource Brush.Text.Secondary}" Visibility="{Binding IsMonthly, Converter={StaticResource FD.HasValue}}" />
+            <TextBlock Text="{l:Loc Bud_RolloverHint}" Style="{StaticResource Text.Meta}" FontSize="11" TextWrapping="Wrap" Margin="22,2,0,0" Visibility="{Binding IsMonthly, Converter={StaticResource FD.HasValue}}" />
+            <TextBlock Text="{l:Loc Bud_Name}" Style="{StaticResource FieldLabel}" Margin="0,10,0,0" />
+            <TextBox Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" MinHeight="28" ui:Bidi.AutoDirection="True" AutomationProperties.Name="{l:Loc Bud_Name}" />
+            <TextBlock Text="{Binding Error}" Style="{StaticResource FieldError}" Margin="0,10,0,0" TextWrapping="Wrap" Visibility="{Binding Error, Converter={StaticResource FD.HasValue}}" />
+            <DockPanel Margin="0,18,0,0">
+                <ui:ArcadiaButton DockPanel.Dock="Left" Icon="Trash" IconSize="12" Content="{l:Loc Confirm_Delete}" Command="{Binding DeleteCommand}" Visibility="{Binding IsNew, Converter={StaticResource FD.HasValue}, ConverterParameter=invert}" />
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <ui:ArcadiaButton Content="{l:Loc Editor_Cancel}" Command="{Binding CancelCommand}" MinWidth="96" Margin="0,0,10,0" IsCancel="True" />
+                    <ui:ArcadiaButton Variant="Primary" Icon="Check" IconSize="13" Content="{l:Loc Editor_Save}" Command="{Binding ConfirmCommand}" MinWidth="110" IsDefault="True" />
+                </StackPanel>
+            </DockPanel>
+        </StackPanel>
+    </DataTemplate>
+
+    <!-- ═══════════ Bill / subscription / income ═══════════ -->
+    <DataTemplate DataType="{x:Type dialogs:RecurringEditorViewModel}">
+        <StackPanel Margin="22,16,22,18">
+            <Grid>
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="10" /><ColumnDefinition Width="150" /></Grid.ColumnDefinitions>
+                <StackPanel>
+                    <TextBlock Text="{l:Loc Rec_Name}" Style="{StaticResource FieldLabel}" />
+                    <TextBox Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" MinHeight="32" FontSize="15" ui:Bidi.AutoDirection="True" AutomationProperties.Name="{l:Loc Rec_Name}" />
+                </StackPanel>
+                <StackPanel Grid.Column="2">
+                    <TextBlock Text="{l:Loc Rec_Kind}" Style="{StaticResource FieldLabel}" />
+                    <ComboBox ItemsSource="{Binding KindOptions}" SelectedItem="{Binding Kind}" MinHeight="32" AutomationProperties.Name="{l:Loc Rec_Kind}" />
+                </StackPanel>
+            </Grid>
+            <Grid Margin="0,10,0,0">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="10" /><ColumnDefinition Width="100" /><ColumnDefinition Width="10" /><ColumnDefinition Width="1.3*" /></Grid.ColumnDefinitions>
+                <StackPanel>
+                    <TextBlock Text="{l:Loc Txn_Amount}" Style="{StaticResource FieldLabel}" />
+                    <TextBox Text="{Binding AmountText, UpdateSourceTrigger=PropertyChanged}" MinHeight="30" FontSize="15" FlowDirection="LeftToRight" AutomationProperties.Name="{l:Loc Txn_Amount}" />
+                </StackPanel>
+                <StackPanel Grid.Column="2">
+                    <TextBlock Text="{l:Loc Acct_Currency}" Style="{StaticResource FieldLabel}" />
+                    <ComboBox ItemsSource="{Binding CurrencyOptions}" Text="{Binding Currency, UpdateSourceTrigger=LostFocus}" IsEditable="True" MinHeight="30"
+                              IsEnabled="{Binding CurrencyFromAccount, Converter={StaticResource FD.Not}}" AutomationProperties.Name="{l:Loc Acct_Currency}" />
+                </StackPanel>
+                <StackPanel Grid.Column="4">
+                    <TextBlock Text="{l:Loc Txn_Account}" Style="{StaticResource FieldLabel}" />
+                    <ComboBox ItemsSource="{Binding AccountOptions}" SelectedItem="{Binding Account}" MinHeight="30" AutomationProperties.Name="{l:Loc Txn_Account}" />
+                </StackPanel>
+            </Grid>
+            <Grid Margin="0,10,0,0">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="70" /><ColumnDefinition Width="8" /><ColumnDefinition Width="*" /><ColumnDefinition Width="10" /><ColumnDefinition Width="*" /><ColumnDefinition Width="10" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                <StackPanel>
+                    <TextBlock Text="{l:Loc Evt_Every}" Style="{StaticResource FieldLabel}" />
+                    <TextBox Text="{Binding IntervalText, UpdateSourceTrigger=PropertyChanged}" MinHeight="30" FlowDirection="LeftToRight" AutomationProperties.Name="{l:Loc Evt_Every}" />
+                </StackPanel>
+                <StackPanel Grid.Column="2">
+                    <TextBlock Text="{l:Loc Rec_Frequency}" Style="{StaticResource FieldLabel}" />
+                    <ComboBox ItemsSource="{Binding FrequencyOptions}" SelectedItem="{Binding Frequency}" MinHeight="30" AutomationProperties.Name="{l:Loc Rec_Frequency}" />
+                </StackPanel>
+                <StackPanel Grid.Column="4">
+                    <TextBlock Text="{l:Loc Rec_FirstDue}" Style="{StaticResource FieldLabel}" />
+                    <TextBox Text="{Binding StartText, UpdateSourceTrigger=PropertyChanged}" MinHeight="30" FlowDirection="LeftToRight" AutomationProperties.Name="{l:Loc Rec_FirstDue}" />
+                </StackPanel>
+                <StackPanel Grid.Column="6">
+                    <TextBlock Text="{l:Loc Rec_Ends}" Style="{StaticResource FieldLabel}" />
+                    <TextBox Text="{Binding EndText, UpdateSourceTrigger=PropertyChanged}" MinHeight="30" FlowDirection="LeftToRight" AutomationProperties.Name="{l:Loc Rec_Ends}" />
+                </StackPanel>
+            </Grid>
+            <Grid Margin="0,10,0,0">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="10" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                <StackPanel>
+                    <TextBlock Text="{l:Loc Txn_Category}" Style="{StaticResource FieldLabel}" />
+                    <ComboBox ItemsSource="{Binding CategoryOptions}" SelectedItem="{Binding Category}" MinHeight="30" AutomationProperties.Name="{l:Loc Txn_Category}" />
+                </StackPanel>
+                <StackPanel Grid.Column="2">
+                    <TextBlock Text="{l:Loc Txn_Payee}" Style="{StaticResource FieldLabel}" />
+                    <TextBox Text="{Binding Payee, UpdateSourceTrigger=PropertyChanged}" MinHeight="30" ui:Bidi.AutoDirection="True" AutomationProperties.Name="{l:Loc Txn_Payee}" />
+                </StackPanel>
+            </Grid>
+            <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                <CheckBox Content="{l:Loc Rec_Active}" IsChecked="{Binding IsActive}" Foreground="{StaticResource Brush.Text.Secondary}" Margin="0,0,20,0" />
+                <CheckBox Content="{l:Loc Rec_OnCalendar}" IsChecked="{Binding ShowOnCalendar}" Foreground="{StaticResource Brush.Text.Secondary}" />
+            </StackPanel>
+            <TextBlock Text="{l:Loc Task_Notes}" Style="{StaticResource FieldLabel}" Margin="0,10,0,0" />
+            <TextBox Style="{StaticResource TextArea}" Height="46" Text="{Binding Notes, UpdateSourceTrigger=PropertyChanged}" ui:Bidi.AutoDirection="True" AutomationProperties.Name="{l:Loc Task_Notes}" />
+            <TextBlock Text="{Binding Error}" Style="{StaticResource FieldError}" Margin="0,10,0,0" TextWrapping="Wrap" Visibility="{Binding Error, Converter={StaticResource FD.HasValue}}" />
+            <DockPanel Margin="0,18,0,0">
+                <ui:ArcadiaButton DockPanel.Dock="Left" Icon="Trash" IconSize="12" Content="{l:Loc Confirm_Delete}" Command="{Binding DeleteCommand}" Visibility="{Binding IsNew, Converter={StaticResource FD.HasValue}, ConverterParameter=invert}" />
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <ui:ArcadiaButton Content="{l:Loc Editor_Cancel}" Command="{Binding CancelCommand}" MinWidth="96" Margin="0,0,10,0" IsCancel="True" />
+                    <ui:ArcadiaButton Variant="Primary" Icon="Check" IconSize="13" Content="{l:Loc Editor_Save}" Command="{Binding ConfirmCommand}" MinWidth="110" IsDefault="True" />
+                </StackPanel>
+            </DockPanel>
+        </StackPanel>
+    </DataTemplate>
+
+    <!-- ═══════════ Goal ═══════════ -->
+    <DataTemplate DataType="{x:Type dialogs:GoalEditorViewModel}">
+        <StackPanel Margin="22,16,22,18">
+            <TextBlock Text="{l:Loc Goal_Name}" Style="{StaticResource FieldLabel}" />
+            <TextBox Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" MinHeight="32" FontSize="15" ui:Bidi.AutoDirection="True" AutomationProperties.Name="{l:Loc Goal_Name}" />
+            <Grid Margin="0,10,0,0">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="10" /><ColumnDefinition Width="100" /><ColumnDefinition Width="10" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                <StackPanel>
+                    <TextBlock Text="{l:Loc Goal_Target}" Style="{StaticResource FieldLabel}" />
+                    <TextBox Text="{Binding TargetText, UpdateSourceTrigger=PropertyChanged}" MinHeight="30" FontSize="15" FlowDirection="LeftToRight" AutomationProperties.Name="{l:Loc Goal_Target}" />
+                </StackPanel>
+                <StackPanel Grid.Column="2">
+                    <TextBlock Text="{l:Loc Acct_Currency}" Style="{StaticResource FieldLabel}" />
+                    <ComboBox ItemsSource="{Binding CurrencyOptions}" Text="{Binding Currency, UpdateSourceTrigger=LostFocus}" IsEditable="True" MinHeight="30"
+                              IsEnabled="{Binding IsManual}" AutomationProperties.Name="{l:Loc Acct_Currency}" />
+                </StackPanel>
+                <StackPanel Grid.Column="4">
+                    <TextBlock Text="{l:Loc Goal_Date}" Style="{StaticResource FieldLabel}" />
+                    <TextBox Text="{Binding DateInput, UpdateSourceTrigger=PropertyChanged}" MinHeight="30" FlowDirection="LeftToRight" AutomationProperties.Name="{l:Loc Goal_Date}" />
+                </StackPanel>
+            </Grid>
+            <TextBlock Text="{l:Loc Goal_Tracking}" Style="{StaticResource FieldLabel}" Margin="0,10,0,0" />
+            <ComboBox ItemsSource="{Binding AccountOptions}" SelectedItem="{Binding Account}" MinHeight="30" AutomationProperties.Name="{l:Loc Goal_Tracking}" />
+            <StackPanel Visibility="{Binding IsManual, Converter={StaticResource FD.HasValue}}">
+                <TextBlock Text="{l:Loc Goal_Saved}" Style="{StaticResource FieldLabel}" Margin="0,10,0,0" />
+                <TextBox Text="{Binding SavedText, UpdateSourceTrigger=PropertyChanged}" MinHeight="30" FlowDirection="LeftToRight" AutomationProperties.Name="{l:Loc Goal_Saved}" />
+            </StackPanel>
+            <TextBlock Text="{l:Loc Goal_AccountHint}" Style="{StaticResource Text.Meta}" FontSize="11" TextWrapping="Wrap" Margin="0,4,0,0" Visibility="{Binding IsManual, Converter={StaticResource FD.HasValue}, ConverterParameter=invert}" />
+            <TextBlock Text="{l:Loc Acct_Description}" Style="{StaticResource FieldLabel}" Margin="0,10,0,0" />
+            <TextBox Style="{StaticResource TextArea}" Height="42" Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}" ui:Bidi.AutoDirection="True" AutomationProperties.Name="{l:Loc Acct_Description}" />
+            <TextBlock Text="{l:Loc Cat_Icon}" Style="{StaticResource FieldLabel}" Margin="0,10,0,0" />
+            <ItemsControl ItemsSource="{Binding Icons}" ItemTemplate="{StaticResource FD.IconChoice}" Focusable="False">
+                <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+            </ItemsControl>
+            <ItemsControl ItemsSource="{Binding Accents}" ItemTemplate="{StaticResource FD.AccentChoice}" Focusable="False" Margin="0,4,0,0">
+                <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+            </ItemsControl>
+            <TextBlock Text="{Binding Error}" Style="{StaticResource FieldError}" Margin="0,10,0,0" TextWrapping="Wrap" Visibility="{Binding Error, Converter={StaticResource FD.HasValue}}" />
+            <DockPanel Margin="0,18,0,0">
+                <ui:ArcadiaButton DockPanel.Dock="Left" Icon="Trash" IconSize="12" Content="{l:Loc Confirm_Delete}" Command="{Binding DeleteCommand}" Visibility="{Binding IsNew, Converter={StaticResource FD.HasValue}, ConverterParameter=invert}" />
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <ui:ArcadiaButton Content="{l:Loc Editor_Cancel}" Command="{Binding CancelCommand}" MinWidth="96" Margin="0,0,10,0" IsCancel="True" />
+                    <ui:ArcadiaButton Variant="Primary" Icon="Check" IconSize="13" Content="{l:Loc Editor_Save}" Command="{Binding ConfirmCommand}" MinWidth="110" IsDefault="True" />
+                </StackPanel>
+            </DockPanel>
+        </StackPanel>
+    </DataTemplate>
+
+    <!-- ═══════════ One amount ═══════════ -->
+    <DataTemplate DataType="{x:Type dialogs:AmountPromptViewModel}">
+        <StackPanel Margin="22,16,22,18" FocusManager.FocusedElement="{Binding ElementName=Box}">
+            <TextBlock Text="{Binding Message}" Style="{StaticResource Text.Body}" TextWrapping="Wrap" />
+            <DockPanel Margin="0,12,0,0">
+                <TextBlock DockPanel.Dock="Left" Text="{Binding CurrencySymbol}" FontFamily="Bahnschrift, Segoe UI" FontSize="18" Foreground="#7FA9C8" VerticalAlignment="Center" Margin="0,0,8,0" />
+                <TextBox x:Name="Box" Text="{Binding AmountText, UpdateSourceTrigger=PropertyChanged}" MinHeight="34" FontSize="17" FlowDirection="LeftToRight" AutomationProperties.Name="{l:Loc Txn_Amount}" />
+            </DockPanel>
+            <TextBlock Text="{l:Loc Goal_AddHint}" Style="{StaticResource Text.Meta}" FontSize="11" Margin="0,4,0,0" Visibility="{Binding AllowNegative, Converter={StaticResource FD.HasValue}}" />
+            <TextBlock Text="{Binding Error}" Style="{StaticResource FieldError}" Margin="0,8,0,0" Visibility="{Binding Error, Converter={StaticResource FD.HasValue}}" />
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
+                <ui:ArcadiaButton Content="{l:Loc Editor_Cancel}" Command="{Binding CancelCommand}" MinWidth="96" Margin="0,0,10,0" IsCancel="True" />
+                <ui:ArcadiaButton Variant="Primary" Icon="Check" IconSize="13" Content="{l:Loc Editor_Save}" Command="{Binding ConfirmCommand}" MinWidth="110" IsDefault="True" />
+            </StackPanel>
+        </StackPanel>
+    </DataTemplate>
+
+    <!-- ═══════════ Pay a bill ═══════════ -->
+    <DataTemplate DataType="{x:Type dialogs:PayBillViewModel}">
+        <StackPanel Margin="22,16,22,18">
+            <TextBlock Text="{Binding Message}" Style="{StaticResource Text.Body}" TextWrapping="Wrap" />
+            <TextBlock Text="{l:Loc Txn_Account}" Style="{StaticResource FieldLabel}" Margin="0,12,0,0" />
+            <ComboBox ItemsSource="{Binding AccountOptions}" SelectedItem="{Binding Account}" MinHeight="30" AutomationProperties.Name="{l:Loc Txn_Account}" />
+            <TextBlock Text="{l:Loc Pay_NoAccount}" Style="{StaticResource FieldError}" TextWrapping="Wrap" Visibility="{Binding HasAccounts, Converter={StaticResource FD.HasValue}, ConverterParameter=invert}" />
+            <Grid Margin="0,10,0,0">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="10" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                <StackPanel>
+                    <TextBlock Text="{l:Loc Txn_Amount}" Style="{StaticResource FieldLabel}" />
+                    <DockPanel>
+                        <TextBlock DockPanel.Dock="Left" Text="{Binding CurrencySymbol}" FontFamily="Bahnschrift, Segoe UI" FontSize="15" Foreground="#7FA9C8" VerticalAlignment="Center" Margin="0,0,6,0" />
+                        <TextBox Text="{Binding AmountText, UpdateSourceTrigger=PropertyChanged}" MinHeight="30" FlowDirection="LeftToRight" AutomationProperties.Name="{l:Loc Txn_Amount}" />
+                    </DockPanel>
+                </StackPanel>
+                <StackPanel Grid.Column="2">
+                    <TextBlock Text="{l:Loc Pay_PaidOn}" Style="{StaticResource FieldLabel}" />
+                    <TextBox Text="{Binding DateInput, UpdateSourceTrigger=PropertyChanged}" MinHeight="30" FlowDirection="LeftToRight" AutomationProperties.Name="{l:Loc Pay_PaidOn}" />
+                </StackPanel>
+            </Grid>
+            <TextBlock Text="{Binding Error}" Style="{StaticResource FieldError}" Margin="0,8,0,0" TextWrapping="Wrap" Visibility="{Binding Error, Converter={StaticResource FD.HasValue}}" />
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
+                <ui:ArcadiaButton Content="{l:Loc Editor_Cancel}" Command="{Binding CancelCommand}" MinWidth="96" Margin="0,0,10,0" IsCancel="True" />
+                <ui:ArcadiaButton Variant="Primary" Icon="Check" IconSize="13" Content="{l:Loc Rec_MarkPaid}" Command="{Binding ConfirmCommand}" MinWidth="120" IsDefault="True" />
+            </StackPanel>
+        </StackPanel>
+    </DataTemplate>
+
+    <!-- ═══════════ Categories ═══════════ -->
+    <DataTemplate DataType="{x:Type dialogs:CategoryManagerViewModel}">
+        <Grid Margin="22,16,22,18">
+            <Grid.RowDefinitions><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="14" /><ColumnDefinition Width="300" /></Grid.ColumnDefinitions>
+            <DockPanel Height="420">
+                <DockPanel DockPanel.Dock="Top" Margin="0,0,0,6">
+                    <CheckBox DockPanel.Dock="Right" Content="{l:Loc Cat_ShowArchived}" IsChecked="{Binding ShowArchived}" Foreground="{StaticResource Brush.Text.Secondary}" VerticalAlignment="Center" />
+                    <StackPanel Orientation="Horizontal">
+                        <ui:ArcadiaButton Icon="Plus" IconSize="12" Content="{l:Loc Cat_Add}" Command="{Binding NewCommand}" Margin="0,0,6,0" />
+                        <ui:ArcadiaButton Icon="Plus" IconSize="12" Content="{l:Loc Cat_AddSub}" Command="{Binding NewCommand}" CommandParameter="child" />
+                    </StackPanel>
+                </DockPanel>
+                <Border Style="{StaticResource Tool.TableFrame}">
+                    <Border Style="{StaticResource Tool.TableInner}">
+                        <ListBox ItemsSource="{Binding Items}" SelectedItem="{Binding Selected}" Style="{StaticResource Tr.List}" AutomationProperties.Name="{Binding Title}">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate DataType="{x:Type dialogs:CategoryRowItem}">
+                                    <DockPanel MinHeight="30">
+                                        <DockPanel.Style>
+                                            <Style TargetType="DockPanel">
+                                                <Setter Property="Margin" Value="10,0" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsChild}" Value="True"><Setter Property="Margin" Value="34,0,10,0" /></DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </DockPanel.Style>
+                                        <TextBlock DockPanel.Dock="Right" Text="{Binding UseText}" Style="{StaticResource Text.Meta}" FontSize="10.5" VerticalAlignment="Center" />
+                                        <ui:ArcadiaIcon Kind="{Binding Info.Icon}" Width="13" Height="13" Foreground="{Binding Info.Accent, Converter={StaticResource FD.Tone}}" VerticalAlignment="Center" />
+                                        <TextBlock ui:Bidi.Text="{Binding Name}" Margin="8,0,0,0" VerticalAlignment="Center" Foreground="{StaticResource Brush.Text.Primary}" TextTrimming="CharacterEllipsis" />
+                                    </DockPanel>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </Border>
+                </Border>
+            </DockPanel>
+
+            <!-- the selected category -->
+            <Grid Grid.Column="2">
+                <StackPanel Visibility="{Binding IsEditing, Converter={StaticResource FD.HasValue}, ConverterParameter=invert}">
+                    <StackPanel Visibility="{Binding Selected, Converter={StaticResource FD.HasValue}}">
+                        <TextBlock Text="{Binding Selected.Name}" Style="{StaticResource Text.Title}" FontSize="16" TextTrimming="CharacterEllipsis" />
+                        <TextBlock Text="{Binding Selected.UseText}" Style="{StaticResource Text.Meta}" Margin="0,2,0,0" />
+                        <ui:ArcadiaButton Icon="Settings" IconSize="13" Content="{l:Loc Cat_Edit}" Command="{Binding EditCommand}" HorizontalAlignment="Stretch" Margin="0,14,0,6" />
+                        <ui:ArcadiaButton Icon="Layers" IconSize="13" Content="{l:Loc Cat_ToggleArchive}" Command="{Binding ToggleArchiveCommand}" HorizontalAlignment="Stretch" Margin="0,0,0,14" />
+                        <TextBlock Text="{l:Loc Cat_DeleteMoveTo}" Style="{StaticResource FieldLabel}" />
+                        <ComboBox ItemsSource="{Binding MoveOptions}" SelectedItem="{Binding MoveTo}" MinHeight="28" AutomationProperties.Name="{l:Loc Cat_DeleteMoveTo}" />
+                        <ui:ArcadiaButton Icon="Trash" IconSize="12" Content="{l:Loc Confirm_Delete}" Command="{Binding DeleteCommand}" HorizontalAlignment="Left" Margin="0,8,0,0" />
+                    </StackPanel>
+                </StackPanel>
+                <StackPanel Visibility="{Binding IsEditing, Converter={StaticResource FD.HasValue}}">
+                    <TextBlock Text="{l:Loc Cat_Name}" Style="{StaticResource FieldLabel}" />
+                    <TextBox Text="{Binding EditName, UpdateSourceTrigger=PropertyChanged}" MinHeight="30" ui:Bidi.AutoDirection="True" AutomationProperties.Name="{l:Loc Cat_Name}" />
+                    <TextBlock Text="{l:Loc Cat_Kind}" Style="{StaticResource FieldLabel}" Margin="0,8,0,0" />
+                    <ComboBox ItemsSource="{Binding KindOptions}" SelectedItem="{Binding EditKind}" MinHeight="28" AutomationProperties.Name="{l:Loc Cat_Kind}" />
+                    <TextBlock Text="{l:Loc Cat_Parent}" Style="{StaticResource FieldLabel}" Margin="0,8,0,0" />
+                    <ComboBox ItemsSource="{Binding ParentOptions}" SelectedItem="{Binding EditParent}" MinHeight="28" AutomationProperties.Name="{l:Loc Cat_Parent}" />
+                    <TextBlock Text="{l:Loc Cat_Icon}" Style="{StaticResource FieldLabel}" Margin="0,8,0,0" />
+                    <ItemsControl ItemsSource="{Binding Icons}" Focusable="False">
+                        <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <RadioButton Style="{StaticResource Tool.RadioChip}" GroupName="CatIconF" Margin="0,0,3,3" Width="30" Height="26" ToolTip="{Binding}" AutomationProperties.Name="{Binding}"
+                                             Command="{Binding DataContext.ChooseIconCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}">
+                                    <RadioButton.IsChecked>
+                                        <MultiBinding Converter="{StaticResource It.Same}" Mode="OneWay">
+                                            <Binding />
+                                            <Binding Path="DataContext.EditGlyph" RelativeSource="{RelativeSource AncestorType=ItemsControl}" />
+                                        </MultiBinding>
+                                    </RadioButton.IsChecked>
+                                    <ui:ArcadiaIcon Kind="{Binding}" Width="13" Height="13" />
+                                </RadioButton>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <ItemsControl ItemsSource="{Binding Accents}" Focusable="False" Margin="0,4,0,0">
+                        <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <RadioButton Style="{StaticResource Tool.RadioChip}" GroupName="CatAccentF" Margin="0,0,3,3" Height="24" Padding="6,0" ToolTip="{Binding}" AutomationProperties.Name="{Binding}"
+                                             Command="{Binding DataContext.ChooseAccentCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}">
+                                    <RadioButton.IsChecked>
+                                        <MultiBinding Converter="{StaticResource It.Same}" Mode="OneWay">
+                                            <Binding />
+                                            <Binding Path="DataContext.EditAccent" RelativeSource="{RelativeSource AncestorType=ItemsControl}" />
+                                        </MultiBinding>
+                                    </RadioButton.IsChecked>
+                                    <Border Width="16" Height="9" CornerRadius="2" Background="{Binding Converter={StaticResource FD.Tone}}" />
+                                </RadioButton>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
+                        <ui:ArcadiaButton Content="{l:Loc Editor_Cancel}" Command="{Binding CancelEditCommand}" MinWidth="80" Margin="0,0,8,0" />
+                        <ui:ArcadiaButton Variant="Primary" Icon="Check" IconSize="13" Content="{l:Loc Editor_Save}" Command="{Binding SaveEditCommand}" MinWidth="96" />
+                    </StackPanel>
+                </StackPanel>
+            </Grid>
+            <TextBlock Grid.Row="1" Grid.ColumnSpan="3" Text="{Binding Error}" Style="{StaticResource FieldError}" Margin="0,10,0,0" TextWrapping="Wrap" Visibility="{Binding Error, Converter={StaticResource FD.HasValue}}" />
+            <ui:ArcadiaButton Grid.Row="1" Grid.ColumnSpan="3" Variant="Primary" Content="{l:Loc Cat_Done}" Command="{Binding DoneCommand}" HorizontalAlignment="Right" MinWidth="110" Margin="0,16,0,0" IsCancel="True" />
+        </Grid>
+    </DataTemplate>
+
+    <!-- ═══════════ CSV import ═══════════ -->
+    <DataTemplate DataType="{x:Type dialogs:ImportWizardViewModel}">
+        <DockPanel Margin="22,14,22,18" Height="560">
+            <TextBlock DockPanel.Dock="Top" Text="{Binding StepText}" Style="{StaticResource Fin.Kicker}" Margin="0,0,0,10" />
+            <StackPanel DockPanel.Dock="Bottom">
+                <TextBlock Text="{Binding Error}" Style="{StaticResource FieldError}" TextWrapping="Wrap" Margin="0,8,0,0" Visibility="{Binding Error, Converter={StaticResource FD.HasValue}}" />
+                <DockPanel Margin="0,12,0,0">
+                    <ui:ArcadiaButton DockPanel.Dock="Left" Content="{l:Loc Imp_Back}" Command="{Binding BackCommand}" MinWidth="90" Visibility="{Binding CanGoBack, Converter={StaticResource FD.HasValue}}" />
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <ui:ArcadiaButton Content="{l:Loc Editor_Cancel}" Command="{Binding CancelCommand}" MinWidth="90" Margin="0,0,10,0" IsCancel="True" Visibility="{Binding IsDoneStep, Converter={StaticResource FD.HasValue}, ConverterParameter=invert}" />
+                        <ui:ArcadiaButton Variant="Primary" Icon="ChevronRight" IconSize="11" Content="{l:Loc Imp_Next}" Command="{Binding NextCommand}" MinWidth="110" Visibility="{Binding CanGoNext, Converter={StaticResource FD.HasValue}}" />
+                        <ui:ArcadiaButton Variant="Primary" Icon="Import" IconSize="13" Content="{l:Loc Imp_Import}" Command="{Binding ImportCommand}" MinWidth="130" Visibility="{Binding IsReviewStep, Converter={StaticResource FD.HasValue}}" />
+                        <ui:ArcadiaButton Variant="Primary" Content="{l:Loc Cat_Done}" Command="{Binding CancelCommand}" MinWidth="110" Visibility="{Binding IsDoneStep, Converter={StaticResource FD.HasValue}}" />
+                    </StackPanel>
+                </DockPanel>
+            </StackPanel>
+            <Grid>
+                <!-- 1 · file -->
+                <StackPanel Visibility="{Binding IsFileStep, Converter={StaticResource FD.HasValue}}">
+                    <TextBlock Text="{l:Loc Imp_FileIntro}" Style="{StaticResource Text.Body}" TextWrapping="Wrap" />
+                    <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                        <ui:ArcadiaButton Variant="Primary" Icon="Import" IconSize="13" Content="{l:Loc Imp_ChooseFile}" Command="{Binding PickFileCommand}" MinWidth="150" />
+                        <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding FileName}" Style="{StaticResource Text.Item}" />
+                            <TextBlock Text="{Binding FileInfo}" Style="{StaticResource Text.Meta}" FontSize="11" />
+                        </StackPanel>
+                    </StackPanel>
+                    <Grid Margin="0,14,0,0" Visibility="{Binding HasFile, Converter={StaticResource FD.HasValue}}">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="12" /><ColumnDefinition Width="160" /><ColumnDefinition Width="12" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock Text="{l:Loc Imp_IntoAccount}" Style="{StaticResource FieldLabel}" />
+                            <ComboBox ItemsSource="{Binding AccountOptions}" SelectedItem="{Binding Account}" MinHeight="30" AutomationProperties.Name="{l:Loc Imp_IntoAccount}" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="{l:Loc Imp_Separator}" Style="{StaticResource FieldLabel}" />
+                            <ComboBox ItemsSource="{Binding DelimiterOptions}" SelectedItem="{Binding Delimiter}" MinHeight="30" AutomationProperties.Name="{l:Loc Imp_Separator}" />
+                        </StackPanel>
+                        <CheckBox Grid.Column="4" Content="{l:Loc Imp_HasHeader}" IsChecked="{Binding HasHeader}" VerticalAlignment="Bottom" Margin="0,0,0,6" Foreground="{StaticResource Brush.Text.Secondary}" />
+                    </Grid>
+                    <TextBlock Text="{l:Loc Imp_Preview}" Style="{StaticResource FieldLabel}" Margin="0,14,0,0" Visibility="{Binding HasFile, Converter={StaticResource FD.HasValue}}" />
+                    <Border Style="{StaticResource Tool.TableFrame}" Visibility="{Binding HasFile, Converter={StaticResource FD.HasValue}}">
+                        <Border Style="{StaticResource Tool.TableInner}" Padding="10,6">
+                            <ItemsControl ItemsSource="{Binding PreviewLines}" Focusable="False">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding}" FontFamily="Cascadia Mono, Consolas" FontSize="11" Foreground="#AFC2D8" TextTrimming="CharacterEllipsis" Margin="0,2" />
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </Border>
+                    </Border>
+                    <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
+                        <ui:ArcadiaIcon Kind="Shield" Width="12" Height="12" Opacity="0.8" />
+                        <TextBlock Text="{l:Loc Imp_Safety}" Style="{StaticResource Text.Meta}" FontSize="11" Margin="6,0,0,0" TextWrapping="Wrap" MaxWidth="780" />
+                    </StackPanel>
+                </StackPanel>
+
+                <!-- 2 · map -->
+                <Grid Visibility="{Binding IsMapStep, Converter={StaticResource FD.HasValue}}">
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="16" /><ColumnDefinition Width="300" /></Grid.ColumnDefinitions>
+                    <DockPanel>
+                        <TextBlock DockPanel.Dock="Top" Text="{l:Loc Imp_MapIntro}" Style="{StaticResource Text.Meta}" TextWrapping="Wrap" Margin="0,0,0,8" />
+                        <ScrollViewer VerticalScrollBarVisibility="Auto" Focusable="False">
+                            <ItemsControl ItemsSource="{Binding Mappings}" Focusable="False">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate DataType="{x:Type dialogs:FieldMapping}">
+                                        <Grid Margin="0,3">
+                                            <Grid.ColumnDefinitions><ColumnDefinition Width="150" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                                            <TextBlock Text="{Binding Label}" Style="{StaticResource Text.Body}" VerticalAlignment="Center" />
+                                            <ComboBox Grid.Column="1" ItemsSource="{Binding Columns}" SelectedItem="{Binding Selected}" MinHeight="26" AutomationProperties.Name="{Binding Label}" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </DockPanel>
+                    <StackPanel Grid.Column="2">
+                        <TextBlock Text="{l:Loc Imp_NumberStyle}" Style="{StaticResource FieldLabel}" />
+                        <ComboBox ItemsSource="{Binding StyleOptions}" SelectedItem="{Binding Style}" MinHeight="28" AutomationProperties.Name="{l:Loc Imp_NumberStyle}" />
+                        <TextBlock Text="{Binding StyleHint}" FontSize="11" TextWrapping="Wrap" Margin="0,3,0,0">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock" BasedOn="{StaticResource Text.Meta}">
+                                    <Style.Triggers><DataTrigger Binding="{Binding StyleNeedsChoice}" Value="True"><Setter Property="Foreground" Value="#E0B060" /></DataTrigger></Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                        <TextBlock Text="{l:Loc Imp_DateFormat}" Style="{StaticResource FieldLabel}" Margin="0,10,0,0" />
+                        <ComboBox ItemsSource="{Binding DateFormats}" SelectedItem="{Binding DateFormat}" MinHeight="28" FlowDirection="LeftToRight" AutomationProperties.Name="{l:Loc Imp_DateFormat}" />
+                        <TextBlock Text="{Binding DateHint}" FontSize="11" TextWrapping="Wrap" Margin="0,3,0,0">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock" BasedOn="{StaticResource Text.Meta}">
+                                    <Style.Triggers><DataTrigger Binding="{Binding DateNeedsChoice}" Value="True"><Setter Property="Foreground" Value="#E0B060" /></DataTrigger></Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                        <StackPanel Visibility="{Binding UsesSingleAmount, Converter={StaticResource FD.HasValue}}">
+                            <TextBlock Text="{l:Loc Imp_Sign}" Style="{StaticResource FieldLabel}" Margin="0,10,0,0" />
+                            <ComboBox ItemsSource="{Binding SignOptions}" SelectedItem="{Binding Sign}" MinHeight="28" AutomationProperties.Name="{l:Loc Imp_Sign}" />
+                        </StackPanel>
+                    </StackPanel>
+                </Grid>
+
+                <!-- 3 · review -->
+                <DockPanel Visibility="{Binding IsReviewStep, Converter={StaticResource FD.HasValue}}">
+                    <StackPanel DockPanel.Dock="Top">
+                        <TextBlock Text="{Binding Summary}" Style="{StaticResource Text.Body}" TextWrapping="Wrap" />
+                        <StackPanel Orientation="Horizontal" Margin="0,8,0,8">
+                            <CheckBox Content="{l:Loc Imp_SkipLikely}" IsChecked="{Binding SkipLikely}" Foreground="{StaticResource Brush.Text.Secondary}" Margin="0,0,18,0" />
+                            <CheckBox Content="{l:Loc Imp_SkipPossible}" IsChecked="{Binding SkipPossible}" Foreground="{StaticResource Brush.Text.Secondary}" Margin="0,0,18,0" />
+                            <TextBlock Text="{Binding ImportCount, StringFormat='→ {0}'}" Style="{StaticResource Org.Time}" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </StackPanel>
+                    <Border Style="{StaticResource Tool.TableFrame}">
+                        <Border Style="{StaticResource Tool.TableInner}">
+                            <ListBox ItemsSource="{Binding Results}" Style="{StaticResource Tr.List}" AutomationProperties.Name="{l:Loc Imp_Review}">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate DataType="{x:Type dialogs:ImportPreviewRow}">
+                                        <Grid MinHeight="28" Margin="10,0">
+                                            <Grid.ColumnDefinitions><ColumnDefinition Width="44" /><ColumnDefinition Width="96" /><ColumnDefinition Width="*" /><ColumnDefinition Width="150" /><ColumnDefinition Width="120" /><ColumnDefinition Width="170" /></Grid.ColumnDefinitions>
+                                            <TextBlock Text="{Binding Line}" Style="{StaticResource Org.Time}" FontSize="10.5" VerticalAlignment="Center" />
+                                            <TextBlock Grid.Column="1" Text="{Binding DateText}" Style="{StaticResource Org.Time}" VerticalAlignment="Center" />
+                                            <TextBlock Grid.Column="2" ui:Bidi.Text="{Binding Description}" FontSize="12" Foreground="{StaticResource Brush.Text.Primary}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" Margin="0,0,8,0" />
+                                            <TextBlock Grid.Column="3" ui:Bidi.Text="{Binding CategoryText}" FontSize="11.5" Foreground="#AFC2D8" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                                            <fin:MoneyText Grid.Column="4" Money="{Binding AmountText}" FontFamily="Bahnschrift, Segoe UI" FontSize="12.5" TextAlignment="Right" VerticalAlignment="Center" Margin="0,0,10,0"
+                                                           Foreground="{Binding AmountTone, Converter={StaticResource FD.Ink}}" />
+                                            <StackPanel Grid.Column="5" Orientation="Horizontal" VerticalAlignment="Center">
+                                                <Ellipse Width="6" Height="6" Fill="{Binding StatusTone, Converter={StaticResource FD.Ink}}" VerticalAlignment="Center" />
+                                                <TextBlock Text="{Binding StatusText}" FontSize="11" Foreground="#AFC2D8" Margin="6,0,0,0" TextTrimming="CharacterEllipsis" />
+                                            </StackPanel>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </Border>
+                    </Border>
+                </DockPanel>
+
+                <!-- 4 · done -->
+                <StackPanel Visibility="{Binding IsDoneStep, Converter={StaticResource FD.HasValue}}" VerticalAlignment="Center" HorizontalAlignment="Center" MaxWidth="480">
+                    <ui:ArcadiaIcon Kind="Check" Width="36" Height="36" />
+                    <TextBlock Text="{Binding DoneText}" Style="{StaticResource Text.Body}" TextAlignment="Center" TextWrapping="Wrap" Margin="0,12,0,0" />
+                    <ui:ArcadiaButton Icon="Refresh" IconSize="12" Content="{l:Loc Imp_Undo}" Command="{Binding UndoCommand}" HorizontalAlignment="Center" Margin="0,14,0,0"
+                                      Visibility="{Binding Batch, Converter={StaticResource FD.HasValue}}" />
+                </StackPanel>
+            </Grid>
+        </DockPanel>
+    </DataTemplate>
+
+    <!-- ═══════════ Export ═══════════ -->
+    <DataTemplate DataType="{x:Type dialogs:FinanceExportViewModel}">
+        <StackPanel Margin="22,16,22,18">
+            <TextBlock Text="{l:Loc Exp_CsvTitle}" Style="{StaticResource Fin.Kicker}" />
+            <Grid Margin="0,8,0,0">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="10" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                <StackPanel>
+                    <TextBlock Text="{l:Loc Reg_Account}" Style="{StaticResource FieldLabel}" />
+                    <ComboBox ItemsSource="{Binding AccountOptions}" SelectedItem="{Binding Account}" MinHeight="28" AutomationProperties.Name="{l:Loc Reg_Account}" />
+                </StackPanel>
+                <StackPanel Grid.Column="2">
+                    <TextBlock Text="{l:Loc Reg_Category}" Style="{StaticResource FieldLabel}" />
+                    <ComboBox ItemsSource="{Binding CategoryOptions}" SelectedItem="{Binding Category}" MinHeight="28" AutomationProperties.Name="{l:Loc Reg_Category}" />
+                </StackPanel>
+            </Grid>
+            <TextBlock Text="{l:Loc Reg_Period}" Style="{StaticResource FieldLabel}" Margin="0,8,0,0" />
+            <ComboBox ItemsSource="{Binding PeriodOptions}" SelectedItem="{Binding Period}" MinHeight="28" AutomationProperties.Name="{l:Loc Reg_Period}" />
+            <StackPanel Orientation="Horizontal" Margin="0,6,0,0" Visibility="{Binding IsCustom, Converter={StaticResource FD.HasValue}}">
+                <TextBox Text="{Binding FromText, UpdateSourceTrigger=PropertyChanged}" Width="110" MinHeight="28" FlowDirection="LeftToRight" AutomationProperties.Name="{l:Loc Reg_From}" />
+                <TextBlock Text="–" Margin="6,0" VerticalAlignment="Center" Foreground="{StaticResource Brush.Text.Secondary}" />
+                <TextBox Text="{Binding ToText, UpdateSourceTrigger=PropertyChanged}" Width="110" MinHeight="28" FlowDirection="LeftToRight" AutomationProperties.Name="{l:Loc Reg_To}" />
+            </StackPanel>
+            <TextBlock Text="{l:Loc Exp_CsvHint}" Style="{StaticResource Text.Meta}" FontSize="11" TextWrapping="Wrap" Margin="0,6,0,0" />
+            <ui:ArcadiaButton Variant="Primary" Icon="Export" IconSize="13" Content="{l:Loc Exp_SaveCsv}" Command="{Binding ExportCsvCommand}" HorizontalAlignment="Left" Margin="0,10,0,0" />
+            <Border Height="1" Background="#1E2E44" Margin="0,16" />
+            <TextBlock Text="{l:Loc Exp_JsonTitle}" Style="{StaticResource Fin.Kicker}" />
+            <TextBlock Text="{l:Loc Exp_JsonHint}" Style="{StaticResource Text.Meta}" FontSize="11" TextWrapping="Wrap" Margin="0,6,0,0" />
+            <ui:ArcadiaButton Icon="Export" IconSize="13" Content="{l:Loc Exp_SaveJson}" Command="{Binding ExportJsonCommand}" HorizontalAlignment="Left" Margin="0,10,0,0" />
+            <TextBlock Text="{Binding Result}" Style="{StaticResource Text.Body}" Foreground="#8CD9A6" TextWrapping="Wrap" Margin="0,12,0,0" Visibility="{Binding Result, Converter={StaticResource FD.HasValue}}" />
+            <TextBlock Text="{Binding Error}" Style="{StaticResource FieldError}" TextWrapping="Wrap" Margin="0,8,0,0" Visibility="{Binding Error, Converter={StaticResource FD.HasValue}}" />
+            <ui:ArcadiaButton Content="{l:Loc Cat_Done}" Command="{Binding DoneCommand}" HorizontalAlignment="Right" MinWidth="100" Margin="0,16,0,0" IsCancel="True" />
+        </StackPanel>
+    </DataTemplate>
+</ResourceDictionary>

@@ -1,0 +1,194 @@
+<UserControl x:Class="Arcadia.App.Views.Travel.TravelMapView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:ui="urn:arcadia-ui"
+             xmlns:l="clr-namespace:Arcadia.App.Localization"
+             xmlns:tvm="clr-namespace:Arcadia.App.ViewModels.Travel"
+             xmlns:tv="clr-namespace:Arcadia.App.Views.Travel"
+             mc:Ignorable="d" d:DataContext="{d:DesignInstance tvm:TravelViewModel}">
+    <UserControl.Resources>
+        <DataTemplate x:Key="ResultRow" DataType="{x:Type tvm:GeoResultItem}">
+            <Button Style="{StaticResource ListRowButton}" Padding="8,5" Command="{Binding DataContext.PickResultCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}"
+                    AutomationProperties.Name="{Binding Name}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <ui:ArcadiaIcon Kind="{Binding Icon}" Width="16" Height="16" VerticalAlignment="Top" Margin="0,1,0,0" />
+                    <StackPanel Grid.Column="1" Margin="9,0,8,0">
+                        <StackPanel Orientation="Horizontal">
+                            <Image Source="{Binding Flag}" Style="{StaticResource Tr.Flag}" Height="11" Margin="0,0,6,0" Visibility="{Binding Flag, Converter={StaticResource HasValue}}" />
+                            <TextBlock ui:Bidi.Text="{Binding Name}" Style="{StaticResource Text.Item}" FontSize="13" TextTrimming="CharacterEllipsis" />
+                        </StackPanel>
+                        <TextBlock ui:Bidi.Text="{Binding Detail}" Style="{StaticResource Text.Meta}" FontSize="11" TextTrimming="CharacterEllipsis" Visibility="{Binding Detail, Converter={StaticResource HasValue}}" />
+                    </StackPanel>
+                    <TextBlock Grid.Column="2" Text="{Binding SourceText}" Style="{StaticResource Tr.Coord}" FontSize="9.5" VerticalAlignment="Top" Margin="0,2,0,0" />
+                </Grid>
+            </Button>
+        </DataTemplate>
+        <ContextMenu x:Key="MapMenu">
+            <MenuItem Header="{l:Loc Tr_AddPlaceHere}" Command="{Binding AddPlaceHereCommand}">
+                <MenuItem.Icon><ui:ArcadiaIcon Kind="MapPin" Width="14" Height="14" /></MenuItem.Icon>
+            </MenuItem>
+            <MenuItem Header="{l:Loc Tr_CenterHere}" Command="{Binding CenterHereCommand}">
+                <MenuItem.Icon><ui:ArcadiaIcon Kind="Crosshair" Width="14" Height="14" /></MenuItem.Icon>
+            </MenuItem>
+            <MenuItem Header="{l:Loc Tr_CountryHere}" Command="{Binding CountryHereCommand}">
+                <MenuItem.Icon><ui:ArcadiaIcon Kind="Flag" Width="14" Height="14" /></MenuItem.Icon>
+            </MenuItem>
+            <MenuItem Header="{l:Loc Tr_CopyCoordinates}" Command="{Binding CopyCoordinatesCommand}">
+                <MenuItem.Icon><ui:ArcadiaIcon Kind="Copy" Width="14" Height="14" /></MenuItem.Icon>
+            </MenuItem>
+        </ContextMenu>
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+
+        <Border Style="{StaticResource Tr.Chart}">
+            <Border Style="{StaticResource Tr.ChartInner}">
+                <Grid>
+                    <tv:WorldMap x:Name="Map" Countries="{Binding Countries}" Tiles="{Binding Tiles}" Markers="{Binding Markers}" CountryShades="{Binding CountryShades}"
+                                 SelectedKey="{Binding SelectedMarker}" SelectedCountry="{Binding SelectedCountry}" ContextPoint="{Binding ContextPoint}"
+                                 Latitude="{Binding MapLatitude}" Longitude="{Binding MapLongitude}" Zoom="{Binding MapZoom}" LanguageCode="{Binding LanguageCode}"
+                                 MarkerCommand="{Binding MarkerClickedCommand}" CountryCommand="{Binding CountryClickedCommand}" ContextMenu="{StaticResource MapMenu}" />
+
+                    <!-- search -->
+                    <Border Width="370" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="12" CornerRadius="4" BorderThickness="1" BorderBrush="#2E4462" Background="#F00A121E">
+                        <Border.Effect><DropShadowEffect Color="Black" BlurRadius="14" ShadowDepth="2" Opacity="0.55" /></Border.Effect>
+                        <StackPanel>
+                            <Grid Height="38">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBox x:Name="SearchBox" BorderThickness="0" Background="Transparent" Padding="32,0,8,0" VerticalContentAlignment="Center" FontSize="13"
+                                         Text="{Binding MapSearch, UpdateSourceTrigger=PropertyChanged, Delay=150}" ui:Bidi.AutoDirection="True" AutomationProperties.Name="{l:Loc Tr_SearchPlaces}">
+                                    <TextBox.InputBindings>
+                                        <KeyBinding Key="Return" Command="{Binding SearchOnlineCommand}" />
+                                    </TextBox.InputBindings>
+                                </TextBox>
+                                <ui:ArcadiaIcon Kind="Search" Width="15" Height="15" HorizontalAlignment="Left" Margin="11,0,0,0" IsHitTestVisible="False" Foreground="{StaticResource Brush.Icon.Dim}" />
+                                <TextBlock Text="{l:Loc Tr_SearchPlaces}" Margin="33,0,8,0" VerticalAlignment="Center" FontSize="12.5" Foreground="{StaticResource Brush.Text.Muted}" IsHitTestVisible="False"
+                                           Visibility="{Binding Text, ElementName=SearchBox, Converter={StaticResource HasValue}, ConverterParameter=invert}" />
+                                <ui:ArcadiaButton Grid.Column="1" Style="{StaticResource Tool.Button}" Icon="Travel" Content="{l:Loc Tr_SearchOnline}" Margin="0,0,5,0" Height="28"
+                                                  Command="{Binding SearchOnlineCommand}" ToolTip="{l:Loc Tr_SearchOnlineTip}" Visibility="{Binding OnlineSearchEnabled, Converter={StaticResource BoolToVisibility}}" />
+                            </Grid>
+                            <Border BorderThickness="0,1,0,0" BorderBrush="#1E2E44" Visibility="{Binding SearchResults.Count, Converter={StaticResource HasValue}}">
+                                <ScrollViewer MaxHeight="340" VerticalScrollBarVisibility="Auto" Focusable="False">
+                                    <ItemsControl ItemsSource="{Binding SearchResults}" ItemTemplate="{StaticResource ResultRow}" Margin="4" Focusable="False" />
+                                </ScrollViewer>
+                            </Border>
+                            <TextBlock Text="{Binding SearchStatus}" Style="{StaticResource Text.Meta}" Margin="12,0,12,9" TextWrapping="Wrap" Visibility="{Binding SearchStatus, Converter={StaticResource HasValue}}" />
+                        </StackPanel>
+                    </Border>
+
+                    <!-- zoom & layers -->
+                    <StackPanel HorizontalAlignment="Right" VerticalAlignment="Top" Margin="12">
+                        <Button Style="{StaticResource Tr.MapButton}" Click="OnZoomIn" ToolTip="{l:Loc Tr_ZoomIn}" AutomationProperties.Name="{l:Loc Tr_ZoomIn}"><ui:ArcadiaIcon Kind="Plus" Width="14" Height="14" /></Button>
+                        <Button Style="{StaticResource Tr.MapButton}" Click="OnZoomOut" Margin="0,4,0,0" ToolTip="{l:Loc Tr_ZoomOut}" AutomationProperties.Name="{l:Loc Tr_ZoomOut}"><ui:ArcadiaIcon Kind="Minus" Width="14" Height="14" /></Button>
+                        <Button Style="{StaticResource Tr.MapButton}" Command="{Binding FitAllCommand}" Margin="0,10,0,0" ToolTip="{l:Loc Tr_FitAll}" AutomationProperties.Name="{l:Loc Tr_FitAll}"><ui:ArcadiaIcon Kind="Crosshair" Width="15" Height="15" /></Button>
+                        <Button Style="{StaticResource Tr.MapButton}" Command="{Binding ToggleTilesCommand}" Margin="0,4,0,0" ToolTip="{l:Loc Tr_ToggleDetail}" AutomationProperties.Name="{l:Loc Tr_ToggleDetail}"><ui:ArcadiaIcon Kind="Layers" Width="15" Height="15" /></Button>
+                        <Border Margin="0,14,0,0" Width="32" Height="32" CornerRadius="16" BorderThickness="1" BorderBrush="#2E4462" Background="#C00A121E" ToolTip="{l:Loc Tr_North}">
+                            <ui:ArcadiaIcon Kind="Compass" Width="20" Height="20" />
+                        </Border>
+                    </StackPanel>
+
+                    <!-- legend: status layers -->
+                    <WrapPanel HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="12,0,12,30">
+                        <ToggleButton Style="{StaticResource Tr.Legend}" IsChecked="{Binding ShowWanted}" Margin="0,0,5,0" AutomationProperties.Name="{l:Loc PlaceStatus_WantToVisit}">
+                            <StackPanel Orientation="Horizontal"><Ellipse Width="10" Height="10" Stroke="#F2B13C" StrokeThickness="2" /><TextBlock Text="{l:Loc PlaceStatus_WantToVisit}" Margin="6,0,0,0" /></StackPanel>
+                        </ToggleButton>
+                        <ToggleButton Style="{StaticResource Tr.Legend}" IsChecked="{Binding ShowPlanned}" Margin="0,0,5,0" AutomationProperties.Name="{l:Loc PlaceStatus_Planned}">
+                            <StackPanel Orientation="Horizontal"><Grid Width="10" Height="10"><Ellipse Fill="#4F8DFF" /><Ellipse Width="4" Height="4" Fill="#060B13" /></Grid><TextBlock Text="{l:Loc PlaceStatus_Planned}" Margin="6,0,0,0" /></StackPanel>
+                        </ToggleButton>
+                        <ToggleButton Style="{StaticResource Tr.Legend}" IsChecked="{Binding ShowVisited}" Margin="0,0,5,0" AutomationProperties.Name="{l:Loc PlaceStatus_Visited}">
+                            <StackPanel Orientation="Horizontal"><Ellipse Width="10" Height="10" Fill="#45D2FF" /><TextBlock Text="{l:Loc PlaceStatus_Visited}" Margin="6,0,0,0" /></StackPanel>
+                        </ToggleButton>
+                        <ToggleButton Style="{StaticResource Tr.Legend}" IsChecked="{Binding FavoritesOnly}" AutomationProperties.Name="{l:Loc Tr_FavoritesOnly}">
+                            <StackPanel Orientation="Horizontal"><Ellipse Width="11" Height="11" Stroke="#FFD26A" StrokeThickness="1.4" /><TextBlock Text="{l:Loc Tr_FavoritesOnly}" Margin="6,0,0,0" /></StackPanel>
+                        </ToggleButton>
+                    </WrapPanel>
+
+                    <!-- readout & attribution -->
+                    <Border VerticalAlignment="Bottom" Height="24" Background="#C8060A10" BorderThickness="0,1,0,0" BorderBrush="#1A2A3E">
+                        <DockPanel Margin="10,0">
+                            <TextBlock DockPanel.Dock="Right" Text="{l:Loc Tr_AttributionNe}" Style="{StaticResource Tr.Coord}" FontSize="10" VerticalAlignment="Center" />
+                            <TextBlock DockPanel.Dock="Right" Text="{l:Loc Tr_AttributionOsm}" Style="{StaticResource Tr.Coord}" FontSize="10" Foreground="#9FB8D4" VerticalAlignment="Center" Margin="0,0,12,0"
+                                       Visibility="{Binding ShowsTiles, ElementName=Map, Converter={StaticResource BoolToVisibility}}" />
+                            <TextBlock DockPanel.Dock="Right" Text="{Binding TileNotice}" Style="{StaticResource Text.Meta}" FontSize="10.5" Foreground="#F2B13C" VerticalAlignment="Center" Margin="0,0,14,0"
+                                       Visibility="{Binding TileNotice, Converter={StaticResource HasValue}}" />
+                            <TextBlock Text="{Binding CursorText, ElementName=Map}" Style="{StaticResource Tr.Coord}" FontSize="10.5" VerticalAlignment="Center" />
+                        </DockPanel>
+                    </Border>
+
+                    <!-- first run: the map itself is the invitation -->
+                    <Border HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,70" Padding="18,12" CornerRadius="4" BorderThickness="1" BorderBrush="#2E4462" Background="#F00A121E"
+                            Visibility="{Binding AllPlaces.Count, Converter={StaticResource HasValue}, ConverterParameter=invert}">
+                        <StackPanel>
+                            <TextBlock Text="{l:Loc Tr_MapEmptyTitle}" Style="{StaticResource Text.Item}" HorizontalAlignment="Center" />
+                            <TextBlock Text="{l:Loc Tr_MapEmptyBody}" Style="{StaticResource Text.Meta}" HorizontalAlignment="Center" Margin="0,3,0,10" TextAlignment="Center" TextWrapping="Wrap" MaxWidth="420" />
+                            <ui:ArcadiaButton HorizontalAlignment="Center" Variant="Primary" Icon="MapPin" Content="{l:Loc Tr_AddFirstPlace}" Command="{Binding AddPlaceCommand}" />
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </Border>
+        </Border>
+
+        <!-- ═══════ side panel ═══════ -->
+        <Border Grid.Column="1" Width="372" Margin="10,0,0,0" Style="{StaticResource Tool.TableFrame}" Visibility="{Binding Panel, Converter={StaticResource Tr.Visible}, ConverterParameter=Place}">
+            <Border Style="{StaticResource Tool.TableInner}" Padding="12,10,8,6">
+                <DockPanel>
+                    <ui:ArcadiaButton DockPanel.Dock="Top" HorizontalAlignment="Right" Variant="Tool" Icon="Close" IconSize="10" Width="24" Height="22" Margin="0,-4,0,-18"
+                                      Command="{Binding ClosePanelCommand}" ToolTip="{l:Loc Tr_Close}" AutomationProperties.Name="{l:Loc Tr_Close}" Panel.ZIndex="2" />
+                    <tv:PlaceDetailsView DataContext="{Binding PlaceDetails}" />
+                </DockPanel>
+            </Border>
+        </Border>
+        <Border Grid.Column="1" Width="372" Margin="10,0,0,0" Style="{StaticResource Tool.TableFrame}" Visibility="{Binding Panel, Converter={StaticResource Tr.Visible}, ConverterParameter=Country}">
+            <Border Style="{StaticResource Tool.TableInner}" Padding="12,10,8,6">
+                <DockPanel>
+                    <ui:ArcadiaButton DockPanel.Dock="Top" HorizontalAlignment="Right" Variant="Tool" Icon="Close" IconSize="10" Width="24" Height="22" Margin="0,-4,0,-18"
+                                      Command="{Binding ClosePanelCommand}" ToolTip="{l:Loc Tr_Close}" AutomationProperties.Name="{l:Loc Tr_Close}" Panel.ZIndex="2" />
+                    <tv:CountryPanelView />
+                </DockPanel>
+            </Border>
+        </Border>
+        <Border Grid.Column="1" Width="372" Margin="10,0,0,0" Style="{StaticResource Tool.TableFrame}" Visibility="{Binding Panel, Converter={StaticResource Tr.Visible}, ConverterParameter=Found}">
+            <Border Style="{StaticResource Tool.TableInner}" Padding="14,12">
+                <StackPanel DataContext="{Binding Found}">
+                    <DockPanel>
+                        <ui:ArcadiaButton DockPanel.Dock="Right" Variant="Tool" Icon="Close" IconSize="10" Width="24" Height="22" VerticalAlignment="Top"
+                                          Command="{Binding DataContext.ClosePanelCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" ToolTip="{l:Loc Tr_Close}" AutomationProperties.Name="{l:Loc Tr_Close}" />
+                        <TextBlock Text="{l:Loc Tr_FoundKicker}" Style="{StaticResource Tr.Kicker}" VerticalAlignment="Center" />
+                    </DockPanel>
+                    <Border Height="120" Margin="0,8,0,0" CornerRadius="3" ClipToBounds="True" BorderThickness="1" BorderBrush="#243650" Background="#0B131F">
+                        <Grid>
+                            <tv:TopoLines Seed="11" Spacing="14" />
+                            <ui:ArcadiaIcon Kind="{Binding Icon}" Width="44" Height="44" />
+                        </Grid>
+                    </Border>
+                    <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                        <Image Source="{Binding Flag}" Style="{StaticResource Tr.Flag}" Margin="0,0,8,0" Visibility="{Binding Flag, Converter={StaticResource HasValue}}" />
+                        <TextBlock ui:Bidi.Text="{Binding Name}" Style="{StaticResource Text.Title}" FontSize="20" TextWrapping="Wrap" />
+                    </StackPanel>
+                    <TextBlock ui:Bidi.Text="{Binding Detail}" Style="{StaticResource Text.Meta}" TextWrapping="Wrap" Margin="0,3,0,0" />
+                    <TextBlock Text="{Binding CoordinatesText}" Style="{StaticResource Tr.Coord}" Margin="0,6,0,0" />
+                    <TextBlock Style="{StaticResource Text.Meta}" FontSize="11" Margin="0,4,0,0"><Run Text="{l:Loc Tr_Source}" /><Run Text=": " /><Run Text="{Binding SourceText, Mode=OneWay}" /></TextBlock>
+                    <ui:ArcadiaButton Margin="0,14,0,0" HorizontalAlignment="Stretch" Variant="Primary" Icon="Compass" Content="{l:Loc Tr_SaveWanted}"
+                                      Command="{Binding DataContext.SaveFoundWantedCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" />
+                    <ui:ArcadiaButton Margin="0,6,0,0" HorizontalAlignment="Stretch" Icon="Check" Content="{l:Loc Tr_SaveVisited}"
+                                      Command="{Binding DataContext.SaveFoundVisitedCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" />
+                    <TextBlock Text="{l:Loc Tr_FoundPrivacy}" Style="{StaticResource Text.Meta}" FontSize="11" TextWrapping="Wrap" Margin="0,12,0,0" />
+                </StackPanel>
+            </Border>
+        </Border>
+    </Grid>
+</UserControl>

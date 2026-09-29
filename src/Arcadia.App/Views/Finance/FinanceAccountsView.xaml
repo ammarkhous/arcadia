@@ -1,0 +1,113 @@
+<UserControl x:Class="Arcadia.App.Views.Finance.FinanceAccountsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:ui="urn:arcadia-ui"
+             xmlns:l="clr-namespace:Arcadia.App.Localization"
+             xmlns:fvm="clr-namespace:Arcadia.App.ViewModels.Finance"
+             xmlns:fin="clr-namespace:Arcadia.App.Views.Finance"
+             mc:Ignorable="d" d:DataContext="{d:DesignInstance fvm:FinanceAccountsViewModel}" x:Name="Root">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="10" />
+            <ColumnDefinition Width="320" />
+        </Grid.ColumnDefinitions>
+        <DockPanel>
+            <DockPanel DockPanel.Dock="Top" Margin="0,0,0,8">
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                    <CheckBox Content="{l:Loc Acct_ShowArchived}" IsChecked="{Binding ShowArchived}" VerticalAlignment="Center" Foreground="{StaticResource Brush.Text.Secondary}" Margin="0,0,12,0" />
+                    <ui:ArcadiaButton Variant="Primary" Icon="Plus" IconSize="12" Content="{l:Loc Acct_New}" Command="{Binding NewCommand}" />
+                </StackPanel>
+                <TextBlock Text="{l:Loc Acct_Intro}" Style="{StaticResource Fin.Meta}" VerticalAlignment="Center" TextWrapping="Wrap" />
+            </DockPanel>
+            <Border Style="{StaticResource Fin.Panel}">
+                <Border Style="{StaticResource Tool.TableInner}">
+                    <Grid>
+                        <ListBox x:Name="List" ItemsSource="{Binding Items}" SelectedItem="{Binding Selected}" Style="{StaticResource Tr.List}" AutomationProperties.Name="{l:Loc FinSec_Accounts}">
+                            <ListBox.InputBindings>
+                                <MouseBinding MouseAction="LeftDoubleClick" Command="{Binding ShowTransactionsCommand}" CommandParameter="{Binding SelectedItem, ElementName=List}" />
+                                <KeyBinding Key="Return" Command="{Binding ShowTransactionsCommand}" CommandParameter="{Binding SelectedItem, ElementName=List}" />
+                            </ListBox.InputBindings>
+                            <ListBox.ItemTemplate>
+                                <DataTemplate DataType="{x:Type fvm:AccountItem}">
+                                    <Grid MinHeight="52" Margin="12,0">
+                                        <Grid.ContextMenu>
+                                            <ContextMenu>
+                                                <MenuItem Header="{l:Loc Acct_NewTransaction}" Command="{Binding PlacementTarget.Tag.NewTransactionInCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}" />
+                                                <MenuItem Header="{l:Loc Fin_ShowTransactions}" Command="{Binding PlacementTarget.Tag.ShowTransactionsCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}" />
+                                                <MenuItem Header="{l:Loc Acct_Edit}" Command="{Binding PlacementTarget.Tag.EditCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}" />
+                                                <MenuItem Header="{l:Loc Acct_SetDefault}" Command="{Binding PlacementTarget.Tag.SetDefaultCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}" />
+                                                <Separator />
+                                                <MenuItem Header="{l:Loc Acct_ToggleArchive}" Command="{Binding PlacementTarget.Tag.ToggleArchiveCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}" />
+                                                <MenuItem Header="{l:Loc Confirm_Delete}" Command="{Binding PlacementTarget.Tag.DeleteCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" CommandParameter="{Binding}" />
+                                            </ContextMenu>
+                                        </Grid.ContextMenu>
+                                        <Grid.Tag><Binding Path="DataContext" ElementName="Root" /></Grid.Tag>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="40" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="60" />
+                                            <ColumnDefinition Width="200" />
+                                            <ColumnDefinition Width="170" />
+                                        </Grid.ColumnDefinitions>
+                                        <Border Width="30" Height="30" CornerRadius="3" BorderThickness="1" BorderBrush="#26384F" Background="#0A121C" HorizontalAlignment="Left">
+                                            <ui:ArcadiaIcon Kind="{Binding Icon}" Width="16" Height="16" Foreground="{Binding Accent, Converter={StaticResource Fin.Tone}}" />
+                                        </Border>
+                                        <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="4,0,8,0">
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock ui:Bidi.Text="{Binding Name}" FontSize="14" Foreground="{StaticResource Brush.Text.Primary}" TextTrimming="CharacterEllipsis" />
+                                                <TextBlock Text="{l:Loc Acct_Archived}" FontSize="10.5" Foreground="#8FA3BD" Margin="8,0,0,0" VerticalAlignment="Center" Visibility="{Binding IsArchived, Converter={StaticResource Fin.HasValue}}" />
+                                            </StackPanel>
+                                            <TextBlock Text="{Binding TypeText}" FontSize="11" Foreground="#7F93AE" />
+                                        </StackPanel>
+                                        <Border Grid.Column="2" CornerRadius="2" Padding="5,0" BorderThickness="1" BorderBrush="#2A3E58" Background="#0C1622" VerticalAlignment="Center" HorizontalAlignment="Left">
+                                            <TextBlock Text="{Binding Currency}" FontFamily="{StaticResource Fin.Figures}" FontSize="10.5" Foreground="#9FC4E6" />
+                                        </Border>
+                                        <TextBlock Grid.Column="3" Text="{Binding ActivityText}" Style="{StaticResource Fin.Meta}" VerticalAlignment="Center" />
+                                        <fin:MoneyText Grid.Column="4" Money="{Binding BalanceText}" Style="{StaticResource Fin.Money}" FontSize="16" VerticalAlignment="Center" Foreground="{Binding BalanceTone, Converter={StaticResource Fin.Ink}}" />
+                                    </Grid>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                        <TextBlock Text="{l:Loc Acct_Empty}" Style="{StaticResource Text.Body}" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="{Binding IsEmpty, Converter={StaticResource Fin.HasValue}}" />
+                    </Grid>
+                </Border>
+            </Border>
+        </DockPanel>
+
+        <StackPanel Grid.Column="2">
+            <Border Style="{StaticResource Fin.Panel}">
+                <Border Style="{StaticResource Fin.PanelInner}">
+                    <StackPanel>
+                        <TextBlock Text="{l:Loc Acct_Totals}" Style="{StaticResource Fin.Kicker}" />
+                        <ItemsControl ItemsSource="{Binding Totals}" Margin="0,6,0,0" Focusable="False" />
+                        <TextBlock Text="{l:Loc Acct_TotalsNote}" Style="{StaticResource Text.Meta}" FontSize="10.5" TextWrapping="Wrap" Margin="0,6,0,0" />
+                    </StackPanel>
+                </Border>
+            </Border>
+            <Border Style="{StaticResource Fin.Panel}" Margin="0,10,0,0" Visibility="{Binding Selected, Converter={StaticResource Fin.HasValue}}">
+                <Border Style="{StaticResource Fin.PanelInner}">
+                    <StackPanel DataContext="{Binding Selected}">
+                        <TextBlock ui:Bidi.Text="{Binding Name}" Style="{StaticResource Text.Title}" FontSize="16" TextTrimming="CharacterEllipsis" />
+                        <TextBlock Text="{Binding TypeText}" Style="{StaticResource Fin.Meta}" />
+                        <fin:MoneyText Money="{Binding BalanceText}" Style="{StaticResource Fin.MoneyLarge}" Margin="0,10,0,0" Foreground="{Binding BalanceTone, Converter={StaticResource Fin.Ink}}" />
+                        <DockPanel Margin="0,6,0,0">
+                            <TextBlock Text="{l:Loc Acct_Opening}" Style="{StaticResource Fin.Meta}" />
+                            <fin:MoneyText Money="{Binding OpeningText}" Style="{StaticResource Fin.Money}" FontSize="12" Foreground="#AFC2D8" />
+                        </DockPanel>
+                        <TextBlock Text="{Binding Description}" Style="{StaticResource Text.Body}" TextWrapping="Wrap" Margin="0,8,0,0" Visibility="{Binding Description, Converter={StaticResource Fin.HasValue}}" />
+                        <StackPanel Margin="0,12,0,0" DataContext="{Binding DataContext, ElementName=Root}">
+                            <ui:ArcadiaButton Variant="Primary" Icon="Plus" IconSize="12" Content="{l:Loc Acct_NewTransaction}" Command="{Binding NewTransactionInCommand}" HorizontalAlignment="Stretch" Margin="0,0,0,6" />
+                            <ui:ArcadiaButton Icon="Receipt" IconSize="13" Content="{l:Loc Fin_ShowTransactions}" Command="{Binding ShowTransactionsCommand}" HorizontalAlignment="Stretch" Margin="0,0,0,6" />
+                            <ui:ArcadiaButton Icon="Settings" IconSize="13" Content="{l:Loc Acct_Edit}" Command="{Binding EditCommand}" HorizontalAlignment="Stretch" Margin="0,0,0,6" />
+                            <ui:ArcadiaButton Icon="Star" IconSize="13" Content="{l:Loc Acct_SetDefault}" Command="{Binding SetDefaultCommand}" HorizontalAlignment="Stretch" Margin="0,0,0,6" />
+                            <ui:ArcadiaButton Variant="Link" Content="{l:Loc Acct_ToggleArchive}" Command="{Binding ToggleArchiveCommand}" HorizontalAlignment="Left" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </Border>
+        </StackPanel>
+    </Grid>
+</UserControl>

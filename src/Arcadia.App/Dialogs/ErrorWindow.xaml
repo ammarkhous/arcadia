@@ -1,0 +1,61 @@
+<Window x:Class="Arcadia.App.Dialogs.ErrorWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ui="urn:arcadia-ui"
+        xmlns:l="clr-namespace:Arcadia.App.Localization"
+        Title="{l:Loc Error_Title}"
+        Width="480" SizeToContent="Height" ResizeMode="NoResize" WindowStartupLocation="CenterOwner"
+        Background="{StaticResource Brush.Window}" ShowInTaskbar="False"
+        FlowDirection="{Binding FlowDirection, Source={x:Static l:LocalizationManager.Instance}}"
+        UseLayoutRounding="True" TextOptions.TextFormattingMode="Display">
+    <WindowChrome.WindowChrome>
+        <WindowChrome CaptionHeight="40" GlassFrameThickness="0" ResizeBorderThickness="0" UseAeroCaptionButtons="False" />
+    </WindowChrome.WindowChrome>
+    <Border BorderBrush="#3A2A30" BorderThickness="1">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="40" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <Border Background="{StaticResource Brush.Caption}" BorderBrush="#05070A" BorderThickness="0,0,0,1">
+                <StackPanel Orientation="Horizontal" Margin="14,0">
+                    <ui:ArcadiaIcon Kind="Logo" Width="18" Height="18" Foreground="{StaticResource Brush.Gold}" />
+                    <TextBlock Margin="10,0,0,0" Text="ARCADIA" Style="{StaticResource Text.Caps}" FontSize="13" Foreground="{StaticResource Brush.Text.Secondary}" VerticalAlignment="Center" />
+                </StackPanel>
+            </Border>
+
+            <Grid Grid.Row="1" Margin="22,20,22,8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Grid Width="44" Height="44" VerticalAlignment="Top">
+                    <Ellipse>
+                        <Ellipse.Fill>
+                            <RadialGradientBrush GradientOrigin="0.35,0.3">
+                                <GradientStop Offset="0" Color="#FF7A6A" />
+                                <GradientStop Offset="1" Color="#9E2228" />
+                            </RadialGradientBrush>
+                        </Ellipse.Fill>
+                    </Ellipse>
+                    <ui:ArcadiaIcon Kind="Warning" Width="24" Height="24" Foreground="White" />
+                </Grid>
+                <StackPanel Grid.Column="1" Margin="16,0,0,0">
+                    <TextBlock Text="{l:Loc Error_Title}" Style="{StaticResource Text.Title}" />
+                    <TextBlock Margin="0,6,0,0" Text="{l:Loc Error_Message}" Style="{StaticResource Text.Body}" />
+                    <Expander x:Name="DetailsExpander" Margin="0,12,0,0" Foreground="{StaticResource Brush.Text.Muted}" Header="{l:Loc Error_Details}">
+                        <TextBox x:Name="DetailsText" Margin="0,6,0,0" Height="140" IsReadOnly="True" TextWrapping="NoWrap"
+                                 FontFamily="Cascadia Mono, Consolas" FontSize="11" FlowDirection="LeftToRight"
+                                 VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" />
+                    </Expander>
+                </StackPanel>
+            </Grid>
+
+            <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="22,10,22,20">
+                <ui:ArcadiaButton Content="{l:Loc Error_OpenLogs}" Icon="Documents" Click="OnOpenLogs" Margin="0,0,10,0" />
+                <ui:ArcadiaButton x:Name="ContinueButton" Variant="Primary" Content="{l:Loc Error_Continue}" MinWidth="110" IsDefault="True" IsCancel="True" Click="OnContinue" />
+            </StackPanel>
+        </Grid>
+    </Border>
+</Window>

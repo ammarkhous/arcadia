@@ -1,0 +1,141 @@
+<!-- Views for the smaller Projects/Documents dialogs (resolved by DataTemplate in App.xaml). -->
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:ui="urn:arcadia-ui"
+                    xmlns:l="clr-namespace:Arcadia.App.Localization"
+                    xmlns:dialogs="clr-namespace:Arcadia.App.Dialogs"
+                    xmlns:proj="clr-namespace:Arcadia.Core.Projects;assembly=Arcadia.Core"
+                    xmlns:conv="clr-namespace:Arcadia.App.Converters">
+
+    <!-- Templates in a merged dictionary cannot see keys declared directly in App.xaml, so the converters they use live here too. -->
+    <conv:HasValueToVisibilityConverter x:Key="HasValue" />
+    <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
+    <conv:InverseBoolConverter x:Key="InverseBool" />
+
+    <!-- ═══════════ Task ═══════════ -->
+    <DataTemplate DataType="{x:Type dialogs:TaskEditorViewModel}">
+        <StackPanel Margin="22,16,22,18">
+            <TextBlock Text="{l:Loc Task_Title}" Style="{StaticResource FieldLabel}" />
+            <TextBox Text="{Binding TaskTitle, UpdateSourceTrigger=PropertyChanged}" MinHeight="30" ui:Bidi.AutoDirection="True" AutomationProperties.Name="{l:Loc Task_Title}" />
+            <TextBlock Text="{Binding TitleError}" Style="{StaticResource FieldError}" Visibility="{Binding TitleError, Converter={StaticResource HasValue}}" />
+            <Grid Margin="0,12,0,0">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="12" /><ColumnDefinition Width="*" /><ColumnDefinition Width="12" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                <StackPanel>
+                    <TextBlock Text="{l:Loc Task_Status}" Style="{StaticResource FieldLabel}" />
+                    <ComboBox ItemsSource="{Binding StatusOptions}" SelectedItem="{Binding Status}" MinHeight="30" AutomationProperties.Name="{l:Loc Task_Status}" />
+                </StackPanel>
+                <StackPanel Grid.Column="2">
+                    <TextBlock Text="{l:Loc Proj_Priority}" Style="{StaticResource FieldLabel}" />
+                    <ComboBox ItemsSource="{Binding PriorityOptions}" SelectedItem="{Binding Priority}" MinHeight="30" AutomationProperties.Name="{l:Loc Proj_Priority}" />
+                </StackPanel>
+                <StackPanel Grid.Column="4">
+                    <TextBlock Text="{l:Loc Task_Due}" Style="{StaticResource FieldLabel}" />
+                    <TextBox Text="{Binding DueText, UpdateSourceTrigger=PropertyChanged}" MinHeight="30" AutomationProperties.Name="{l:Loc Task_Due}" />
+                </StackPanel>
+            </Grid>
+            <TextBlock Text="{Binding DueError}" Style="{StaticResource FieldError}" Visibility="{Binding DueError, Converter={StaticResource HasValue}}" />
+            <TextBlock Margin="0,12,0,0" Text="{l:Loc Task_Parent}" Style="{StaticResource FieldLabel}" />
+            <ComboBox ItemsSource="{Binding ParentOptions}" SelectedItem="{Binding Parent}" MinHeight="30" AutomationProperties.Name="{l:Loc Task_Parent}" />
+            <TextBlock Margin="0,12,0,0" Text="{l:Loc Task_Description}" Style="{StaticResource FieldLabel}" />
+            <TextBox Style="{StaticResource TextArea}" Height="60" Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}" ui:Bidi.AutoDirection="True" AutomationProperties.Name="{l:Loc Task_Description}" />
+            <TextBlock Margin="0,12,0,0" Text="{l:Loc Task_Notes}" Style="{StaticResource FieldLabel}" />
+            <TextBox Style="{StaticResource TextArea}" Height="50" Text="{Binding Notes, UpdateSourceTrigger=PropertyChanged}" ui:Bidi.AutoDirection="True" AutomationProperties.Name="{l:Loc Task_Notes}" />
+            <TextBlock Margin="0,12,0,0" Text="{l:Loc Proj_Tags}" Style="{StaticResource FieldLabel}" />
+            <TextBox Text="{Binding Tags, UpdateSourceTrigger=PropertyChanged}" MinHeight="30" ui:Bidi.AutoDirection="True" AutomationProperties.Name="{l:Loc Proj_Tags}" />
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0">
+                <ui:ArcadiaButton Content="{l:Loc Editor_Cancel}" Command="{Binding CancelCommand}" MinWidth="96" Margin="0,0,10,0" IsCancel="True" />
+                <ui:ArcadiaButton Variant="Primary" Icon="Check" IconSize="14" Content="{Binding ConfirmText}" Command="{Binding ConfirmCommand}" MinWidth="110" IsDefault="True" />
+            </StackPanel>
+        </StackPanel>
+    </DataTemplate>
+
+    <!-- ═══════════ Link ═══════════ -->
+    <DataTemplate DataType="{x:Type dialogs:LinkEditorViewModel}">
+        <StackPanel Margin="22,16,22,18">
+            <TextBlock Text="{l:Loc Link_Url}" Style="{StaticResource FieldLabel}" />
+            <TextBox Text="{Binding Url, UpdateSourceTrigger=PropertyChanged}" MinHeight="30" FontFamily="{StaticResource Font.Mono}" FlowDirection="LeftToRight" AutomationProperties.Name="{l:Loc Link_Url}" />
+            <TextBlock Text="{Binding UrlError}" Style="{StaticResource FieldError}" Visibility="{Binding UrlError, Converter={StaticResource HasValue}}" />
+            <TextBlock Margin="0,12,0,0" Text="{l:Loc Link_TitleLabel}" Style="{StaticResource FieldLabel}" />
+            <TextBox Text="{Binding LinkTitle, UpdateSourceTrigger=PropertyChanged}" MinHeight="30" ui:Bidi.AutoDirection="True" AutomationProperties.Name="{l:Loc Link_TitleLabel}" />
+            <TextBlock Margin="0,12,0,0" Text="{l:Loc Link_Description}" Style="{StaticResource FieldLabel}" />
+            <TextBox Style="{StaticResource TextArea}" Height="56" Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}" ui:Bidi.AutoDirection="True" AutomationProperties.Name="{l:Loc Link_Description}" />
+            <TextBlock Margin="0,12,0,0" Text="{l:Loc Proj_Tags}" Style="{StaticResource FieldLabel}" />
+            <TextBox Text="{Binding Tags, UpdateSourceTrigger=PropertyChanged}" MinHeight="30" ui:Bidi.AutoDirection="True" AutomationProperties.Name="{l:Loc Proj_Tags}" />
+            <TextBlock Margin="0,8,0,0" Text="{l:Loc Link_Privacy}" Style="{StaticResource Text.Meta}" TextWrapping="Wrap" />
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,18,0,0">
+                <ui:ArcadiaButton Content="{l:Loc Editor_Cancel}" Command="{Binding CancelCommand}" MinWidth="96" Margin="0,0,10,0" IsCancel="True" />
+                <ui:ArcadiaButton Variant="Primary" Icon="Check" IconSize="14" Content="{Binding ConfirmText}" Command="{Binding ConfirmCommand}" MinWidth="110" IsDefault="True" />
+            </StackPanel>
+        </StackPanel>
+    </DataTemplate>
+
+    <!-- ═══════════ Add folder ═══════════ -->
+    <DataTemplate DataType="{x:Type dialogs:AddFolderViewModel}">
+        <StackPanel Margin="22,16,22,18">
+            <StackPanel Orientation="Horizontal">
+                <ui:ArcadiaIcon Kind="Documents" Width="22" Height="22" />
+                <StackPanel Margin="10,0,0,0">
+                    <TextBlock ui:Bidi.Text="{Binding FolderName}" Style="{StaticResource Text.Item}" />
+                    <TextBlock Text="{Binding Folder}" FontFamily="{StaticResource Font.Mono}" FontSize="11.5" Foreground="{StaticResource Brush.Text.Secondary}" FlowDirection="LeftToRight" HorizontalAlignment="Left" TextWrapping="Wrap" />
+                </StackPanel>
+            </StackPanel>
+            <TextBlock Margin="0,14,0,6" Text="{l:Loc Doc_FolderHow}" Style="{StaticResource FieldLabel}" />
+            <RadioButton Style="{StaticResource Tool.Radio}" GroupName="FolderMode" IsChecked="{Binding IsReference}" Margin="0,4" Foreground="{StaticResource Brush.Text.Primary}">
+                <StackPanel Margin="4,0,0,0">
+                    <TextBlock Text="{l:Loc Doc_FolderReference}" Style="{StaticResource Text.Item}" FontSize="13" />
+                    <TextBlock Text="{l:Loc Doc_FolderReferenceHint}" Style="{StaticResource Text.Meta}" TextWrapping="Wrap" />
+                </StackPanel>
+            </RadioButton>
+            <RadioButton Style="{StaticResource Tool.Radio}" GroupName="FolderMode" IsChecked="{Binding IsIndex}" Margin="0,4" Foreground="{StaticResource Brush.Text.Primary}">
+                <StackPanel Margin="4,0,0,0">
+                    <TextBlock Text="{l:Loc Doc_FolderIndex}" Style="{StaticResource Text.Item}" FontSize="13" />
+                    <TextBlock Text="{l:Loc Doc_FolderIndexHint}" Style="{StaticResource Text.Meta}" TextWrapping="Wrap" />
+                </StackPanel>
+            </RadioButton>
+            <RadioButton Style="{StaticResource Tool.Radio}" GroupName="FolderMode" IsChecked="{Binding IsWatch}" Margin="0,4" Foreground="{StaticResource Brush.Text.Primary}">
+                <StackPanel Margin="4,0,0,0">
+                    <TextBlock Text="{l:Loc Doc_FolderWatch}" Style="{StaticResource Text.Item}" FontSize="13" />
+                    <TextBlock Text="{l:Loc Doc_FolderWatchHint}" Style="{StaticResource Text.Meta}" TextWrapping="Wrap" />
+                </StackPanel>
+            </RadioButton>
+            <CheckBox Style="{StaticResource Tool.Check}" Content="{l:Loc Doc_IncludeSubfolders}" IsChecked="{Binding IncludeSubfolders}" Margin="0,10,0,0" IsEnabled="{Binding IsReference, Converter={StaticResource InverseBool}}" />
+            <TextBlock Margin="0,10,0,0" Text="{l:Loc Doc_NeverMoved}" Style="{StaticResource Text.Meta}" TextWrapping="Wrap" />
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,18,0,0">
+                <ui:ArcadiaButton Content="{l:Loc Editor_Cancel}" Command="{Binding CancelCommand}" MinWidth="96" Margin="0,0,10,0" IsCancel="True" />
+                <ui:ArcadiaButton Variant="Primary" Icon="Check" IconSize="14" Content="{l:Loc Doc_AddFolder}" Command="{Binding ConfirmCommand}" MinWidth="120" IsDefault="True" />
+            </StackPanel>
+        </StackPanel>
+    </DataTemplate>
+
+    <!-- ═══════════ Project picker ═══════════ -->
+    <DataTemplate DataType="{x:Type dialogs:ProjectPickerViewModel}">
+        <StackPanel Margin="22,16,22,18">
+            <TextBox Text="{Binding Filter, UpdateSourceTrigger=PropertyChanged}" MinHeight="30" AutomationProperties.Name="{l:Loc Proj_Search}" ui:Bidi.AutoDirection="True" />
+            <Border Margin="0,10,0,0" Style="{StaticResource Tool.TableFrame}">
+                <Border Style="{StaticResource Tool.TableInner}">
+                    <ListBox ItemsSource="{Binding Projects}" SelectedItem="{Binding Selected}" Height="260" Background="Transparent" BorderThickness="0" AutomationProperties.Name="{l:Loc Doc_Projects}">
+                        <ListBox.ItemContainerStyle>
+                            <Style TargetType="ListBoxItem" BasedOn="{StaticResource {x:Type ListBoxItem}}">
+                                <Setter Property="AutomationProperties.Name" Value="{Binding Name}" />
+                            </Style>
+                        </ListBox.ItemContainerStyle>
+                        <ListBox.ItemTemplate>
+                            <DataTemplate DataType="{x:Type proj:ProjectSummary}">
+                                <StackPanel Orientation="Horizontal" Margin="4,4">
+                                    <Border Width="3" Height="20" CornerRadius="1.5" Background="{Binding Accent, Converter={StaticResource It.Tone}}" />
+                                    <ui:ArcadiaIcon Kind="{Binding Icon}" Width="16" Height="16" Margin="8,0,0,0" />
+                                    <TextBlock ui:Bidi.Text="{Binding Name}" Margin="8,0,0,0" VerticalAlignment="Center" Foreground="{StaticResource Brush.Text.Primary}" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </Border>
+            </Border>
+            <TextBlock Text="{l:Loc Doc_NoProjectsYet}" Style="{StaticResource Text.Meta}" Margin="0,8,0,0" Visibility="{Binding Empty, Converter={StaticResource BoolToVisibility}}" />
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,18,0,0">
+                <ui:ArcadiaButton Content="{l:Loc Editor_Cancel}" Command="{Binding CancelCommand}" MinWidth="96" Margin="0,0,10,0" IsCancel="True" />
+                <ui:ArcadiaButton Variant="Primary" Icon="Projects" IconSize="14" Content="{l:Loc Doc_Associate}" Command="{Binding ConfirmCommand}" MinWidth="120" IsDefault="True" />
+            </StackPanel>
+        </StackPanel>
+    </DataTemplate>
+</ResourceDictionary>

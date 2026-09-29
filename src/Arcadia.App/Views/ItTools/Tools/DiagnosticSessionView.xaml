@@ -1,0 +1,220 @@
+<UserControl x:Class="Arcadia.App.Views.ItTools.Tools.DiagnosticSessionView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:ui="urn:arcadia-ui"
+             xmlns:l="clr-namespace:Arcadia.App.Localization"
+             xmlns:it="clr-namespace:Arcadia.App.ViewModels.ItTools"
+             xmlns:itv="clr-namespace:Arcadia.App.Views.ItTools"
+             xmlns:diag="clr-namespace:Arcadia.Core.ItTools.Diagnostics;assembly=Arcadia.Core"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance it:DiagnosticSessionToolViewModel}">
+    <UserControl.Resources>
+        <!-- Session list rows: selected row lit like the rail -->
+        <Style x:Key="SessionItem" TargetType="ListBoxItem">
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Margin" Value="0,0,0,2" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FocusVisualStyle" Value="{StaticResource Arcadia.FocusVisual}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <Grid Background="Transparent">
+                            <Border x:Name="wash" CornerRadius="3" Opacity="0" Background="{StaticResource Brush.Nav.Selected}" />
+                            <Border x:Name="hover" CornerRadius="3" Opacity="0" Background="{StaticResource Brush.Nav.Hover}" />
+                            <Border x:Name="edge" Width="3" HorizontalAlignment="Left" Margin="0,6" CornerRadius="1.5" Background="{StaticResource Brush.Cyan}" Opacity="0" />
+                            <ContentPresenter Margin="10,7,8,7" />
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="hover" Property="Opacity" Value="1" /></Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="wash" Property="Opacity" Value="1" />
+                                <Setter TargetName="edge" Property="Opacity" Value="1" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+
+    <DockPanel>
+        <itv:ToolHeader DockPanel.Dock="Top" />
+
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="250" />
+                <ColumnDefinition Width="10" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!-- ═══════ sessions ═══════ -->
+            <ui:ArcadiaPanel Header="{l:Loc Diag_Sessions}" Icon="Diagnostic" Padding="6,4,6,6">
+                <ui:ArcadiaPanel.HeaderAction>
+                    <ui:ArcadiaButton Variant="Link" Content="{l:Loc Diag_New}" Command="{Binding NewSessionCommand}" />
+                </ui:ArcadiaPanel.HeaderAction>
+                <Grid>
+                    <ListBox ItemsSource="{Binding SessionList}" SelectedItem="{Binding SelectedSummary}" ItemContainerStyle="{StaticResource SessionItem}"
+                             Background="Transparent" BorderThickness="0" ScrollViewer.HorizontalScrollBarVisibility="Disabled" AutomationProperties.Name="{l:Loc Diag_Sessions}">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate DataType="{x:Type diag:DiagnosticSessionSummary}">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <ui:ArcadiaLed Width="8" Height="8" VerticalAlignment="Top" Margin="0,5,0,0" Tone="#34C76A" IsOn="{Binding ClosedAtUtc, Converter={StaticResource It.IsNull}}" />
+                                    <StackPanel Grid.Column="1" Margin="9,0,0,0">
+                                        <TextBlock ui:Bidi.Text="{Binding Title}" Style="{StaticResource Text.Item}" FontSize="13" TextTrimming="CharacterEllipsis" />
+                                        <TextBlock Text="{Binding Converter={StaticResource It.SessionMeta}}" Style="{StaticResource Text.Meta}" FontSize="11" TextWrapping="Wrap" />
+                                    </StackPanel>
+                                </Grid>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                    <StackPanel Margin="6" Visibility="{Binding SessionList.Count, Converter={StaticResource HasValue}, ConverterParameter=invert}">
+                        <TextBlock Text="{l:Loc Diag_Empty}" Style="{StaticResource Text.Body}" TextWrapping="Wrap" />
+                        <ui:ArcadiaButton Margin="0,10,0,0" HorizontalAlignment="Left" Variant="Primary" Icon="Diagnostic" Content="{l:Loc It_StartSession}" Command="{Binding NewSessionCommand}" />
+                    </StackPanel>
+                </Grid>
+            </ui:ArcadiaPanel>
+
+            <!-- ═══════ nothing selected ═══════ -->
+            <Border Grid.Column="2" Style="{StaticResource Tool.TableFrame}" Visibility="{Binding HasSession, Converter={StaticResource HasValue}, ConverterParameter=invert}">
+                <Border Style="{StaticResource Tool.TableInner}">
+                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="460">
+                        <Border Width="300" Height="150" Style="{StaticResource ArtworkWell}" HorizontalAlignment="Center">
+                            <ui:ModuleIllustration Icon="Diagnostic" SecondaryIcon="Journal" Tone="#2F7BFF" Seed="12" Glow="0.6" />
+                        </Border>
+                        <TextBlock Margin="0,16,0,0" Text="{l:Loc Diag_IntroTitle}" Style="{StaticResource Text.Title}" HorizontalAlignment="Center" />
+                        <TextBlock Margin="0,6,0,0" Text="{l:Loc Diag_IntroBody}" Style="{StaticResource Text.Body}" TextAlignment="Center" TextWrapping="Wrap" />
+                        <ui:ArcadiaButton Margin="0,14,0,0" HorizontalAlignment="Center" Variant="Primary" Icon="Diagnostic" Content="{l:Loc It_StartSession}" Command="{Binding NewSessionCommand}" />
+                    </StackPanel>
+                </Border>
+            </Border>
+
+            <!-- ═══════ selected session ═══════ -->
+            <DockPanel Grid.Column="2" Visibility="{Binding HasSession, Converter={StaticResource BoolToVisibility}}">
+                <!-- header plate -->
+                <Border DockPanel.Dock="Top" Style="{StaticResource Tool.CommandBar}">
+                    <Border Style="{StaticResource Tool.CommandBarInner}" Padding="12,10">
+                        <StackPanel>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock ui:Bidi.Text="{Binding SessionTitle}" FontFamily="{StaticResource Font.Display}" FontSize="19" Foreground="{StaticResource Brush.Text.Primary}" TextTrimming="CharacterEllipsis" />
+                                    <StackPanel Orientation="Horizontal" Margin="0,3,0,0">
+                                        <ui:ArcadiaLed Width="9" Height="9" Tone="{Binding StateTone, Converter={StaticResource It.Tone}}" VerticalAlignment="Center" />
+                                        <TextBlock Text="{Binding State}" Style="{StaticResource Text.Meta}" Margin="7,0,14,0" VerticalAlignment="Center" />
+                                        <TextBlock Style="{StaticResource Text.Meta}" VerticalAlignment="Center">
+                                            <Run Text="{l:Loc Diag_Started}" /><Run Text=" " /><Run Text="{Binding Started, Mode=OneWay}" />
+                                        </TextBlock>
+                                        <TextBlock ui:Bidi.Text="{Binding Reference}" Style="{StaticResource Text.Meta}" Margin="14,0,0,0" VerticalAlignment="Center" Foreground="{StaticResource Brush.Text.Secondary}"
+                                                   Visibility="{Binding Reference, Converter={StaticResource HasValue}}" />
+                                    </StackPanel>
+                                </StackPanel>
+                                <ui:ArcadiaButton Grid.Column="1" Style="{StaticResource Tool.Button}" Variant="Tool" Icon="Journal" Width="30" Height="30" ToolTip="{l:Loc Diag_Edit}" AutomationProperties.Name="{l:Loc Diag_Edit}"
+                                                  Command="{Binding EditDetailsCommand}" VerticalAlignment="Top" />
+                            </Grid>
+                            <WrapPanel Margin="0,10,0,0">
+                                <ui:ArcadiaButton Style="{StaticResource Tool.Button}" Margin="0,0,6,0" Variant="Primary" Icon="Diagnostic" Content="{l:Loc Diag_Record}" Command="{Binding MakeActiveCommand}"
+                                                  ToolTip="{l:Loc Diag_RecordTip}" Visibility="{Binding IsActiveSession, Converter={StaticResource HasValue}, ConverterParameter=invert}" />
+                                <ui:ArcadiaButton Style="{StaticResource Tool.Button}" Margin="0,0,6,0" Icon="Stop" Content="{l:Loc Diag_StopRecording}" Command="{Binding StopRecordingCommand}"
+                                                  Visibility="{Binding IsActiveSession, Converter={StaticResource BoolToVisibility}}" />
+                                <ui:ArcadiaButton Style="{StaticResource Tool.Button}" Margin="0,0,6,0" Icon="Check" Content="{Binding IsClosed, Converter={StaticResource It.CloseLabel}}" Command="{Binding ToggleClosedCommand}" />
+                                <ui:ArcadiaButton Style="{StaticResource Tool.Button}" Margin="0,0,6,0" Icon="Copy" Content="{l:Loc Diag_CopyReport}" Command="{Binding CopyReportCommand}" />
+                                <ui:ArcadiaButton Style="{StaticResource Tool.Button}" Margin="0,0,6,0" Icon="Export" Content="{l:Loc Diag_Export}" Command="{Binding ExportSessionCommand}" ToolTip="{l:Loc Diag_ExportTip}" />
+                                <ui:ArcadiaButton Style="{StaticResource Tool.Button}" Margin="0,0,6,0" Icon="Trash" Content="{l:Loc Diag_Delete}" Command="{Binding DeleteSessionCommand}" Foreground="#FFB0B3" />
+                            </WrapPanel>
+                        </StackPanel>
+                    </Border>
+                </Border>
+
+                <!-- note composer -->
+                <Border DockPanel.Dock="Bottom" Style="{StaticResource Tool.CommandBar}" Margin="0,10,0,0">
+                    <Border Style="{StaticResource Tool.CommandBarInner}">
+                        <StackPanel>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBox Style="{StaticResource TextArea}" Height="58" Text="{Binding NoteText, UpdateSourceTrigger=PropertyChanged}" MaxLength="{Binding NoteMaxLength}"
+                                         ui:Bidi.AutoDirection="True" AutomationProperties.Name="{l:Loc Diag_NoteBox}" />
+                                <ui:ArcadiaButton Grid.Column="1" Variant="Primary" Icon="Plus" IconSize="13" Content="{l:Loc Diag_AddNote}" Command="{Binding AddNoteCommand}"
+                                                  MinHeight="30" Padding="14,4" Margin="10,0,0,0" VerticalAlignment="Bottom" />
+                            </Grid>
+                            <TextBlock Text="{Binding NoteError}" Style="{StaticResource FieldError}" Visibility="{Binding NoteError, Converter={StaticResource HasValue}}" />
+                            <TextBlock Text="{l:Loc Diag_NoteHint}" Style="{StaticResource Text.Meta}" Margin="0,5,0,0" />
+                        </StackPanel>
+                    </Border>
+                </Border>
+
+                <!-- timeline -->
+                <Border Style="{StaticResource Tool.TableFrame}">
+                    <Border Style="{StaticResource Tool.TableInner}">
+                        <Grid>
+                            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Focusable="False">
+                                <ItemsControl ItemsSource="{Binding Entries}" Margin="6" Focusable="False">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate DataType="{x:Type it:SessionEntryViewModel}">
+                                            <Border BorderBrush="{StaticResource Brush.Separator}" BorderThickness="0,0,0,1" Padding="6,8">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto" />
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="Auto" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <Grid Width="36" VerticalAlignment="Top">
+                                                        <ui:ArcadiaIcon Kind="{Binding Icon}" Width="22" Height="22" HorizontalAlignment="Left" />
+                                                        <ui:ArcadiaLed Width="8" Height="8" HorizontalAlignment="Right" VerticalAlignment="Top" Tone="{Binding Tone, Converter={StaticResource It.Tone}}" />
+                                                    </Grid>
+                                                    <StackPanel Grid.Column="1" Margin="10,0,8,0">
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <TextBlock ui:Bidi.Text="{Binding Title}" Style="{StaticResource Text.Item}" FontSize="13.5" />
+                                                            <TextBlock Text="{Binding Time}" Style="{StaticResource Text.Meta}" Margin="10,0,0,0" VerticalAlignment="Center" />
+                                                        </StackPanel>
+                                                        <TextBlock ui:Bidi.Text="{Binding Summary}" Style="{StaticResource Text.Meta}" TextWrapping="Wrap" Visibility="{Binding Summary, Converter={StaticResource HasValue}}" />
+                                                        <!-- notes: shown in full, in their own direction -->
+                                                        <TextBlock ui:Bidi.Text="{Binding Body}" Style="{StaticResource Text.Body}" TextWrapping="Wrap" Margin="0,4,0,0" Foreground="{StaticResource Brush.Text.Primary}"
+                                                                   Visibility="{Binding IsNote, Converter={StaticResource BoolToVisibility}}" />
+                                                        <!-- results: plain-text report on demand -->
+                                                        <Border Style="{StaticResource Tool.Console}" Margin="0,8,0,0" Padding="10,8">
+                                                            <Border.Visibility>
+                                                                <MultiBinding Converter="{StaticResource It.AllTrue}">
+                                                                    <Binding Path="IsExpanded" />
+                                                                    <Binding Path="IsNote" Converter="{StaticResource InverseBool}" />
+                                                                </MultiBinding>
+                                                            </Border.Visibility>
+                                                            <TextBox Style="{StaticResource Tool.SelectableText}" Text="{Binding Body, Mode=OneWay}" FontFamily="{StaticResource Font.Mono}" FontSize="12"
+                                                                     Foreground="#B9D4F0" TextWrapping="NoWrap" HorizontalScrollBarVisibility="Auto" FlowDirection="LeftToRight" />
+                                                        </Border>
+                                                    </StackPanel>
+                                                    <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Top">
+                                                        <ui:ArcadiaButton Variant="Tool" Icon="ChevronDown" Width="26" Height="26" ToolTip="{l:Loc Diag_Details}" AutomationProperties.Name="{l:Loc Diag_Details}"
+                                                                          Command="{Binding DataContext.ToggleEntryCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}"
+                                                                          Visibility="{Binding IsNote, Converter={StaticResource HasValue}, ConverterParameter=invert}" />
+                                                        <ui:ArcadiaButton Variant="Tool" Icon="Copy" Width="26" Height="26" ToolTip="{l:Loc It_Copy}" AutomationProperties.Name="{l:Loc It_Copy}"
+                                                                          Command="{Binding DataContext.CopyEntryCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" />
+                                                        <ui:ArcadiaButton Variant="Tool" Icon="Trash" Width="26" Height="26" ToolTip="{l:Loc Diag_Delete}" AutomationProperties.Name="{l:Loc Diag_Delete}"
+                                                                          Command="{Binding DataContext.DeleteEntryCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" />
+                                                    </StackPanel>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+                            <TextBlock Text="{l:Loc Diag_NoEntries}" Style="{StaticResource Text.Meta}" HorizontalAlignment="Center" VerticalAlignment="Center" TextWrapping="Wrap" MaxWidth="420" TextAlignment="Center"
+                                       Visibility="{Binding Entries.Count, Converter={StaticResource HasValue}, ConverterParameter=invert}" />
+                        </Grid>
+                    </Border>
+                </Border>
+            </DockPanel>
+        </Grid>
+    </DockPanel>
+</UserControl>

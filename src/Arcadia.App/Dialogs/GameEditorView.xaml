@@ -1,0 +1,203 @@
+<UserControl x:Class="Arcadia.App.Dialogs.GameEditorView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:ui="urn:arcadia-ui"
+             xmlns:l="clr-namespace:Arcadia.App.Localization"
+             xmlns:dialogs="clr-namespace:Arcadia.App.Dialogs"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance dialogs:GameEditorViewModel}">
+    <UserControl.Resources>
+        <Style x:Key="Field" TargetType="StackPanel">
+            <Setter Property="Margin" Value="0,0,0,14" />
+        </Style>
+    </UserControl.Resources>
+
+    <Grid Margin="22,18,22,18">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="22" />
+                <ColumnDefinition Width="250" />
+            </Grid.ColumnDefinitions>
+
+            <!-- ── details ── -->
+            <StackPanel>
+                <StackPanel Style="{StaticResource Field}">
+                    <TextBlock Text="{l:Loc Editor_GameTitle}" Style="{StaticResource FieldLabel}" />
+                    <TextBox Text="{Binding GameTitle, UpdateSourceTrigger=PropertyChanged}" FontSize="14" MinHeight="32" AutomationProperties.Name="{l:Loc Editor_GameTitle}" />
+                    <TextBlock Text="{Binding TitleError}" Style="{StaticResource FieldError}" Visibility="{Binding TitleError, Converter={StaticResource HasValue}}" />
+                </StackPanel>
+
+                <Grid Margin="0,0,0,14">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="12" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="12" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel>
+                        <TextBlock Text="{l:Loc Editor_Platform}" Style="{StaticResource FieldLabel}" />
+                        <ComboBox IsEditable="True" ItemsSource="{Binding PlatformOptions}" Text="{Binding Platform, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="{l:Loc Editor_Platform}" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="2">
+                        <TextBlock Text="{l:Loc Editor_Status}" Style="{StaticResource FieldLabel}" />
+                        <ComboBox ItemsSource="{Binding StatusOptions}" SelectedItem="{Binding Status}" DisplayMemberPath="Label" AutomationProperties.Name="{l:Loc Editor_Status}" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="4">
+                        <TextBlock Text="{l:Loc Editor_Priority}" Style="{StaticResource FieldLabel}" />
+                        <ComboBox ItemsSource="{Binding PriorityOptions}" SelectedItem="{Binding Priority}" DisplayMemberPath="Label" AutomationProperties.Name="{l:Loc Editor_Priority}" />
+                    </StackPanel>
+                </Grid>
+
+                <StackPanel Style="{StaticResource Field}">
+                    <TextBlock Text="{l:Loc Editor_Tags}" Style="{StaticResource FieldLabel}" />
+                    <TextBox Text="{Binding Tags, UpdateSourceTrigger=PropertyChanged}" MinHeight="30" AutomationProperties.Name="{l:Loc Editor_Tags}" />
+                    <TextBlock Margin="0,4,0,0" Text="{l:Loc Editor_TagsHint}" Style="{StaticResource Text.Meta}" />
+                </StackPanel>
+
+                <StackPanel Style="{StaticResource Field}">
+                    <Grid>
+                        <TextBlock Text="{l:Loc Editor_Progress}" Style="{StaticResource FieldLabel}" />
+                        <TextBlock Text="{Binding CompletionText}" Style="{StaticResource Text.Numeric}" HorizontalAlignment="Right" />
+                    </Grid>
+                    <Slider Minimum="0" Maximum="100" SmallChange="1" LargeChange="10" Value="{Binding Completion}" AutomationProperties.Name="{l:Loc Editor_Progress}" />
+                </StackPanel>
+
+                <Grid Margin="0,0,0,4">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="12" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="12" />
+                        <ColumnDefinition Width="1.3*" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel>
+                        <TextBlock Text="{l:Loc Editor_Playtime}" Style="{StaticResource FieldLabel}" />
+                        <TextBox Text="{Binding PlaytimeText, UpdateSourceTrigger=PropertyChanged}" MinHeight="30" AutomationProperties.Name="{l:Loc Editor_Playtime}" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="2">
+                        <TextBlock Text="{l:Loc Editor_Estimated}" Style="{StaticResource FieldLabel}" />
+                        <TextBox Text="{Binding EstimatedText, UpdateSourceTrigger=PropertyChanged}" MinHeight="30" AutomationProperties.Name="{l:Loc Editor_Estimated}" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="4">
+                        <TextBlock Text="{l:Loc Editor_Achievements}" Style="{StaticResource FieldLabel}" />
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBox Text="{Binding AchievementsUnlockedText, UpdateSourceTrigger=PropertyChanged}" MinHeight="30" AutomationProperties.Name="{l:Loc Editor_Achievements}" />
+                            <TextBlock Grid.Column="1" Margin="8,0" Text="{l:Loc Editor_AchievementsOf}" Style="{StaticResource Text.Meta}" VerticalAlignment="Center" />
+                            <TextBox Grid.Column="2" Text="{Binding AchievementsTotalText, UpdateSourceTrigger=PropertyChanged}" MinHeight="30" />
+                        </Grid>
+                    </StackPanel>
+                </Grid>
+                <TextBlock Text="{Binding NumberError}" Style="{StaticResource FieldError}" Visibility="{Binding NumberError, Converter={StaticResource HasValue}}" />
+                <TextBlock Text="{Binding AchievementsError}" Style="{StaticResource FieldError}" Visibility="{Binding AchievementsError, Converter={StaticResource HasValue}}" />
+
+                <StackPanel Style="{StaticResource Field}" Margin="0,14,0,14">
+                    <TextBlock Text="{l:Loc Editor_Objective}" Style="{StaticResource FieldLabel}" />
+                    <TextBox Text="{Binding Objective, UpdateSourceTrigger=PropertyChanged}" MinHeight="30" AutomationProperties.Name="{l:Loc Editor_Objective}" />
+                </StackPanel>
+
+                <StackPanel Style="{StaticResource Field}">
+                    <TextBlock Text="{l:Loc Editor_Description}" Style="{StaticResource FieldLabel}" />
+                    <TextBox Style="{StaticResource TextArea}" Height="74" Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="{l:Loc Editor_Description}" />
+                </StackPanel>
+
+                <StackPanel Style="{StaticResource Field}" Margin="0">
+                    <TextBlock Text="{l:Loc Editor_Launch}" Style="{StaticResource FieldLabel}" />
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBox Text="{Binding LaunchTarget, UpdateSourceTrigger=PropertyChanged}" MinHeight="30" FontFamily="Cascadia Mono, Consolas" FontSize="12"
+                                 FlowDirection="LeftToRight" AutomationProperties.Name="{l:Loc Editor_Launch}" />
+                        <ui:ArcadiaButton Grid.Column="1" Margin="8,0,0,0" Content="{l:Loc Editor_Browse}" Command="{Binding BrowseProgramCommand}" />
+                    </Grid>
+                    <TextBlock Margin="0,4,0,0" Text="{l:Loc Editor_LaunchHint}" Style="{StaticResource Text.Meta}" TextWrapping="Wrap" />
+                    <TextBlock Text="{Binding LaunchError}" Style="{StaticResource FieldError}" Visibility="{Binding LaunchError, Converter={StaticResource HasValue}}" />
+
+                    <TextBlock Margin="0,14,0,0" Text="{l:Loc Editor_InstallDir}" Style="{StaticResource FieldLabel}" />
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBox Text="{Binding InstallDirectory, UpdateSourceTrigger=PropertyChanged}" MinHeight="30" FontFamily="Cascadia Mono, Consolas" FontSize="12"
+                                 FlowDirection="LeftToRight" AutomationProperties.Name="{l:Loc Editor_InstallDir}" />
+                        <ui:ArcadiaButton Grid.Column="1" Margin="8,0,0,0" Content="{l:Loc Editor_Browse}" Command="{Binding BrowseFolderCommand}" />
+                    </Grid>
+                    <TextBlock Margin="0,4,0,0" Text="{l:Loc Editor_InstallDirHint}" Style="{StaticResource Text.Meta}" TextWrapping="Wrap" />
+
+                    <!-- Phase 9: executables that mean "this game is running" -->
+                    <TextBlock Margin="0,14,0,0" Text="{l:Loc Editor_Executables}" Style="{StaticResource FieldLabel}" />
+                    <ItemsControl ItemsSource="{Binding Executables}" Focusable="False">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <DockPanel Margin="0,2">
+                                    <ui:ArcadiaButton DockPanel.Dock="Right" Variant="Tool" Icon="Close" IconSize="10" Width="24" Height="24" AutomationProperties.Name="{l:Loc Editor_RemoveExe}"
+                                                      Command="{Binding DataContext.RemoveExecutableCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}" />
+                                    <ui:ArcadiaButton DockPanel.Dock="Right" Variant="Link" Content="{l:Loc Editor_ExeFullPath}" Margin="0,0,6,0"
+                                                      Command="{Binding DataContext.UseFullPathCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}" />
+                                    <TextBlock Text="{Binding}" FontFamily="Cascadia Mono, Consolas" FontSize="12" FlowDirection="LeftToRight" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                                </DockPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                        <ui:ArcadiaButton Content="{l:Loc Editor_BrowseExe}" Command="{Binding BrowseExecutableCommand}" />
+                        <ComboBox Width="190" Margin="8,0,0,0" MinHeight="28" ItemsSource="{Binding RunningExecutables}" SelectedItem="{Binding PickedRunning}" FlowDirection="LeftToRight"
+                                  DropDownOpened="OnDetectRunningOpened" AutomationProperties.Name="{l:Loc Editor_DetectRunning}" ToolTip="{l:Loc Editor_DetectRunning}" />
+                    </StackPanel>
+                    <TextBlock Margin="0,4,0,0" Text="{l:Loc Editor_ExeHint}" Style="{StaticResource Text.Meta}" TextWrapping="Wrap" />
+                    <DockPanel Margin="0,10,0,0">
+                        <CheckBox DockPanel.Dock="Right" Style="{StaticResource ToggleSwitch}" IsChecked="{Binding AutoGamingMode}" AutomationProperties.Name="{l:Loc Editor_AutoGaming}" />
+                        <TextBlock Text="{l:Loc Editor_AutoGaming}" Style="{StaticResource Text.Item}" VerticalAlignment="Center" />
+                    </DockPanel>
+                </StackPanel>
+            </StackPanel>
+
+            <!-- ── artwork ── -->
+            <StackPanel Grid.Column="2">
+                <TextBlock Text="{l:Loc Editor_Cover}" Style="{StaticResource FieldLabel}" />
+                <Border Style="{StaticResource ArtworkWell}" Width="250" Height="117" HorizontalAlignment="Left">
+                    <ui:ArtworkPresenter Theme="{Binding Scene}" Seed="{Binding Seed}" ImagePath="{Binding CoverPreview}" Vignette="0.3" />
+                </Border>
+                <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                    <ui:ArcadiaButton Icon="Image" IconSize="14" Content="{l:Loc Editor_Choose}" Command="{Binding ChooseCoverCommand}" />
+                    <ui:ArcadiaButton Margin="6,0,0,0" Variant="Link" Content="{l:Loc Editor_Remove}" Command="{Binding RemoveCoverCommand}"
+                                      Visibility="{Binding CoverPreview, Converter={StaticResource HasValue}}" VerticalAlignment="Center" />
+                </StackPanel>
+
+                <TextBlock Margin="0,18,0,0" Text="{l:Loc Editor_Hero}" Style="{StaticResource FieldLabel}" />
+                <Border Style="{StaticResource ArtworkWell}" Width="250" Height="81" HorizontalAlignment="Left">
+                    <ui:ArtworkPresenter Theme="{Binding Scene}" Seed="{Binding Seed}" ImagePath="{Binding HeroPreview}" Vignette="0.3" />
+                </Border>
+                <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                    <ui:ArcadiaButton Icon="Image" IconSize="14" Content="{l:Loc Editor_Choose}" Command="{Binding ChooseHeroCommand}" />
+                    <ui:ArcadiaButton Margin="6,0,0,0" Variant="Link" Content="{l:Loc Editor_Remove}" Command="{Binding RemoveHeroCommand}"
+                                      Visibility="{Binding HeroPreview, Converter={StaticResource HasValue}}" VerticalAlignment="Center" />
+                </StackPanel>
+
+                <TextBlock Margin="0,18,0,0" Text="{l:Loc Editor_Scene}" Style="{StaticResource FieldLabel}" />
+                <ComboBox ItemsSource="{Binding SceneOptions}" SelectedItem="{Binding Scene}" AutomationProperties.Name="{l:Loc Editor_Scene}" />
+                <TextBlock Margin="0,4,0,0" Text="{l:Loc Editor_SceneHint}" Style="{StaticResource Text.Meta}" TextWrapping="Wrap" />
+            </StackPanel>
+        </Grid>
+
+        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0">
+            <ui:ArcadiaButton Content="{l:Loc Editor_Cancel}" Command="{Binding CancelCommand}" MinWidth="96" Margin="0,0,10,0" />
+            <ui:ArcadiaButton Variant="Primary" Icon="Check" IconSize="14" Content="{l:Loc Editor_Save}" Command="{Binding SaveCommand}" MinWidth="110" IsDefault="True" />
+        </StackPanel>
+    </Grid>
+</UserControl>

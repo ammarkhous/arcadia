@@ -1,0 +1,134 @@
+<UserControl x:Class="Arcadia.App.Views.Travel.TravelTripsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:ui="urn:arcadia-ui"
+             xmlns:l="clr-namespace:Arcadia.App.Localization"
+             xmlns:tvm="clr-namespace:Arcadia.App.ViewModels.Travel"
+             xmlns:tv="clr-namespace:Arcadia.App.Views.Travel"
+             xmlns:ctl="clr-namespace:Arcadia.App.Views.Controls"
+             mc:Ignorable="d" d:DataContext="{d:DesignInstance tvm:TravelViewModel}">
+    <UserControl.Resources>
+        <ContextMenu x:Key="TripMenu" x:Shared="False" DataContext="{Binding PlacementTarget.Tag, RelativeSource={RelativeSource Self}}">
+            <MenuItem Header="{l:Loc Tr_Open}" Command="{Binding OpenTripCardCommand}" CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}">
+                <MenuItem.Icon><ui:ArcadiaIcon Kind="ArrowRight" Width="14" Height="14" /></MenuItem.Icon>
+            </MenuItem>
+            <MenuItem Header="{l:Loc Tr_Edit}" Command="{Binding EditTripCommand}" CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}">
+                <MenuItem.Icon><ui:ArcadiaIcon Kind="Journal" Width="14" Height="14" /></MenuItem.Icon>
+            </MenuItem>
+            <MenuItem Header="{l:Loc Tr_MarkActive}" Command="{Binding ActivateTripCommand}" CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}">
+                <MenuItem.Icon><ui:ArcadiaIcon Kind="Play" Width="14" Height="14" /></MenuItem.Icon>
+            </MenuItem>
+            <MenuItem Header="{l:Loc Tr_Complete}" Command="{Binding CompleteTripCommand}" CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}">
+                <MenuItem.Icon><ui:ArcadiaIcon Kind="Check" Width="14" Height="14" /></MenuItem.Icon>
+            </MenuItem>
+            <MenuItem Header="{l:Loc Tr_Favorite}" Command="{Binding ToggleTripFavoriteCommand}" CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}">
+                <MenuItem.Icon><ui:ArcadiaIcon Kind="Star" Width="14" Height="14" /></MenuItem.Icon>
+            </MenuItem>
+            <MenuItem Header="{l:Loc Tr_CancelTrip}" Command="{Binding CancelTripCommand}" CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}">
+                <MenuItem.Icon><ui:ArcadiaIcon Kind="Library" Width="14" Height="14" /></MenuItem.Icon>
+            </MenuItem>
+            <Separator Background="#26344A" Margin="4" />
+            <MenuItem Header="{l:Loc Proj_DeletePermanently}" Command="{Binding DeleteTripCommand}" CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}">
+                <MenuItem.Icon><ui:ArcadiaIcon Kind="Trash" Width="14" Height="14" Foreground="#FF8A8E" /></MenuItem.Icon>
+            </MenuItem>
+        </ContextMenu>
+    </UserControl.Resources>
+
+    <DockPanel>
+        <Grid DockPanel.Dock="Top" Margin="2,0,0,10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <StackPanel>
+                <TextBlock Text="{l:Loc Tr_TripsKicker}" Style="{StaticResource Tr.Kicker}" />
+                <TextBlock Text="{l:Loc TrSection_Trips}" Style="{StaticResource Text.Title}" FontSize="24" Margin="0,2,0,0" />
+            </StackPanel>
+            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                <Grid Width="240" Height="34" Margin="0,0,10,0">
+                    <TextBox x:Name="SearchBox" Padding="30,0,8,0" Text="{Binding TripSearch, UpdateSourceTrigger=PropertyChanged, Delay=120}" ctl:Shortcuts.IsSearchBox="True"
+                             AutomationProperties.Name="{l:Loc Tr_SearchTrips}" ui:Bidi.AutoDirection="True" />
+                    <ui:ArcadiaIcon Kind="Search" Width="14" Height="14" HorizontalAlignment="Left" Margin="10,0,0,0" IsHitTestVisible="False" Foreground="{StaticResource Brush.Icon.Dim}" />
+                    <TextBlock Text="{l:Loc Tr_SearchTrips}" Margin="31,0,8,0" VerticalAlignment="Center" FontSize="12" Foreground="{StaticResource Brush.Text.Muted}" IsHitTestVisible="False"
+                               Visibility="{Binding Text, ElementName=SearchBox, Converter={StaticResource HasValue}, ConverterParameter=invert}" />
+                </Grid>
+                <ui:ArcadiaButton Variant="Primary" Icon="Plus" Content="{l:Loc Tr_NewTrip}" Command="{Binding NewTripCommand}" MinHeight="36" Padding="16,6" />
+            </StackPanel>
+        </Grid>
+        <ItemsControl DockPanel.Dock="Top" ItemsSource="{Binding TripFilters}" Margin="0,0,0,10" Focusable="False">
+            <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <ui:ArcadiaChoice Style="{StaticResource Tool.RadioChip}" Height="28" Padding="12,0" GroupName="TripFilter" Content="{Binding Label}" Margin="0,0,6,4"
+                                      Command="{Binding DataContext.SetTripFilterCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}">
+                        <ui:ArcadiaChoice.IsChecked>
+                            <MultiBinding Converter="{StaticResource It.Same}" Mode="OneWay">
+                                <Binding Path="DataContext.TripFilterOption" RelativeSource="{RelativeSource AncestorType=UserControl}" />
+                                <Binding />
+                            </MultiBinding>
+                        </ui:ArcadiaChoice.IsChecked>
+                    </ui:ArcadiaChoice>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <Grid>
+            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Focusable="False">
+                <ItemsControl ItemsSource="{Binding TripsView}" Focusable="False">
+                    <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate DataType="{x:Type tvm:TripCard}">
+                            <Button Style="{StaticResource GameCardButton}" Width="316" Margin="0,0,10,10" AutomationProperties.Name="{Binding Name}"
+                                    Command="{Binding DataContext.OpenTripCardCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}"
+                                    Tag="{Binding DataContext, RelativeSource={RelativeSource AncestorType=UserControl}}" ContextMenu="{StaticResource TripMenu}">
+                                <Grid Height="196" Margin="6">
+                                    <Border Style="{StaticResource ArtworkWell}">
+                                        <Grid>
+                                            <ui:ArtworkPresenter Theme="{Binding Theme}" Seed="{Binding Seed}" Vignette="0.35" BottomShade="0.9" />
+                                            <tv:PhotoThumb Path="{Binding CoverPath}" DecodeWidth="640" Visibility="{Binding HasCover, Converter={StaticResource BoolToVisibility}}" />
+                                        </Grid>
+                                    </Border>
+                                    <Border>
+                                        <Border.Background>
+                                            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                                <GradientStop Offset="0.3" Color="#00060A10" />
+                                                <GradientStop Offset="1" Color="#F0060A10" />
+                                            </LinearGradientBrush>
+                                        </Border.Background>
+                                    </Border>
+                                    <Border Height="3" VerticalAlignment="Top" Margin="1,1,1,0" CornerRadius="2,2,0,0" Background="{Binding Accent, Converter={StaticResource Tr.Tone}}" />
+                                    <ui:ArcadiaStatusIndicator Text="{Binding StatusText}" Tone="{Binding StatusTone, Converter={StaticResource Tr.Tone}}" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,10,10,0" MinWidth="0" Height="20" />
+                                    <ui:ArcadiaIcon Kind="Star" Width="14" Height="14" Foreground="#FFD26A" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,11,0,0"
+                                                    Visibility="{Binding IsFavorite, Converter={StaticResource BoolToVisibility}}" />
+                                    <StackPanel VerticalAlignment="Bottom" Margin="12,0,12,10">
+                                        <TextBlock Text="{Binding WhenText}" Style="{StaticResource Tr.Coord}" FontSize="11.5" Foreground="#7FE3FF" />
+                                        <TextBlock ui:Bidi.Text="{Binding Name}" Style="{StaticResource Text.OnArt}" FontFamily="{StaticResource Font.Display}" FontSize="18" TextTrimming="CharacterEllipsis" Margin="0,2,0,0" />
+                                        <DockPanel Margin="0,4,0,0">
+                                            <ItemsControl DockPanel.Dock="Right" ItemsSource="{Binding Flags}" Focusable="False">
+                                                <ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel Orientation="Horizontal" /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                                                <ItemsControl.ItemTemplate><DataTemplate><Border BorderThickness="1" BorderBrush="#40FFFFFF" Margin="4,0,0,0"><Image Source="{Binding}" Style="{StaticResource Tr.Flag}" Height="11" /></Border></DataTemplate></ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                            <TextBlock Text="{Binding DatesText}" Style="{StaticResource Text.Meta}" Foreground="#C8D4E4" TextTrimming="CharacterEllipsis" />
+                                        </DockPanel>
+                                        <TextBlock Text="{Binding CountsText}" Style="{StaticResource Text.Meta}" FontSize="11" Foreground="#8FA3BD" Margin="0,2,0,0" />
+                                        <ui:ArcadiaProgressBar Height="4" Margin="0,6,0,0" Value="{Binding Progress}" Tone="#45D2FF" Visibility="{Binding ShowProgress, Converter={StaticResource BoolToVisibility}}" />
+                                    </StackPanel>
+                                </Grid>
+                            </Button>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="520" Visibility="{Binding TripsView.Count, Converter={StaticResource HasValue}, ConverterParameter=invert}">
+                <Border Width="420" Height="190" Style="{StaticResource ArtworkWell}">
+                    <ui:ArtworkPresenter Theme="desert-sunset" Seed="17" Vignette="0.35" BottomShade="0.6" />
+                </Border>
+                <TextBlock Margin="0,16,0,0" Text="{l:Loc Tr_NoTripsTitle}" Style="{StaticResource Text.Title}" HorizontalAlignment="Center" />
+                <TextBlock Margin="0,6,0,0" Text="{l:Loc Tr_NoTripsBody}" Style="{StaticResource Text.Body}" TextAlignment="Center" TextWrapping="Wrap" />
+                <ui:ArcadiaButton Margin="0,14,0,0" HorizontalAlignment="Center" Variant="Primary" Icon="Suitcase" Content="{l:Loc Tr_CreateFirstTrip}" Command="{Binding NewTripCommand}" />
+            </StackPanel>
+        </Grid>
+    </DockPanel>
+</UserControl>

@@ -1,0 +1,239 @@
+<!-- Travel's own accents on top of Arcadia's design system: chart frames, dossier index tabs, map controls, coordinate type. -->
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:ui="urn:arcadia-ui"
+                    xmlns:conv="clr-namespace:Arcadia.App.Converters"
+                    xmlns:ctl="clr-namespace:Arcadia.App.Views.Controls">
+
+    <!-- merged dictionaries cannot see App-level keys, so the converters used here live here too -->
+    <conv:HasValueToVisibilityConverter x:Key="HasValue" />
+    <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
+    <conv:ToneToColorConverter x:Key="Tr.Tone" />
+    <ctl:EqualsToVisibilityConverter x:Key="Tr.Visible" />
+    <ctl:EqualsConverter x:Key="Tr.Equals" />
+
+    <FontFamily x:Key="Tr.Mono">Cascadia Mono, Consolas</FontFamily>
+
+    <!-- coordinate / reference typography: small caps-like mono in muted steel -->
+    <Style x:Key="Tr.Coord" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{StaticResource Tr.Mono}" />
+        <Setter Property="FontSize" Value="11" />
+        <Setter Property="Foreground" Value="#6F86A6" />
+        <Setter Property="FlowDirection" Value="LeftToRight" />
+        <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+    </Style>
+
+    <Style x:Key="Tr.Kicker" TargetType="TextBlock" BasedOn="{StaticResource Text.Caps}">
+        <Setter Property="FontSize" Value="10.5" />
+        <Setter Property="Foreground" Value="#7FA9C8" />
+    </Style>
+
+    <!-- a nautical-chart frame: thin double border with a faint inner glow -->
+    <Style x:Key="Tr.Chart" TargetType="Border">
+        <Setter Property="BorderBrush" Value="#2A3E58" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="4" />
+        <Setter Property="Padding" Value="3" />
+        <Setter Property="Background">
+            <Setter.Value>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                    <GradientStop Offset="0" Color="#101A28" />
+                    <GradientStop Offset="1" Color="#080D15" />
+                </LinearGradientBrush>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    <Style x:Key="Tr.ChartInner" TargetType="Border">
+        <Setter Property="BorderBrush" Value="#1B2A3E" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="2" />
+        <Setter Property="ClipToBounds" Value="True" />
+    </Style>
+
+    <!-- square map control button (zoom, fit, layers) -->
+    <Style x:Key="Tr.MapButton" TargetType="Button">
+        <Setter Property="Width" Value="32" />
+        <Setter Property="Height" Value="32" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Foreground" Value="#B9C8DC" />
+        <Setter Property="FocusVisualStyle" Value="{StaticResource Arcadia.FocusVisual}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="b" CornerRadius="3" BorderThickness="1" BorderBrush="#2E4462" Background="#E00A121E">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="b" Property="BorderBrush" Value="#45D2FF" />
+                            <Setter TargetName="b" Property="Background" Value="#F0122238" />
+                            <Setter Property="Foreground" Value="White" />
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="b" Property="Background" Value="#FF0C2436" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- legend chip on the map (toggle a status layer) -->
+    <Style x:Key="Tr.Legend" TargetType="ToggleButton">
+        <Setter Property="Height" Value="26" />
+        <Setter Property="Padding" Value="8,0,10,0" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Foreground" Value="#8FA3BD" />
+        <Setter Property="FontSize" Value="11.5" />
+        <Setter Property="FocusVisualStyle" Value="{StaticResource Arcadia.FocusVisual}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ToggleButton">
+                    <Border x:Name="b" CornerRadius="3" BorderThickness="1" BorderBrush="#243650" Background="#D00A121E" Padding="{TemplateBinding Padding}" Opacity="0.55">
+                        <ContentPresenter VerticalAlignment="Center" TextBlock.Foreground="{TemplateBinding Foreground}" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="b" Property="Opacity" Value="1" />
+                            <Setter TargetName="b" Property="BorderBrush" Value="#35506E" />
+                            <Setter Property="Foreground" Value="#DCE7F4" />
+                        </Trigger>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="b" Property="BorderBrush" Value="#45D2FF" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- dossier index tab: numbered, vertical, like tabs on a travel folder -->
+    <Style x:Key="Tr.DossierTab" TargetType="RadioButton">
+        <Setter Property="Height" Value="38" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Foreground" Value="#8FA3BD" />
+        <Setter Property="FocusVisualStyle" Value="{StaticResource Arcadia.FocusVisual}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="RadioButton">
+                    <Grid Background="Transparent" Margin="0,0,0,2">
+                        <Border x:Name="card" CornerRadius="3,0,0,3" BorderThickness="1,1,0,1" BorderBrush="Transparent" Background="Transparent" />
+                        <Border x:Name="edge" Width="3" HorizontalAlignment="Left" Margin="0,6" CornerRadius="1.5" Background="#45D2FF" Opacity="0">
+                            <Border.Effect><DropShadowEffect Color="#45D2FF" BlurRadius="8" ShadowDepth="0" Opacity="0.9" /></Border.Effect>
+                        </Border>
+                        <ContentPresenter Margin="14,0,10,0" VerticalAlignment="Center" TextBlock.Foreground="{TemplateBinding Foreground}" />
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="card" Property="Background" Value="#0E1826" />
+                            <Setter Property="Foreground" Value="#DCE7F4" />
+                        </Trigger>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="card" Property="BorderBrush" Value="#2A3E58" />
+                            <Setter TargetName="card" Property="Background">
+                                <Setter.Value>
+                                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                        <GradientStop Offset="0" Color="#16263A" />
+                                        <GradientStop Offset="1" Color="#0C1522" />
+                                    </LinearGradientBrush>
+                                </Setter.Value>
+                            </Setter>
+                            <Setter TargetName="edge" Property="Opacity" Value="1" />
+                            <Setter Property="Foreground" Value="White" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- a photo tile in grids -->
+    <Style x:Key="Tr.PhotoTile" TargetType="Button">
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="FocusVisualStyle" Value="{StaticResource Arcadia.FocusVisual}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="frame" CornerRadius="3" BorderThickness="1" BorderBrush="#243650" Background="#0A111B" Padding="2" RenderTransformOrigin="0.5,0.5">
+                        <Border.RenderTransform><ScaleTransform x:Name="s" /></Border.RenderTransform>
+                        <ContentPresenter />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="frame" Property="BorderBrush" Value="#45D2FF" />
+                            <Trigger.EnterActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="s" Storyboard.TargetProperty="ScaleX" To="1.025" Duration="0:0:0.12" />
+                                        <DoubleAnimation Storyboard.TargetName="s" Storyboard.TargetProperty="ScaleY" To="1.025" Duration="0:0:0.12" />
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.EnterActions>
+                            <Trigger.ExitActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="s" Storyboard.TargetProperty="ScaleX" To="1" Duration="0:0:0.15" />
+                                        <DoubleAnimation Storyboard.TargetName="s" Storyboard.TargetProperty="ScaleY" To="1" Duration="0:0:0.15" />
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.ExitActions>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- a flag image with a hairline border -->
+    <Style x:Key="Tr.Flag" TargetType="Image">
+        <Setter Property="Height" Value="14" />
+        <Setter Property="Stretch" Value="Uniform" />
+        <Setter Property="RenderOptions.BitmapScalingMode" Value="HighQuality" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+    <!-- selectable list rows (same language as Projects' task list) -->
+    <Style x:Key="Tr.RowItem" TargetType="ListBoxItem">
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+        <Setter Property="FocusVisualStyle" Value="{StaticResource Arcadia.FocusVisual}" />
+        <Setter Property="AutomationProperties.Name" Value="{Binding}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ListBoxItem">
+                    <Border BorderBrush="{StaticResource Brush.Separator}" BorderThickness="0,0,0,1" Background="Transparent">
+                        <Grid>
+                            <Border x:Name="sel" Opacity="0">
+                                <Border.Background>
+                                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                        <GradientStop Offset="0" Color="#553F8CFF" />
+                                        <GradientStop Offset="1" Color="#103F8CFF" />
+                                    </LinearGradientBrush>
+                                </Border.Background>
+                            </Border>
+                            <Border x:Name="hover" Opacity="0" Background="#0F2F6BD9" />
+                            <Border x:Name="edge" Width="2" HorizontalAlignment="Left" Background="{StaticResource Brush.Cyan}" Opacity="0" />
+                            <ContentPresenter Margin="{TemplateBinding Padding}" />
+                        </Grid>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="hover" Property="Opacity" Value="1" /></Trigger>
+                        <Trigger Property="IsSelected" Value="True">
+                            <Setter TargetName="sel" Property="Opacity" Value="1" />
+                            <Setter TargetName="edge" Property="Opacity" Value="1" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="Tr.List" TargetType="ListBox">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled" />
+        <Setter Property="VirtualizingPanel.IsVirtualizing" Value="True" />
+        <Setter Property="VirtualizingPanel.VirtualizationMode" Value="Recycling" />
+        <Setter Property="VirtualizingPanel.ScrollUnit" Value="Pixel" />
+        <Setter Property="ItemContainerStyle" Value="{StaticResource Tr.RowItem}" />
+    </Style>
+</ResourceDictionary>

@@ -1,0 +1,231 @@
+<UserControl x:Class="Arcadia.App.Views.Finance.FinanceReportsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:ui="urn:arcadia-ui"
+             xmlns:l="clr-namespace:Arcadia.App.Localization"
+             xmlns:fvm="clr-namespace:Arcadia.App.ViewModels.Finance"
+             xmlns:fin="clr-namespace:Arcadia.App.Views.Finance"
+             xmlns:svc="clr-namespace:Arcadia.App.Services"
+             mc:Ignorable="d" d:DataContext="{d:DesignInstance fvm:FinanceReportsViewModel}" x:Name="Root">
+    <DockPanel>
+        <!-- period + currency -->
+        <DockPanel DockPanel.Dock="Top" Margin="0,0,0,8">
+            <ItemsControl DockPanel.Dock="Right" ItemsSource="{Binding Currencies}" Focusable="False" VerticalAlignment="Center">
+                <ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel Orientation="Horizontal" /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <RadioButton Style="{StaticResource Tool.RadioChip}" GroupName="RepCurrency" Content="{Binding}" Margin="4,0,0,0" Height="28" Padding="8,0"
+                                     Command="{Binding DataContext.SetCurrencyCommand, ElementName=Root}" CommandParameter="{Binding}" AutomationProperties.Name="{Binding}">
+                            <RadioButton.IsChecked>
+                                <MultiBinding Converter="{StaticResource It.Same}" Mode="OneWay">
+                                    <Binding />
+                                    <Binding Path="DataContext.Currency" ElementName="Root" />
+                                </MultiBinding>
+                            </RadioButton.IsChecked>
+                        </RadioButton>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <ItemsControl ItemsSource="{Binding PeriodOptions}" Focusable="False">
+                    <ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel Orientation="Horizontal" /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <RadioButton Style="{StaticResource Tool.RadioChip}" GroupName="RepPeriod" Content="{Binding Label}" Margin="0,0,4,0" Height="28" Padding="8,0"
+                                         Command="{Binding DataContext.SetPeriodCommand, ElementName=Root}" CommandParameter="{Binding}" AutomationProperties.Name="{Binding Label}">
+                                <RadioButton.IsChecked>
+                                    <MultiBinding Converter="{StaticResource It.Same}" Mode="OneWay">
+                                        <Binding />
+                                        <Binding Path="DataContext.Period" ElementName="Root" />
+                                    </MultiBinding>
+                                </RadioButton.IsChecked>
+                            </RadioButton>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <StackPanel Orientation="Horizontal" Margin="6,0,0,0" Visibility="{Binding IsCustom, Converter={StaticResource Fin.HasValue}}">
+                    <TextBox Text="{Binding FromText, UpdateSourceTrigger=PropertyChanged}" Width="96" MinHeight="28" FlowDirection="LeftToRight" VerticalContentAlignment="Center" AutomationProperties.Name="{l:Loc Reg_From}" />
+                    <TextBlock Text="–" Margin="4,0" VerticalAlignment="Center" Foreground="{StaticResource Brush.Text.Secondary}" />
+                    <TextBox Text="{Binding ToText, UpdateSourceTrigger=PropertyChanged}" Width="96" MinHeight="28" FlowDirection="LeftToRight" VerticalContentAlignment="Center" AutomationProperties.Name="{l:Loc Reg_To}" />
+                    <ui:ArcadiaButton Content="{l:Loc Rep_Apply}" Command="{Binding ApplyCustomCommand}" Margin="6,0,0,0" MinHeight="28" />
+                </StackPanel>
+                <TextBlock Text="{Binding RangeText}" Style="{StaticResource Org.Time}" Margin="10,0,0,0" VerticalAlignment="Center" />
+            </StackPanel>
+        </DockPanel>
+
+        <ScrollViewer VerticalScrollBarVisibility="Auto" Focusable="False">
+            <StackPanel>
+                <!-- the period in figures -->
+                <Border Style="{StaticResource Fin.Panel}">
+                    <Border Style="{StaticResource Tool.TableInner}">
+                        <ItemsControl ItemsSource="{Binding Summary}" Focusable="False">
+                            <ItemsControl.ItemsPanel><ItemsPanelTemplate><UniformGrid Rows="1" /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                        </ItemsControl>
+                    </Border>
+                </Border>
+
+                <Grid Margin="0,10,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="1.5*" />
+                        <ColumnDefinition Width="10" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Border Style="{StaticResource Fin.Panel}" Height="270">
+                        <Border Style="{StaticResource Fin.PanelInner}">
+                            <DockPanel>
+                                <DockPanel DockPanel.Dock="Top" Margin="0,0,0,6">
+                                    <ItemsControl DockPanel.Dock="Right" Focusable="False" ItemsSource="{Binding FlowSeries}">
+                                        <ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel Orientation="Horizontal" /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate DataType="{x:Type fin:ChartSeries}">
+                                                <StackPanel Orientation="Horizontal" Margin="12,0,0,0">
+                                                    <Border Width="10" Height="3" CornerRadius="1.5" Background="{Binding Tone, Converter={StaticResource Fin.Ink}}" VerticalAlignment="Center" />
+                                                    <TextBlock Text="{Binding Label}" FontSize="11" Foreground="#9FB3CC" Margin="6,0,0,0" />
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                    <TextBlock Text="{l:Loc Rep_IncomeVsExpenses}" Style="{StaticResource Fin.Kicker}" VerticalAlignment="Center" />
+                                </DockPanel>
+                                <fin:FinanceChart Series="{Binding FlowSeries}" Labels="{Binding MonthLabels}" Formatter="{Binding ChartFormatter}" AxisFormatter="{Binding AxisFormatter}"
+                                                  HideValues="{Binding IsHidden, Source={x:Static svc:FinancePrivacy.Instance}}" AutomationProperties.Name="{l:Loc Rep_IncomeVsExpenses}" />
+                            </DockPanel>
+                        </Border>
+                    </Border>
+                    <Border Grid.Column="2" Style="{StaticResource Fin.Panel}" Height="270">
+                        <Border Style="{StaticResource Fin.PanelInner}">
+                            <DockPanel>
+                                <TextBlock DockPanel.Dock="Top" Text="{l:Loc Fin_SpendingByCategory}" Style="{StaticResource Fin.Kicker}" Margin="0,0,0,6" />
+                                <ScrollViewer VerticalScrollBarVisibility="Auto" Focusable="False">
+                                    <ItemsControl ItemsSource="{Binding CategoryBars}" Focusable="False">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate DataType="{x:Type fvm:CategoryBar}">
+                                                <Button Style="{StaticResource Org.EntryButton}" Command="{Binding DataContext.ShowCategoryCommand, ElementName=Root}" CommandParameter="{Binding}" AutomationProperties.Name="{Binding Name}">
+                                                    <ContentPresenter Content="{Binding}" ContentTemplate="{StaticResource Fin.CategoryBarTemplate}" />
+                                                </Button>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </ScrollViewer>
+                            </DockPanel>
+                        </Border>
+                    </Border>
+                </Grid>
+
+                <Grid Margin="0,10,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="10" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Border Style="{StaticResource Fin.Panel}" Height="230">
+                        <Border Style="{StaticResource Fin.PanelInner}">
+                            <DockPanel>
+                                <DockPanel DockPanel.Dock="Top" Margin="0,0,0,6">
+                                    <ItemsControl DockPanel.Dock="Right" Focusable="False" ItemsSource="{Binding NetSeries}">
+                                        <ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel Orientation="Horizontal" /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate DataType="{x:Type fin:ChartSeries}">
+                                                <StackPanel Orientation="Horizontal" Margin="12,0,0,0">
+                                                    <Border Width="10" Height="3" CornerRadius="1.5" Background="{Binding Tone, Converter={StaticResource Fin.Ink}}" VerticalAlignment="Center" />
+                                                    <TextBlock Text="{Binding Label}" FontSize="11" Foreground="#9FB3CC" Margin="6,0,0,0" />
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                    <TextBlock Text="{l:Loc Rep_NetAndSaved}" Style="{StaticResource Fin.Kicker}" VerticalAlignment="Center" />
+                                </DockPanel>
+                                <fin:FinanceChart Series="{Binding NetSeries}" Labels="{Binding MonthLabels}" Formatter="{Binding ChartFormatter}" AxisFormatter="{Binding AxisFormatter}"
+                                                  HideValues="{Binding IsHidden, Source={x:Static svc:FinancePrivacy.Instance}}" AutomationProperties.Name="{l:Loc Rep_NetAndSaved}" />
+                            </DockPanel>
+                        </Border>
+                    </Border>
+                    <Border Grid.Column="2" Style="{StaticResource Fin.Panel}" Height="230">
+                        <Border Style="{StaticResource Fin.PanelInner}">
+                            <DockPanel>
+                                <DockPanel DockPanel.Dock="Top" Margin="0,0,0,6">
+                                    <ItemsControl DockPanel.Dock="Right" ItemsSource="{Binding BalanceLegend}" Focusable="False">
+                                        <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                                    </ItemsControl>
+                                    <TextBlock Text="{l:Loc Rep_Balances}" Style="{StaticResource Fin.Kicker}" VerticalAlignment="Center" />
+                                </DockPanel>
+                                <fin:FinanceChart Series="{Binding BalanceSeries}" Labels="{Binding MonthLabels}" Formatter="{Binding ChartFormatter}" AxisFormatter="{Binding AxisFormatter}"
+                                                  HideValues="{Binding IsHidden, Source={x:Static svc:FinancePrivacy.Instance}}" AutomationProperties.Name="{l:Loc Rep_Balances}" />
+                            </DockPanel>
+                        </Border>
+                    </Border>
+                </Grid>
+
+                <Grid Margin="0,10,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="10" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Border Style="{StaticResource Fin.Panel}">
+                        <Border Style="{StaticResource Fin.PanelInner}">
+                            <StackPanel>
+                                <TextBlock Text="{l:Loc Rep_BudgetPerformance}" Style="{StaticResource Fin.Kicker}" />
+                                <Grid Margin="0,8,0,2" TextBlock.FontSize="10.5" TextBlock.FontWeight="SemiBold" TextBlock.Foreground="#7F93AE">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="100" /><ColumnDefinition Width="100" /><ColumnDefinition Width="100" /></Grid.ColumnDefinitions>
+                                    <TextBlock Text="{l:Loc Rep_Budget}" />
+                                    <TextBlock Grid.Column="1" Text="{l:Loc Rep_Budgeted}" TextAlignment="Right" />
+                                    <TextBlock Grid.Column="2" Text="{l:Loc Rep_Spent}" TextAlignment="Right" />
+                                    <TextBlock Grid.Column="3" Text="{l:Loc Rep_Difference}" TextAlignment="Right" />
+                                </Grid>
+                                <ItemsControl ItemsSource="{Binding BudgetRows}" Focusable="False">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate DataType="{x:Type fvm:BudgetPerformanceRow}">
+                                            <Grid Margin="0,4">
+                                                <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="100" /><ColumnDefinition Width="100" /><ColumnDefinition Width="100" /></Grid.ColumnDefinitions>
+                                                <StackPanel Orientation="Horizontal">
+                                                    <ui:ArcadiaIcon Kind="{Binding Icon}" Width="12" Height="12" Foreground="{Binding Accent, Converter={StaticResource Fin.Tone}}" VerticalAlignment="Center" />
+                                                    <StackPanel Margin="7,0,0,0">
+                                                        <TextBlock ui:Bidi.Text="{Binding Name}" FontSize="12.5" Foreground="{StaticResource Brush.Text.Primary}" TextTrimming="CharacterEllipsis" />
+                                                        <TextBlock Text="{Binding MonthsText}" FontSize="10.5" Foreground="#7F93AE" />
+                                                    </StackPanel>
+                                                </StackPanel>
+                                                <fin:MoneyText Grid.Column="1" Money="{Binding Budgeted}" Style="{StaticResource Fin.Money}" FontSize="12" VerticalAlignment="Center" />
+                                                <fin:MoneyText Grid.Column="2" Money="{Binding Spent}" Style="{StaticResource Fin.Money}" FontSize="12" VerticalAlignment="Center" />
+                                                <fin:MoneyText Grid.Column="3" Money="{Binding Difference}" Style="{StaticResource Fin.Money}" FontSize="12" VerticalAlignment="Center" Foreground="{Binding DifferenceTone, Converter={StaticResource Fin.Ink}}" />
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                                <TextBlock Text="{l:Loc Rep_NoBudgets}" Style="{StaticResource Fin.Meta}" Visibility="{Binding HasBudgets, Converter={StaticResource Fin.HasValue}, ConverterParameter=invert}" />
+                            </StackPanel>
+                        </Border>
+                    </Border>
+                    <Border Grid.Column="2" Style="{StaticResource Fin.Panel}">
+                        <Border Style="{StaticResource Fin.PanelInner}">
+                            <StackPanel>
+                                <DockPanel>
+                                    <fin:MoneyText DockPanel.Dock="Right" Money="{Binding SubscriptionTotal}" Style="{StaticResource Fin.Money}" FontSize="12" Foreground="#AFC2D8" />
+                                    <TextBlock Text="{l:Loc Rep_SubscriptionCosts}" Style="{StaticResource Fin.Kicker}" />
+                                </DockPanel>
+                                <ItemsControl ItemsSource="{Binding Subscriptions}" Margin="0,8,0,0" Focusable="False">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate DataType="{x:Type fvm:SubscriptionItem}">
+                                            <Grid Margin="0,4">
+                                                <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="110" /><ColumnDefinition Width="110" /></Grid.ColumnDefinitions>
+                                                <StackPanel>
+                                                    <TextBlock ui:Bidi.Text="{Binding Name}" FontSize="12.5" Foreground="{StaticResource Brush.Text.Primary}" TextTrimming="CharacterEllipsis" />
+                                                    <TextBlock Text="{Binding FrequencyText}" FontSize="10.5" Foreground="#7F93AE" />
+                                                </StackPanel>
+                                                <fin:MoneyText Grid.Column="1" Money="{Binding MonthlyText}" Style="{StaticResource Fin.Money}" FontSize="12" VerticalAlignment="Center" ToolTip="{l:Loc Rep_PerMonth}" />
+                                                <fin:MoneyText Grid.Column="2" Money="{Binding AnnualText}" Style="{StaticResource Fin.Money}" FontSize="12" VerticalAlignment="Center" ToolTip="{l:Loc Rep_PerYear}" />
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                                <TextBlock Text="{l:Loc Rep_NoSubscriptions}" Style="{StaticResource Fin.Meta}" Visibility="{Binding HasSubscriptions, Converter={StaticResource Fin.HasValue}, ConverterParameter=invert}" />
+                            </StackPanel>
+                        </Border>
+                    </Border>
+                </Grid>
+            </StackPanel>
+        </ScrollViewer>
+    </DockPanel>
+</UserControl>

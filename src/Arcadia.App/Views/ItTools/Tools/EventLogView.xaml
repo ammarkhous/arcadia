@@ -1,0 +1,104 @@
+<UserControl x:Class="Arcadia.App.Views.ItTools.Tools.EventLogView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:ui="urn:arcadia-ui"
+             xmlns:l="clr-namespace:Arcadia.App.Localization"
+             xmlns:it="clr-namespace:Arcadia.App.ViewModels.ItTools"
+             xmlns:itv="clr-namespace:Arcadia.App.Views.ItTools"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance it:EventLogToolViewModel}">
+    <DockPanel>
+        <itv:ToolHeader DockPanel.Dock="Top" />
+
+        <Border DockPanel.Dock="Top" Style="{StaticResource Tool.CommandBar}">
+            <Border Style="{StaticResource Tool.CommandBarInner}">
+                <WrapPanel>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,14,4">
+                        <ItemsControl ItemsSource="{Binding Logs}" Focusable="False">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate><StackPanel Orientation="Horizontal" /></ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <ui:ArcadiaChoice Style="{StaticResource Tool.RadioChip}" GroupName="EvtLog" Height="30" Content="{Binding Converter={StaticResource It.LogLabel}}"
+                                                 Command="{Binding DataContext.SelectLogCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}">
+                                        <ui:ArcadiaChoice.IsChecked>
+                                            <MultiBinding Converter="{StaticResource It.Same}" Mode="OneWay">
+                                                <Binding />
+                                                <Binding Path="DataContext.LogName" RelativeSource="{RelativeSource AncestorType=UserControl}" />
+                                            </MultiBinding>
+                                        </ui:ArcadiaChoice.IsChecked>
+                                    </ui:ArcadiaChoice>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,10,4">
+                        <CheckBox Style="{StaticResource Tool.Check}" Content="{l:Loc Evt_Critical}" IsChecked="{Binding Critical}" />
+                        <CheckBox Style="{StaticResource Tool.Check}" Content="{l:Loc Evt_Error}" IsChecked="{Binding Errors}" />
+                        <CheckBox Style="{StaticResource Tool.Check}" Content="{l:Loc Evt_Warning}" IsChecked="{Binding Warnings}" />
+                        <CheckBox Style="{StaticResource Tool.Check}" Content="{l:Loc Evt_Information}" IsChecked="{Binding Information}" />
+                    </StackPanel>
+                    <Grid Width="200" Height="30" Margin="0,0,8,4">
+                        <TextBox x:Name="SearchBox" Padding="28,0,8,0" Text="{Binding Search, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="{l:Loc Evt_Search}">
+                            <TextBox.InputBindings><KeyBinding Key="Return" Command="{Binding LoadCommand}" /></TextBox.InputBindings>
+                        </TextBox>
+                        <ui:ArcadiaIcon Kind="Search" Width="14" Height="14" HorizontalAlignment="Left" Margin="9,0,0,0" IsHitTestVisible="False" Foreground="{StaticResource Brush.Icon.Dim}" />
+                        <TextBlock Text="{l:Loc Evt_Search}" Margin="29,0,8,0" VerticalAlignment="Center" FontSize="12" Foreground="{StaticResource Brush.Text.Muted}" IsHitTestVisible="False"
+                                   Visibility="{Binding Text, ElementName=SearchBox, Converter={StaticResource HasValue}, ConverterParameter=invert}" />
+                    </Grid>
+                    <ComboBox Width="80" Height="30" ItemsSource="{Binding Limits}" SelectedItem="{Binding Limit}" Margin="0,0,8,4" AutomationProperties.Name="{l:Loc Evt_Limit}" ToolTip="{l:Loc Evt_Limit}" />
+                    <ui:ArcadiaButton Variant="Primary" Icon="Refresh" IconSize="13" Content="{l:Loc Evt_Load}" Command="{Binding LoadCommand}" MinHeight="30" Padding="16,4" Margin="0,0,0,4"
+                                      Visibility="{Binding IsIdle, Converter={StaticResource BoolToVisibility}}" />
+                    <ui:ArcadiaButton Icon="Stop" IconSize="12" Content="{l:Loc It_Cancel}" Command="{Binding CancelCommand}" MinHeight="30" Padding="16,4" Margin="0,0,0,4"
+                                      Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibility}}" />
+                </WrapPanel>
+            </Border>
+        </Border>
+
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*" MinHeight="120" />
+                <RowDefinition Height="8" />
+                <RowDefinition Height="150" MinHeight="80" />
+            </Grid.RowDefinitions>
+            <Border Style="{StaticResource Tool.TableFrame}">
+                <Border Style="{StaticResource Tool.TableInner}">
+                    <DataGrid ItemsSource="{Binding Entries}" SelectedItem="{Binding Selected}" AutomationProperties.Name="{l:Loc Tool_eventlog}">
+                        <DataGrid.ContextMenu>
+                            <ContextMenu>
+                                <MenuItem Header="{l:Loc It_CopySelected}" Command="{Binding CopySelectedCommand}"><MenuItem.Icon><ui:ArcadiaIcon Kind="Copy" Width="14" Height="14" /></MenuItem.Icon></MenuItem>
+                                <MenuItem Header="{l:Loc It_CopyAll}" Command="{Binding CopyAllCommand}"><MenuItem.Icon><ui:ArcadiaIcon Kind="Copy" Width="14" Height="14" /></MenuItem.Icon></MenuItem>
+                            </ContextMenu>
+                        </DataGrid.ContextMenu>
+                        <DataGrid.Columns>
+                            <DataGridTemplateColumn Header="{l:Loc Evt_Level}" Width="120" SortMemberPath="Level">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate DataType="{x:Type it:EventRow}">
+                                        <StackPanel Orientation="Horizontal">
+                                            <ui:ArcadiaLed Width="8" Height="8" Tone="{Binding Tone, Converter={StaticResource It.Tone}}" VerticalAlignment="Center" />
+                                            <TextBlock Text="{Binding Level}" Style="{StaticResource Cell.Text}" Margin="8,0,0,0" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTextColumn Header="{l:Loc Evt_Time}" Binding="{Binding Time}" SortMemberPath="Local" Width="140" ElementStyle="{StaticResource Cell.Dim}" />
+                            <DataGridTextColumn Header="{l:Loc Evt_Source}" Binding="{Binding Source}" Width="*" ElementStyle="{StaticResource Cell.Text}" />
+                            <DataGridTextColumn Header="{l:Loc Evt_Id}" Binding="{Binding EventId}" Width="64" ElementStyle="{StaticResource Cell.Mono}" />
+                            <DataGridTextColumn Header="{l:Loc Evt_Message}" Binding="{Binding FirstLine}" Width="3*" ElementStyle="{StaticResource Cell.Dim}" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Border>
+            </Border>
+            <GridSplitter Grid.Row="1" Height="8" HorizontalAlignment="Stretch" Background="Transparent" Cursor="SizeNS" />
+            <Border Grid.Row="2" Style="{StaticResource Tool.Console}">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Focusable="False">
+                    <TextBox Style="{StaticResource Tool.SelectableText}" Text="{Binding Selected.Message, Mode=OneWay}" FontFamily="{StaticResource Font.Mono}" FontSize="12.5"
+                             Foreground="#B9D4F0" AutomationProperties.Name="{l:Loc Evt_Message}" />
+                </ScrollViewer>
+            </Border>
+        </Grid>
+    </DockPanel>
+</UserControl>
